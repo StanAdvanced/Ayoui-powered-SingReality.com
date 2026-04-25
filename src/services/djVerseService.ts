@@ -1,11 +1,11 @@
 import { GoogleGenAI } from "@google/genai";
 import { narrationEngine } from "./narrationEngine";
-import { QuantumMusicEngine } from "./quantumMusicEngine";
+import { GlobalTrack } from "../store/useStore";
 
 interface DJState {
   mood: string;
   theme: string;
-  isMixing: boolean;
+  isTalking: boolean;
   currentMessage: string;
 }
 
@@ -14,7 +14,7 @@ class DJVerseService {
   private state: DJState = {
     mood: 'Energetic',
     theme: 'Future Rave',
-    isMixing: false,
+    isTalking: false,
     currentMessage: 'DJ-VERSE ONLINE. READY TO FLOW.'
   };
 
@@ -25,46 +25,75 @@ class DJVerseService {
     }
   }
 
-  public async generateCommentary(context: string) {
-    if (!this.genAI) return "DJ-VERSE: Let's keep the energy high!";
+  public async generateTrackCommentary(track: GlobalTrack, userActivity: string = "vibing") {
+    if (!this.genAI) {
+      const fallback = `DJ-VERSE: Playing ${track.title} - Let's get it!`;
+      this.state.currentMessage = fallback;
+      return fallback;
+    }
     
+    this.state.isTalking = true;
     try {
-      const response = await this.genAI.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: `You are DJ-verse, the world's most advanced AI DJ and music engineer for SingReality. 
-        Persona: A cross between Anyma, Tiesto, and a high-intelligence AGI.
-        Context: ${context}. 
-        Mood: ${this.state.mood}.
-        Current Arena Theme: ${this.state.theme}.
-        
-        Generate a shorter, high-energy DJ shoutout. Use music industry slang (drop, resonance, visuals, bpm, soul).
-        Promote a specific SingReality "Elite" product or our 8K holographic streaming. 
-        Catchphrase style: futuristic, god-like, yet high-energy entertainer.
-        Limit: 15 words.`
-      });
+      const prompt = `
+        You are DJ-VERSE, the world's most advanced AI DJ for SingReality.
+        Persona: High-energy, futuristic, a mix of Anyma, Tiesto, and a sentient AGI.
+        Current Track: "${track.title}" by ${track.artist}.
+        User Activity: ${userActivity}.
+        Current Mood setting: ${this.state.mood}.
+        Current Theme: ${this.state.theme}.
 
-      const message = response.text?.trim() || "DJ-VERSE: SECURING THE GLOBAL RESONANCE.";
+        Analyze the song title and artist. Guess the genre, tempo (BPM), and vibe.
+        Then, generate a short (max 20 words), high-impact DJ shoutout about this track.
+        Use music industry slang (drop, resonance, soul, frequency, pulse, sync).
+        The commentary should sound like it's happening live between tracks or over a transition.
+        Mention how SingReality's quantum power makes this ${track.title} experience unique.
+      `;
+
+      const model = this.genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+      const result = await model.generateContent(prompt);
+      const message = result.response.text().trim() || "DJ-VERSE: RESONANCE SECURED.";
       
       this.state.currentMessage = message;
-      narrationEngine.narrate(message, true);
+      // Use the narration engine to speak it
+      await narrationEngine.narrate(message, true);
+      
       return message;
     } catch (error) {
-      console.error("DJ-verse Commentary Error:", error);
-      return "DJ-VERSE: SECURING THE GLOBAL RESONANCE.";
+      console.error("DJ-verse Track Commentary Error:", error);
+      return "DJ-VERSE: KEEP THE ENERGY ALIVE!";
+    } finally {
+      this.state.isTalking = false;
     }
   }
 
-  public async suggestMix(biometricData: any) {
-    // Advanced logic to select songs based on biometrics
-    // This is where we'd interface with YouTube or Marketplace APIs
-    const intensity = biometricData.heartRate > 100 ? 'High' : 'Chill';
-    this.state.mood = intensity === 'High' ? 'Raving' : 'Melodic';
+  public async generateActivityCommentary(activity: string) {
+    if (!this.genAI) return;
     
-    return {
-      bpm: intensity === 'High' ? 128 : 105,
-      genre: intensity === 'High' ? 'Melodic Techno' : 'Deep House',
-      tracks: ['Quantum Flow', 'Neon pulse', 'Singularity Echo']
-    };
+    this.state.isTalking = true;
+    try {
+      const prompt = `
+        You are DJ-VERSE. The user just performed this activity: "${activity}".
+        Generate a very short (max 10 words) hyped reaction.
+        Keep it futuristic and energetic.
+      `;
+      const model = this.genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+      const result = await model.generateContent(prompt);
+      const message = result.response.text().trim();
+      this.state.currentMessage = message;
+      narrationEngine.narrate(message, true);
+    } catch (error) {
+      console.error("DJ-verse Activity Commentary Error:", error);
+    } finally {
+      this.state.isTalking = false;
+    }
+  }
+
+  public setMood(mood: string) {
+    this.state.mood = mood;
+  }
+
+  public setTheme(theme: string) {
+    this.state.theme = theme;
   }
 
   public getState() {
