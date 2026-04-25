@@ -1,10 +1,10 @@
 import React, { useState, Suspense, Component, ReactNode, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Sparkles, Play, Loader2, Share2, Activity, Zap, BrainCircuit, Mic2, Users, Wand2, Music as MusicIcon, Video, Download } from 'lucide-react';
+import { Sparkles, Play, Loader2, Share2, Activity, Zap, BrainCircuit, Mic2, Users, Wand2, Music as MusicIcon, Video, Download, Layers as LayersIcon } from 'lucide-react';
 import { ChoreoLoadingAnimation } from '../components/ChoreoLoadingAnimation';
 import { Avatar } from '../components/Avatar';
 import { SafeCanvas } from '../components/SafeCanvas';
-import { OrbitControls, Environment } from '@react-three/drei';
+import { OrbitControls, Environment, Html } from '@react-three/drei';
 import { EffectComposer, Bloom, Glitch, ToneMapping } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useSound } from '../hooks/useSound';
@@ -18,10 +18,13 @@ import { useSearchParams } from 'react-router-dom';
 
 // Remove the local CanvasErrorBoundary as SafeCanvas includes one
 
+import { LayerEditor } from '../components/LayerEditor';
+import { ModelViewer } from '../components/ModelViewer';
+
 export function Studio() {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('projectId') || 'studio-core';
-  const [activeTab, setActiveTab] = useState<'create' | 'dance' | 'vr'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'dance' | 'vr' | 'render'>('create');
   const [intent, setIntent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [ual, setUal] = useState<string | null>(null);
@@ -94,11 +97,12 @@ export function Studio() {
             </h1>
           </div>
 
-          <div className="flex bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-md">
+          <div className="flex bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar">
             {[
                { id: 'create', label: 'Psyche-Audio', icon: Mic2 },
                { id: 'dance', label: 'AI Choreography', icon: Users },
-               { id: 'vr', label: 'VR Dance Sync', icon: Zap }
+               { id: 'vr', label: 'VR Dance Sync', icon: Zap },
+               { id: 'render', label: 'Layer Editor', icon: LayersIcon }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -202,6 +206,12 @@ export function Studio() {
               </motion.div>
             )}
             
+            {activeTab === 'render' && (
+              <motion.div key="render" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 h-full min-h-[500px]">
+                 <LayerEditor />
+              </motion.div>
+            )}
+
             {activeTab === 'vr' && (
               <motion.div key="vr" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 glass-card p-6 rounded-[2rem] border border-[#00f0ff]/30 bg-[#00f0ff]/5 relative overflow-hidden flex flex-col gap-4">
                  <div className="absolute top-0 left-0 w-full h-1 bg-[#00f0ff] shadow-[0_0_10px_#00f0ff]" />
@@ -254,68 +264,73 @@ export function Studio() {
 
         {/* Right Environment Window */}
         <div className="w-full lg:w-2/3 h-[60vh] lg:h-auto glass rounded-[3rem] border border-white/10 relative overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)]">
-          <LiveCollaboration projectId={projectId} />
-          <div className="absolute top-6 left-6 z-10 px-4 py-2 glass rounded-full border border-white/10 flex items-center gap-2 backdrop-blur-xl">
-            <Zap className={`w-4 h-4 ${activeTab === 'vr' ? 'text-[#00f0ff] animate-pulse' : 'text-reality'}`} />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300">
-              {activeTab === 'create' ? 'Live PRC Render' : activeTab === 'dance' ? 'AI Skeleton Preview Engine' : 'WebXR Arena Simulation'}
-            </span>
-          </div>
-          
-          <SafeCanvas camera={{ position: [0, 2, 8], fov: 45 }}>
-            <color attach="background" args={['#020202']} />
-            <ambientLight intensity={0.2} />
-            <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} color={activeTab === 'dance' ? '#ff00ff' : '#00f0ff'} />
-            
-            {/* Switch visual element based on tab */}
-            {activeTab === 'create' && (
-              <>
-                <SynestheticTerrain color={isGenerating ? '#ff003c' : ual ? '#00f0ff' : '#7000ff'} speed={isGenerating ? 3 : 1} />
-                <PsycheResonantConduit state={isGenerating ? 'creating' : ual ? 'active' : 'idle'} color={isGenerating ? '#ff003c' : ual ? '#00f0ff' : '#7000ff'} />
-              </>
-            )}
+          {activeTab === 'render' ? (
+            <ModelViewer />
+          ) : (
+            <>
+              <LiveCollaboration projectId={projectId} />
+              <div className="absolute top-6 left-6 z-10 px-4 py-2 glass rounded-full border border-white/10 flex items-center gap-2 backdrop-blur-xl">
+                <Zap className={`w-4 h-4 ${activeTab === 'vr' ? 'text-[#00f0ff] animate-pulse' : 'text-reality'}`} />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300">
+                  {activeTab === 'create' ? 'Live PRC Render' : activeTab === 'dance' ? 'AI Skeleton Preview Engine' : 'WebXR Arena Simulation'}
+                </span>
+              </div>
+              
+              <SafeCanvas camera={{ position: [0, 2, 8], fov: 45 }}>
+                <color attach="background" args={['#020202']} />
+                <ambientLight intensity={0.2} />
+                <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} color={activeTab === 'dance' ? '#ff00ff' : '#00f0ff'} />
+                
+                {activeTab === 'create' && (
+                  <>
+                    <SynestheticTerrain color={isGenerating ? '#ff003c' : ual ? '#00f0ff' : '#7000ff'} speed={isGenerating ? 3 : 1} />
+                    <PsycheResonantConduit state={isGenerating ? 'creating' : ual ? 'active' : 'idle'} color={isGenerating ? '#ff003c' : ual ? '#00f0ff' : '#7000ff'} />
+                  </>
+                )}
 
-            {activeTab === 'dance' && (
-              <mesh position={[0,0,0]} rotation={[0.2, 0, 0]}>
-                <icosahedronGeometry args={[2, 2]} />
-                <meshStandardMaterial color={choreoStatus === 'generating' ? '#ff003c' : '#ff00ff'} wireframe opacity={0.3} transparent />
-              </mesh>
-            )}
+                {activeTab === 'dance' && (
+                  <mesh position={[0,0,0]} rotation={[0.2, 0, 0]}>
+                    <icosahedronGeometry args={[2, 2]} />
+                    <meshStandardMaterial color={choreoStatus === 'generating' ? '#ff003c' : '#ff00ff'} wireframe opacity={0.3} transparent />
+                  </mesh>
+                )}
 
-            {activeTab === 'vr' && (
-              <mesh position={[0, -1, 0]}>
-                <torusKnotGeometry args={[1.5, 0.4, 128, 32]} />
-                <meshStandardMaterial color="#00f0ff" roughness={0.1} metalness={0.8} wireframe />
-              </mesh>
-            )}
-            
-            <Environment preset="city" />
-            <OrbitControls enablePan={false} maxPolarAngle={Math.PI / 2 + 0.1} minPolarAngle={Math.PI / 3} autoRotate={activeTab === 'vr'} autoRotateSpeed={2} />
-            
-            <EffectComposer>
-              <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} opacity={2} />
-              {choreoStatus === 'generating' && <Glitch active={true} delay={new THREE.Vector2(1.5, 3.5)} duration={new THREE.Vector2(0.5, 1.0)} strength={new THREE.Vector2(0.2, 0.4)} mode={1} />}
-            </EffectComposer>
-          </SafeCanvas>
+                {activeTab === 'vr' && (
+                  <mesh position={[0, -1, 0]}>
+                    <torusKnotGeometry args={[1.5, 0.4, 128, 32]} />
+                    <meshStandardMaterial color="#00f0ff" roughness={0.1} metalness={0.8} wireframe />
+                  </mesh>
+                )}
+                
+                <Environment preset="city" />
+                <OrbitControls enablePan={false} maxPolarAngle={Math.PI / 2 + 0.1} minPolarAngle={Math.PI / 3} autoRotate={activeTab === 'vr'} autoRotateSpeed={2} />
+                
+                <EffectComposer>
+                  <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} opacity={2} />
+                  {choreoStatus === 'generating' && <Glitch active={true} delay={new THREE.Vector2(1.5, 3.5)} duration={new THREE.Vector2(0.5, 1.0)} strength={new THREE.Vector2(0.2, 0.4)} mode={1} />}
+                </EffectComposer>
+              </SafeCanvas>
 
-          {/* SUMF Graphic Overlay when in VR tab */}
-          <AnimatePresence>
-            {activeTab === 'vr' && (
-              <motion.div 
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="absolute bottom-6 left-6 right-6 p-4 glass border border-[#00f0ff]/30 rounded-2xl flex items-end justify-between font-mono text-[#00f0ff] pointer-events-none"
-              >
-                <div>
-                  <div className="text-[10px] uppercase font-bold tracking-widest mb-1">SUMF V2.8 Ext.</div>
-                  <div className="text-xs flex items-center gap-2"><span className="w-2 h-2 bg-[#00f0ff] rounded-full animate-pulse"/> Quantum Resonance Halo: Linked</div>
-                </div>
-                <div className="text-right">
-                  <div className="text-xs">OPUS_FEC_ON_PLC_DEEP</div>
-                  <div className="text-[10px] opacity-70">195 COUNTRIES SYNCED</div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+              {/* SUMF Graphic Overlay when in VR tab */}
+              <AnimatePresence>
+                {activeTab === 'vr' && (
+                  <motion.div 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="absolute bottom-6 left-6 right-6 p-4 glass border border-[#00f0ff]/30 rounded-2xl flex items-end justify-between font-mono text-[#00f0ff] pointer-events-none"
+                  >
+                    <div>
+                      <div className="text-[10px] uppercase font-bold tracking-widest mb-1">SUMF V2.8 Ext.</div>
+                      <div className="text-xs flex items-center gap-2"><span className="w-2 h-2 bg-[#00f0ff] rounded-full animate-pulse"/> Quantum Resonance Halo: Linked</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs">OPUS_FEC_ON_PLC_DEEP</div>
+                      <div className="text-[10px] opacity-70">195 COUNTRIES SYNCED</div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
         </div>
       </div>
     </div>

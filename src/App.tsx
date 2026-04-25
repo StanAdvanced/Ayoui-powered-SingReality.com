@@ -27,6 +27,7 @@ const GlobalMap = lazy(() => import('./pages/GlobalMap').then(m => ({ default: m
 const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ default: m.NeuralClones })));
 const SingRealityTV = lazy(() => import('./pages/SingRealityTV').then(m => ({ default: m.SingRealityTV })));
 const KaraokeArena = lazy(() => import('./pages/KaraokeArena').then(m => ({ default: m.KaraokeArena })));
+const Showcase = lazy(() => import('./pages/Showcase'));
 
 import { useStore } from './store/useStore';
 
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="/karaoke-arena" element={<KaraokeArena />} />
             <Route path="/global-map" element={<GlobalMap />} />
             <Route path="/tv" element={<SingRealityTV />} />
+            <Route path="/showcase" element={<Showcase />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

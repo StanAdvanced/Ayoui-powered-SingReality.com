@@ -144,8 +144,8 @@ function Model({ url, layer }: { url: string, layer: any }) {
             mat.side = THREE.DoubleSide;
             mat.depthWrite = false;
             mat.blending = THREE.AdditiveBlending;
-            mat.uColor = new THREE.Color(materialProps.color || '#00f0ff');
-            mat.uOpacity = materialProps.opacity || 0.6;
+            mat.uColor = new THREE.Color(layer.color || materialProps.color || '#00f0ff');
+            mat.uOpacity = layer.opacity !== undefined ? layer.opacity : (materialProps.opacity || 0.6);
             mat.uScanlineIntensity = materialProps.scanlineIntensity || 0.3;
             mat.uFlickerIntensity = materialProps.flickerIntensity || 0.1;
             child.material = mat;
@@ -153,7 +153,9 @@ function Model({ url, layer }: { url: string, layer: any }) {
           } else {
             child.material = new THREE.MeshStandardMaterial({
               ...materialProps,
-              color: child.material.color
+              color: layer.color || child.material.color,
+              opacity: layer.opacity !== undefined ? layer.opacity : materialProps.opacity,
+              transparent: (layer.opacity !== undefined && layer.opacity < 1) || materialProps.transparent
             });
           }
         }
@@ -178,15 +180,17 @@ function Model({ url, layer }: { url: string, layer: any }) {
           mat.side = THREE.DoubleSide;
           mat.depthWrite = false;
           mat.blending = THREE.AdditiveBlending;
-          mat.uColor = new THREE.Color(materialProps.color || '#00f0ff');
-          mat.uOpacity = materialProps.opacity || 0.6;
+          mat.uColor = new THREE.Color(layer.color || materialProps.color || '#00f0ff');
+          mat.uOpacity = layer.opacity !== undefined ? layer.opacity : (materialProps.opacity || 0.6);
           mat.uScanlineIntensity = materialProps.scanlineIntensity || 0.3;
           mat.uFlickerIntensity = materialProps.flickerIntensity || 0.1;
           child.material = mat;
           holoMaterials.current.push(mat);
         } else {
           child.material = new THREE.MeshPhysicalMaterial({
-            color: materialProps.color || child.material.color,
+            color: layer.color || materialProps.color || child.material.color,
+            opacity: layer.opacity !== undefined ? layer.opacity : materialProps.opacity,
+            transparent: (layer.opacity !== undefined && layer.opacity < 1) || materialProps.transparent,
             metalness: materialProps.metalness,
             roughness: materialProps.roughness,
             transmission: materialProps.transmission || 0,
@@ -488,10 +492,12 @@ export function ModelViewer() {
           <Stage intensity={0.5} environment="city" shadows="contact" adjustCamera={true}>
             {layers.filter(l => l.visible).map(layer => (
               <group key={layer.id}>
-                <Model 
-                  url="https://raw.githubusercontent.com/pmndrs/drei-assets/master/truck.gltf" 
-                  layer={layer}
-                />
+                {layer.url && (
+                  <Model 
+                    url={layer.url} 
+                    layer={layer}
+                  />
+                )}
               </group>
             ))}
           </Stage>

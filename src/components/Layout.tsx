@@ -16,7 +16,9 @@ import {
   Radio, 
   Code2, 
   ShoppingBag,
-  HandCoins 
+  HandCoins,
+  Award,
+  Layers as LayersIcon
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
 import { useStore } from '../store/useStore';
@@ -113,14 +115,14 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   }, [location.pathname]);
 
   const links = [
+    { name: 'Showcase', path: '/showcase', icon: Award },
+    { name: 'Studio', path: '/studio', icon: LayersIcon },
     { name: 'Karaoke', path: '/karaoke-arena', icon: Mic2 },
     { name: 'Quantum Lab', path: '/quantum-lab', icon: Cpu },
-    { name: 'Crowd-Fund', path: '/funding', icon: HandCoins },
     { name: 'SingReality TV', path: '/tv', icon: Tv },
     { name: 'Arenas', path: '/arenas', icon: Radio },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingBag },
     { name: 'Nexus', path: '/', icon: Globe },
-    { name: 'Omega Portal', path: '/dev-portal', icon: Code2 },
   ];
 
   if (!isAuthReady) {

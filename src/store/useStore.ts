@@ -50,7 +50,7 @@ interface AppState {
   // Project State (for 3D Viewer & Layers)
   layers: Layer[];
   setLayers: (layers: Layer[]) => void;
-  addLayer: (name: string) => void;
+  addLayer: (name: string, url?: string) => void;
   removeLayer: (id: string) => void;
   toggleLayerVisibility: (id: string) => void;
   reorderLayers: (startIndex: number, endIndex: number) => void;
@@ -120,7 +120,10 @@ interface Layer {
   id: string;
   name: string;
   visible: boolean;
+  url?: string; // URL of the 3D model
   objects: string[]; // IDs of 3D objects
+  color?: string;
+  opacity?: number;
   materialProps?: any;
   isHologram?: boolean;
 }
@@ -144,7 +147,7 @@ const createUserDocument = async (user: User) => {
 };
 
 const initialLayers: Layer[] = [
-  { id: '1', name: 'Base Layer', visible: true, objects: [], materialProps: {}, isHologram: true }
+  { id: '1', name: 'Base Layer', visible: true, url: 'https://raw.githubusercontent.com/pmndrs/drei-assets/master/truck.gltf', objects: [], color: '#00f0ff', opacity: 0.6, materialProps: {}, isHologram: true }
 ];
 
 export const useStore = create<AppState>((set, get) => {
@@ -229,9 +232,19 @@ export const useStore = create<AppState>((set, get) => {
       pushToHistory(layers);
     },
     
-    addLayer: (name) => {
+    addLayer: (name, url) => {
       const state = get();
-      const newLayers = [...state.layers, { id: Math.random().toString(36).substr(2, 9), name, visible: true, objects: [], materialProps: {}, isHologram: true }];
+      const newLayers = [...state.layers, { 
+        id: Math.random().toString(36).substr(2, 9), 
+        name, 
+        visible: true, 
+        url: url || 'https://raw.githubusercontent.com/pmndrs/drei-assets/master/truck.gltf',
+        objects: [], 
+        color: '#ffffff',
+        opacity: 1,
+        materialProps: {}, 
+        isHologram: false 
+      }];
       pushToHistory(newLayers);
     },
     
