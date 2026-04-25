@@ -1,0 +1,188 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "A user of the SingReality platform.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "username": { "type": "string" },
+        "email": { "type": "string" },
+        "passwordHash": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "displayName": { "type": "string" },
+        "profilePictureUrl": { "type": "string" },
+        "bio": { "type": "string" },
+        "preferredMusicGenres": { "type": "array" }
+      },
+      "required": ["id", "username", "email", "passwordHash", "createdAt"]
+    },
+    "MusicVideo": {
+      "title": "MusicVideo",
+      "description": "A music video uploaded by a user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "videoUrl": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "uploadDate": { "type": "timestamp" },
+        "score": { "type": "number" },
+        "rank": { "type": "number" },
+        "description": { "type": "string" },
+        "genre": { "type": "string" },
+        "artistName": { "type": "string" },
+        "tags": { 
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Keywords for categorization"
+        },
+        "uploaderId": { "type": "string" }
+      },
+      "required": ["id", "title", "videoUrl", "thumbnailUrl", "uploadDate", "score", "uploaderId"]
+    },
+    "MusicVideoComment": {
+      "title": "MusicVideoComment",
+      "description": "A comment on a music video.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "commentText": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "musicVideoId": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "commentText", "createdAt", "musicVideoId", "userId"]
+    },
+    "MarketplaceItem": {
+      "title": "MarketplaceItem",
+      "description": "An item for sale in the marketplace.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "itemType": { "type": "string" },
+        "price": { "type": "number" },
+        "assetUrl": { "type": "string" },
+        "uploadDate": { "type": "timestamp" },
+        "description": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "tags": { "type": "array" },
+        "previewVideoUrl": { "type": "string" },
+        "acousticMetrics": {
+          "type": "object",
+          "properties": {
+            "vocalRangeOctaves": { "type": "number" },
+            "dynamicClimaxScore": { "type": "number" },
+            "emotionalValenceTrend": { "type": "string" }
+          }
+        }
+      },
+      "required": ["id", "name", "sellerId", "itemType", "price", "assetUrl", "uploadDate"]
+    },
+    "WishlistItem": {
+      "title": "WishlistItem",
+      "description": "An item in a user's wishlist.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "addedAt": { "type": "timestamp" },
+        "marketplaceItemId": { "type": "string" },
+        "userId": { "type": "string" }
+      },
+      "required": ["id", "addedAt", "marketplaceItemId", "userId"]
+    },
+    "Purchase": {
+      "title": "Purchase",
+      "description": "A record of a purchase.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "purchaseDate": { "type": "timestamp" },
+        "buyerId": { "type": "string" },
+        "marketplaceItemId": { "type": "string" },
+        "amount": { "type": "number" },
+        "transactionId": { "type": "string" },
+        "licenseKey": { "type": "string" },
+        "downloadLink": { "type": "string" }
+      },
+      "required": ["id", "purchaseDate", "buyerId", "marketplaceItemId", "amount", "transactionId"]
+    },
+    "KaraokeSession": {
+      "title": "KaraokeSession",
+      "description": "A real-time karaoke session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "songId": { "type": "string" },
+        "participants": { "type": "array" },
+        "startTime": { "type": "timestamp" }
+      },
+      "required": ["id", "songId", "participants", "startTime"]
+    },
+    "GlobalLeaderboard": {
+      "title": "GlobalLeaderboard",
+      "description": "A decentralized leadership board.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "rankings": { "type": "array" },
+        "lastUpdated": { "type": "timestamp" }
+      },
+      "required": ["id", "rankings", "lastUpdated"]
+    },
+    "AISongStudioSession": {
+      "title": "AISongStudioSession",
+      "description": "A generative AI music studio session.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "biometricData": { "type": "array" },
+        "generatedAudioUrl": { "type": "string" },
+        "sessionDuration": { "type": "number" },
+        "flowStateAchieved": { "type": "boolean" }
+      },
+      "required": ["id", "userId", "sessionDuration"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User profiles."
+    },
+    "musicVideos/{videoId}": {
+      "schema": { "$ref": "#/entities/MusicVideo" },
+      "description": "Music videos."
+    },
+    "comments/{commentId}": {
+      "schema": { "$ref": "#/entities/MusicVideoComment" },
+      "description": "Comments on music videos."
+    },
+    "marketplaceItems/{itemId}": {
+      "schema": { "$ref": "#/entities/MarketplaceItem" },
+      "description": "Marketplace items."
+    },
+    "wishlistItems/{wishlistItemId}": {
+      "schema": { "$ref": "#/entities/WishlistItem" },
+      "description": "User wishlists."
+    },
+    "purchases/{purchaseId}": {
+      "schema": { "$ref": "#/entities/Purchase" },
+      "description": "Purchase records."
+    },
+    "karaokeSessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/KaraokeSession" },
+      "description": "Karaoke sessions."
+    },
+    "leaderboards/{leaderboardId}": {
+      "schema": { "$ref": "#/entities/GlobalLeaderboard" },
+      "description": "Global leaderboards."
+    },
+    "aiSongStudioSessions/{sessionId}": {
+      "schema": { "$ref": "#/entities/AISongStudioSession" },
+      "description": "AI music studio sessions."
+    }
+  }
+}

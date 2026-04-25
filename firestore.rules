@@ -1,0 +1,86 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.ownerId;
+    }
+    function hasRequiredFields(fields) {
+      return request.resource.data.keys().hasAll(fields);
+    }
+    function validStringLength(field, minLen, maxLen) {
+      return request.resource.data[field] is string &&
+        request.resource.data[field].size() >= minLen &&
+        request.resource.data[field].size() <= maxLen;
+    }
+
+    // ===============================================================
+    // Domain Validators
+    // ===============================================================
+    function isValidUser() {
+      return hasRequiredFields(['uid', 'email']) &&
+             request.resource.data.uid == request.auth.uid &&
+             (!('displayName' in request.resource.data) || validStringLength('displayName', 1, 50)) &&
+             (!('bio' in request.resource.data) || validStringLength('bio', 0, 500)) &&
+             (!('photoURL' in request.resource.data) || validStringLength('photoURL', 0, 2000)) &&
+             (!('preferredMusicGenres' in request.resource.data) || (request.resource.data.preferredMusicGenres is list && request.resource.data.preferredMusicGenres.size() <= 20));
+    }
+
+    function isValidProject() {
+      return hasRequiredFields(['ownerId', 'name', 'modelUrl']) &&
+             request.resource.data.ownerId == request.auth.uid &&
+             validStringLength('name', 1, 100) &&
+             request.resource.data.modelUrl is string;
+    }
+
+    function isValidMusicVideo() {
+      return hasRequiredFields(['id', 'title', 'videoUrl', 'thumbnailUrl', 'uploadDate', 'score', 'uploaderId']) &&
+             request.resource.data.uploaderId == request.auth.uid &&
+             validStringLength('title', 1, 200) &&
+             request.resource.data.videoUrl is string &&
+             (!('tags' in request.resource.data) || (request.resource.data.tags is list && request.resource.data.tags.size() <= 10));
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser();
+      allow update: if isOwner(userId) && isValidUser() && 
+                    request.resource.data.uid == resource.data.uid;
+    }
+
+    match /projects/{projectId} {
+      allow read: if projectId == 'default' || (isAuthenticated() && resource.data.ownerId == request.auth.uid);
+      allow create: if isAuthenticated() && isValidProject();
+      allow update: if isAuthenticated() && (projectId == 'default' || (isDocOwner() && request.resource.data.ownerId == resource.data.ownerId));
+      allow delete: if isDocOwner();
+    }
+
+    match /musicVideos/{videoId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && isValidMusicVideo();
+      allow update: if isAuthenticated() && request.auth.uid == resource.data.uploaderId && isValidMusicVideo();
+      allow delete: if isAuthenticated() && request.auth.uid == resource.data.uploaderId;
+    }
+
+    match /presence/{userId} {
+      allow read: if true;
+      allow write: if isOwner(userId);
+    }
+
+    match /nexus_chat/{messageId} {
+      allow read: if true;
+      allow create: if isAuthenticated() && request.resource.data.uid == request.auth.uid;
+    }
+  }
+}

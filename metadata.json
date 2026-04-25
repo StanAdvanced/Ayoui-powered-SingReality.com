@@ -1,0 +1,11 @@
+{
+  "name": "SingReality | The Quantum Singularity of Music",
+  "description": "The world's first Transcendent-Quantum Global Singularity Harmony Omni-UltraNexus. Immersive 8K real-time holographic karaoke, generative music marketplace, and crowd-funding ecosystem.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "bluetooth"
+  ],
+  "majorCapabilities": []
+}
