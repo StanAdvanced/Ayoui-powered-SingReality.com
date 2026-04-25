@@ -60,6 +60,7 @@ import { GlobalSearch } from './GlobalSearch';
 import { CinematicBackscreen } from './CinematicBackscreen';
 import { Music2 } from 'lucide-react';
 import WebAgentInterface from './WebAgentInterface';
+import LiveAgentChat from './LiveAgentChat';
 
 export function Layout({ children, onReplayIntro }: { children: React.ReactNode, onReplayIntro?: () => void }) {
   const store = useStore();
@@ -373,6 +374,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
         </div>
       </footer>
       <WebAgentInterface />
+      <LiveAgentChat />
     </div>
   );
 }

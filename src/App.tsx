@@ -6,6 +6,7 @@ import { Loader2 } from 'lucide-react';
 import { OnboardingTour } from './components/OnboardingTour';
 import { AudioPlayer } from './components/AudioPlayer';
 import { IntroVideo } from './components/IntroVideo';
+import AdminDashboard from './components/AdminDashboard';
 
 // Lazy load pages for performance
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
@@ -82,6 +83,7 @@ export default function App() {
             <Route path="/global-map" element={<GlobalMap />} />
             <Route path="/tv" element={<SingRealityTV />} />
             <Route path="/showcase" element={<Showcase />} />
+            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
