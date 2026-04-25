@@ -11,6 +11,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@ericblade/quagga2": "^1.12.1",
     "@google/genai": "^1.29.0",
     "@pixiv/three-vrm": "^3.5.1",
     "@react-google-maps/api": "^2.20.8",
@@ -26,6 +27,7 @@
     "express": "^4.21.2",
     "firebase": "^12.11.0",
     "globe.gl": "^2.45.3",
+    "jsqr": "^1.4.0",
     "lucide-react": "^0.546.0",
     "motion": "^12.23.24",
     "postprocessing": "^6.39.0",

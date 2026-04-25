@@ -58,7 +58,8 @@ export class AISongSincvEngine {
       }, "8n");
 
       Tone.Transport.start();
-      this.loop.start(0);
+      // Start loop relative to transport
+      this.loop.start();
       this.isPlaying = true;
     } finally {
       this.isInitializing = false;
@@ -84,19 +85,27 @@ export class AISongSincvEngine {
 
     const now = Tone.now();
 
-    // Modulate audio parameters based on biometrics using setTargetAtTime to prevent rapid scheduling collision errors
-    if (this.lfo) {
-      // Alpha wave controls LFO rate (0.1 to 5 Hz)
-      this.lfo.frequency.setTargetAtTime(0.1 + biometricData.alphaWave * 5, now, 0.1);
-    }
-    
-    if (this.filter) {
-      // Theta wave controls filter base frequency
-      this.filter.frequency.setTargetAtTime(200 + biometricData.thetaWave * 2000, now, 0.1);
-    }
+    // Ensure we don't schedule in the past or at the exact same time as a previous event
+    // ToneParams can throw if scheduling is redundant
+    try {
+      // Modulate audio parameters based on biometrics using setTargetAtTime to prevent rapid scheduling collision errors
+      if (this.lfo) {
+        // Alpha wave controls LFO rate (0.1 to 5 Hz)
+        this.lfo.frequency.setTargetAtTime(0.1 + biometricData.alphaWave * 5, now, 0.1);
+      }
+      
+      if (this.filter) {
+        // Theta wave controls filter base frequency
+        this.filter.frequency.setTargetAtTime(200 + biometricData.thetaWave * 2000, now, 0.1);
+      }
 
-    // Heart rate controls tempo
-    Tone.Transport.bpm.setTargetAtTime(biometricData.heartRate, now, 0.5);
+      // Only adjust transport BPM if shifted significantly to avoid constant updates which can cause jitter or errors
+      if (Math.abs(Tone.Transport.bpm.value - biometricData.heartRate) > 1) {
+        Tone.Transport.bpm.setTargetAtTime(biometricData.heartRate, now, 0.5);
+      }
+    } catch (e) {
+      console.warn("Audio scheduling collision avoided:", e);
+    }
 
     return "Real-time synthesis active";
   }

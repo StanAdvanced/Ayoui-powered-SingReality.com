@@ -1,19 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Radio, Zap, X, SkipForward, Play, Cpu, Volume2 } from 'lucide-react';
+import { Zap, X, Radio, Volume2, Cpu } from 'lucide-react';
 import { djVerseService } from '../services/djVerseService';
 import { useStore } from '../store/useStore';
 
 export function DJVerseOverlay() {
-  const { globalTrack } = useStore();
+  const { globalTrack, biometricSync } = useStore();
   const [state, setState] = useState(djVerseService.getState());
   const [isVisible, setIsVisible] = useState(false);
   const [eqLevels, setEqLevels] = useState<number[]>(new Array(16).fill(0));
+  const lastTrackId = useRef<string | null>(null);
 
   useEffect(() => {
     const updateLocalState = () => {
       const s = djVerseService.getState();
-      setState(s);
+      setState({ ...s });
       if (s.isTalking) setIsVisible(true);
     };
 
@@ -29,20 +30,37 @@ export function DJVerseOverlay() {
     return () => clearInterval(interval);
   }, []);
 
-  // Auto-trigger commentary on new tracks
-  const lastTrackId = React.useRef<string | null>(null);
+  // Monitor Track Changes
   useEffect(() => {
     if (globalTrack && globalTrack.id !== lastTrackId.current) {
       lastTrackId.current = globalTrack.id;
-      // Small delay for the transition
+      
+      const activityCtx = biometricSync.active 
+        ? `Heart Rate at ${biometricSync.heartRate} BPM, Stress Level ${biometricSync.stressLevel}` 
+        : 'High-intensity vibing';
+
+      // Slight delay for the crossfade
       setTimeout(() => {
-        djVerseService.generateTrackCommentary(globalTrack);
+        djVerseService.generateTrackCommentary(globalTrack, activityCtx);
       }, 3000);
     }
-  }, [globalTrack]);
+  }, [globalTrack, biometricSync]);
+
+  // Resonance Milestone Monitor
+  const { resonance } = useStore();
+  const lastMilestone = useRef(resonance);
+  useEffect(() => {
+    if (resonance >= lastMilestone.current + 5000) {
+      lastMilestone.current = resonance;
+      djVerseService.generateActivityCommentary(`Global resonance has breached ${resonance.toLocaleString()}. The singularity is near!`);
+    }
+  }, [resonance]);
 
   const handleManualShoutout = () => {
-    djVerseService.generateActivityCommentary('Dropping a live vibe for the Stanley Phani Studio crowd!');
+    const activityCtx = biometricSync.active 
+      ? `Synchronization active at ${biometricSync.heartRate} BPM` 
+      : 'Pure energy focus';
+    djVerseService.generateActivityCommentary(`Manual pulse requested. ${activityCtx}`);
   };
 
   return (
@@ -109,7 +127,7 @@ export function DJVerseOverlay() {
                   className="flex-1 flex items-center justify-center gap-2 py-3 glass hover:bg-white/10 rounded-xl border border-white/10 text-[9px] font-black uppercase tracking-widest transition-all hover:scale-105"
                 >
                   <Zap className="w-3 h-3 text-quantum" />
-                  Shoutout
+                  Hype Pulse
                 </button>
                 <div className="flex gap-1">
                   <div className="w-8 h-8 rounded-lg glass flex items-center justify-center">
@@ -123,10 +141,10 @@ export function DJVerseOverlay() {
             <div className="absolute bottom-0 left-0 right-0 flex items-end justify-between h-8 opacity-30 pointer-events-none px-4">
               {eqLevels.map((lvl, i) => (
                 <motion.div 
-                  key={i} 
-                  initial={{ height: '4px' }}
-                  animate={{ height: `${lvl}%` }}
-                  className="w-1 bg-singularity rounded-t-sm"
+                   key={i}
+                   animate={{ height: `${lvl}%` }}
+                   transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                   className="w-1 bg-singularity rounded-t-sm"
                 />
               ))}
             </div>

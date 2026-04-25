@@ -106,7 +106,7 @@ export class QuantumMusicEngine {
     await Tone.start();
     const part = new Tone.Part((time, noteObj: Note) => {
       this.synth.triggerAttackRelease(noteObj.note, noteObj.duration, time);
-    }, notes.map(n => [n.time, n])).start(0);
+    }, notes.map(n => [n.time, n])).start("+0.1");
     
     Tone.Transport.start();
     setTimeout(() => {

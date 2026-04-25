@@ -17,8 +17,8 @@ export function DJVerseLiveFeed() {
 
   useEffect(() => {
     const interval = setInterval(async () => {
-      const msg = await djVerseService.generateCommentary("Mixing live visuals");
-      setDjMessage(msg);
+      const msg = await djVerseService.generateActivityCommentary("Mixing live visuals");
+      if (msg) setDjMessage(msg);
       setIsMixing(true);
       setTimeout(() => setIsMixing(false), 3000);
     }, 15000);

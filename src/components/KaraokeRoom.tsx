@@ -3,13 +3,15 @@ import { useParams } from 'react-router-dom';
 import { syncKaraokeSession } from '../services/karaokeService';
 import { 
   Mic2, Users, Zap, Play, Pause, Volume2, VolumeX, SkipForward,
-  Sparkles, Rocket, Music, Star
+  Sparkles, Rocket, Music, Star, Share2
 } from 'lucide-react';
 import { YouTubeBackground } from './YouTubeBackground';
 import { useMusicEngine } from '../services/musicEngine';
 import { useStore } from '../store/useStore';
 import { motion, AnimatePresence } from 'motion/react';
 import { narrationEngine } from '../services/narrationEngine';
+import { GlobalSingALong } from './GlobalSingALong';
+import { MusicCrowdfunding } from './MusicCrowdfunding';
 
 const PREDEFINED_LYRICS = [
   { time: 0, text: "♪ (Instrumental Intro) ♪" },
@@ -184,9 +186,9 @@ export function KaraokeRoom() {
           </div>
         </div>
         
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Lyrics Display */}
-          <div className="lg:col-span-2 glass-card p-8 rounded-[3rem] border border-white/10 flex flex-col relative overflow-hidden">
+          <div className="lg:col-span-8 glass-card p-8 rounded-[3rem] border border-white/10 flex flex-col relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-full h-32 bg-gradient-to-t from-black/80 to-transparent z-10 pointer-events-none" />
             
@@ -216,66 +218,75 @@ export function KaraokeRoom() {
             </div>
           </div>
 
-          {/* Controls & Track Info */}
-          <div className="glass-card p-8 rounded-[3rem] border border-white/10 flex flex-col items-center justify-center gap-8">
-            <div className="relative">
-              <div className={`absolute inset-0 bg-gradient-to-br ${currentThemeData.color} opacity-20 blur-3xl rounded-full`} />
-              <div className="w-48 h-48 rounded-full border-4 border-white/10 flex items-center justify-center relative overflow-hidden glass">
-                <Mic2 className={`w-20 h-20 text-singularity ${isPlaying ? 'animate-pulse' : ''}`} />
+          {/* Right Sidebar - Integrations & Controls */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            {/* Controls & Track Info */}
+            <div className="glass-card p-6 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center gap-6">
+              <div className="relative">
+                <div className={`absolute inset-0 bg-gradient-to-br ${currentThemeData.color} opacity-20 blur-3xl rounded-full`} />
+                <div className="w-32 h-32 rounded-full border-4 border-white/10 flex items-center justify-center relative overflow-hidden glass">
+                  <Mic2 className={`w-12 h-12 text-singularity ${isPlaying ? 'animate-pulse' : ''}`} />
+                </div>
+              </div>
+
+              <div className="text-center space-y-2">
+                <h3 className="text-xl font-bold text-white truncate max-w-[200px] mx-auto">
+                  {currentTrack?.title || "Loading Track..."}
+                </h3>
+                <p className="text-gray-400 font-mono text-sm">
+                  {currentTrack?.user?.name || "Audius Network"}
+                </p>
+              </div>
+
+              {/* Playback Controls */}
+              <div className="flex flex-col items-center gap-6 w-full px-4">
+                <div className="flex items-center gap-6">
+                  <button 
+                    onClick={togglePlay}
+                    className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)]"
+                  >
+                    {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+                  </button>
+                  <button 
+                    onClick={() => playGenre('Pop')}
+                    className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors"
+                    title="Next Random Track"
+                  >
+                    <SkipForward className="w-4 h-4 text-white" />
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-4 w-full">
+                  <button onClick={() => setVolume(volume === 0 ? 0.15 : 0)}>
+                    {volume === 0 ? <VolumeX className="w-4 h-4 text-gray-400" /> : <Volume2 className="w-4 h-4 text-gray-400" />}
+                  </button>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="1" 
+                    step="0.01" 
+                    value={volume}
+                    onChange={(e) => setVolume(parseFloat(e.target.value))}
+                    className="flex-1 h-1 bg-white/20 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
+                  />
+                </div>
+              </div>
+
+              <div className="w-full h-[1px] bg-white/10 my-2" />
+
+              <div className="text-center">
+                <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Network Sync</div>
+                <div className="text-lg font-mono font-bold text-quantum glow-text">
+                  {new Date(networkTime).toLocaleTimeString()}
+                </div>
               </div>
             </div>
 
-            <div className="text-center space-y-2">
-              <h3 className="text-2xl font-bold text-white truncate max-w-[250px]">
-                {currentTrack?.title || "Loading Track..."}
-              </h3>
-              <p className="text-gray-400 font-mono text-sm">
-                {currentTrack?.user?.name || "Audius Network"}
-              </p>
-            </div>
+            {/* Global Chat/Translate Integration */}
+            <GlobalSingALong />
 
-            {/* Playback Controls */}
-            <div className="flex flex-col items-center gap-6 w-full">
-              <div className="flex items-center gap-6">
-                <button 
-                  onClick={togglePlay}
-                  className="w-16 h-16 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)]"
-                >
-                  {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8 ml-1" />}
-                </button>
-                <button 
-                  onClick={() => playGenre('Pop')}
-                  className="w-12 h-12 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors"
-                  title="Next Random Track"
-                >
-                  <SkipForward className="w-5 h-5 text-white" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-4 w-full px-4">
-                <button onClick={() => setVolume(volume === 0 ? 0.15 : 0)}>
-                  {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-400" /> : <Volume2 className="w-5 h-5 text-gray-400" />}
-                </button>
-                <input 
-                  type="range" 
-                  min="0" 
-                  max="1" 
-                  step="0.01" 
-                  value={volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
-                  className="flex-1 h-1 bg-white/20 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
-                />
-              </div>
-            </div>
-
-            <div className="w-full h-[1px] bg-white/10 my-4" />
-
-            <div className="text-center">
-              <div className="text-sm text-gray-400 uppercase tracking-widest mb-2">Network Sync</div>
-              <div className="text-2xl font-mono font-bold text-quantum glow-text">
-                {new Date(networkTime).toLocaleTimeString()}
-              </div>
-            </div>
+            {/* Music Crowdfunding Integration */}
+            <MusicCrowdfunding />
           </div>
         </div>
       </div>

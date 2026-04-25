@@ -59,6 +59,7 @@ import { UserAvatar } from './UserAvatar';
 import { GlobalSearch } from './GlobalSearch';
 import { CinematicBackscreen } from './CinematicBackscreen';
 import { Music2 } from 'lucide-react';
+import WebAgentInterface from './WebAgentInterface';
 
 export function Layout({ children, onReplayIntro }: { children: React.ReactNode, onReplayIntro?: () => void }) {
   const store = useStore();
@@ -371,6 +372,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
           </div>
         </div>
       </footer>
+      <WebAgentInterface />
     </div>
   );
 }

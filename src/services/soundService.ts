@@ -88,18 +88,23 @@ class SoundService {
     if (this.whooshSynth && this.filter) {
       const now = Tone.now();
       try {
-        this.filter.frequency.setValueAtTime(400, now);
-        this.filter.frequency.exponentialRampToValueAtTime(2000, now + 0.3);
-        this.filter.frequency.exponentialRampToValueAtTime(400, now + 0.6);
-        this.whooshSynth.triggerAttackRelease('4n', now);
-      } catch(e) {}
+        // Robust scheduling: cancel previous events and set start value with small offset
+        this.filter.frequency.cancelScheduledValues(now);
+        this.filter.frequency.setValueAtTime(400, now + 0.01);
+        this.filter.frequency.exponentialRampToValueAtTime(2000, now + 0.31);
+        this.filter.frequency.exponentialRampToValueAtTime(400, now + 0.61);
+        this.whooshSynth.triggerAttackRelease('4n', now + 0.01);
+      } catch(e) {
+        console.warn('Tone: Whoosh scheduling collision prevented', e);
+      }
     }
   }
 
   async playChime() {
     await this.init();
     if (this.chimeSynth) {
-      this.chimeSynth.triggerAttackRelease(['E5', 'G5', 'C6'], '2n');
+      const now = Tone.now();
+      this.chimeSynth.triggerAttackRelease(['E5', 'G5', 'C6'], '2n', now + 0.01);
     }
   }
 
@@ -109,20 +114,12 @@ class SoundService {
       const now = Tone.now();
       try {
         this.filter.frequency.cancelScheduledValues(now);
-        this.filter.frequency.setValueAtTime(2000, now);
-        this.filter.frequency.exponentialRampToValueAtTime(200, now + 0.5);
-        this.transitionSynth.triggerAttackRelease('4n', now);
-        
-        setTimeout(() => {
-          if (this.filter && Tone.now() >= now + 0.5) {
-            try {
-              this.filter.frequency.cancelScheduledValues(Tone.now());
-              this.filter.frequency.setValueAtTime(2000, Tone.now());
-            } catch(e) {}
-          }
-        }, 600);
+        this.filter.frequency.setValueAtTime(2000, now + 0.01);
+        this.filter.frequency.exponentialRampToValueAtTime(200, now + 0.51);
+        this.filter.frequency.exponentialRampToValueAtTime(2000, now + 0.81);
+        this.transitionSynth.triggerAttackRelease('4n', now + 0.01);
       } catch (e) {
-        console.warn('Tone scheduling skipped for transition.', e);
+        console.warn('Tone: Transition scheduling collision prevented.', e);
       }
     }
   }

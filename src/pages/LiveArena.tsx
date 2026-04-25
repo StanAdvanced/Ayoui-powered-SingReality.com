@@ -132,11 +132,11 @@ export function LiveArena() {
 
   useEffect(() => {
     if (biometricSync && biometricData.heartRate > 120) {
-      djVerseService.generateCommentary(`Heart rate spike detected at ${Math.round(biometricData.heartRate)} BPM! The crowd is going wild!`);
+      djVerseService.generateActivityCommentary(`Heart rate spike detected at ${Math.round(biometricData.heartRate)} BPM! The crowd is going wild! Current lyrics vibe: ${currentLyrics.slice(0, 50)}`);
     } else if (biometricSync && biometricData.heartRate < 70) {
-       djVerseService.generateCommentary(`Heart rate at ${Math.round(biometricData.heartRate)} BPM. Time for some melodic transition.`);
+       djVerseService.generateActivityCommentary(`Heart rate at ${Math.round(biometricData.heartRate)} BPM. Time for some melodic transition.`);
     }
-  }, [biometricData.heartRate, biometricSync]);
+  }, [biometricData.heartRate, biometricSync, currentLyrics]);
 
   const [messages, setMessages] = useState<{ userId: string, text: string }[]>([]);
   const [chatInput, setChatInput] = useState('');

@@ -38,7 +38,8 @@ export function IntroVideo({ onComplete }: { onComplete?: () => void }) {
             playsInline
             onEnded={triggerExit}
             onError={(e) => {
-              console.warn("Stanley Phani: Neural link disrupted. Skipping intro...", e);
+              const errMsg = e.currentTarget?.error?.message || "Unknown error";
+              console.warn(`Stanley Phani: Neural link disrupted. Skipping intro... [${errMsg}]`);
               handleComplete();
             }}
           />

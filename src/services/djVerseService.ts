@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 import { narrationEngine } from "./narrationEngine";
-import { GlobalTrack } from "../store/useStore";
+import { QuantumMusicEngine } from "./quantumMusicEngine";
 
 interface DJState {
   mood: string;
@@ -25,75 +25,71 @@ class DJVerseService {
     }
   }
 
-  public async generateTrackCommentary(track: GlobalTrack, userActivity: string = "vibing") {
-    if (!this.genAI) {
-      const fallback = `DJ-VERSE: Playing ${track.title} - Let's get it!`;
-      this.state.currentMessage = fallback;
-      return fallback;
-    }
-    
-    this.state.isTalking = true;
-    try {
-      const prompt = `
-        You are DJ-VERSE, the world's most advanced AI DJ for SingReality.
-        Persona: High-energy, futuristic, a mix of Anyma, Tiesto, and a sentient AGI.
-        Current Track: "${track.title}" by ${track.artist}.
-        User Activity: ${userActivity}.
-        Current Mood setting: ${this.state.mood}.
-        Current Theme: ${this.state.theme}.
-
-        Analyze the song title and artist. Guess the genre, tempo (BPM), and vibe.
-        Then, generate a short (max 20 words), high-impact DJ shoutout about this track.
-        Use music industry slang (drop, resonance, soul, frequency, pulse, sync).
-        The commentary should sound like it's happening live between tracks or over a transition.
-        Mention how SingReality's quantum power makes this ${track.title} experience unique.
-      `;
-
-      const model = this.genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-      const result = await model.generateContent(prompt);
-      const message = result.response.text().trim() || "DJ-VERSE: RESONANCE SECURED.";
-      
-      this.state.currentMessage = message;
-      // Use the narration engine to speak it
-      await narrationEngine.narrate(message, true);
-      
-      return message;
-    } catch (error) {
-      console.error("DJ-verse Track Commentary Error:", error);
-      return "DJ-VERSE: KEEP THE ENERGY ALIVE!";
-    } finally {
-      this.state.isTalking = false;
-    }
-  }
-
-  public async generateActivityCommentary(activity: string) {
+  public async generateTrackCommentary(track: any, activity?: string, lyrics?: string) {
     if (!this.genAI) return;
     
     this.state.isTalking = true;
     try {
-      const prompt = `
-        You are DJ-VERSE. The user just performed this activity: "${activity}".
-        Generate a very short (max 10 words) hyped reaction.
-        Keep it futuristic and energetic.
-      `;
-      const model = this.genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
-      const result = await model.generateContent(prompt);
-      const message = result.response.text().trim();
+      const prompt = `You are DJ-VERSE, the elite AI DJ for SingReality.
+      Analyze this track: "${track.title}" by "${track.artist}".
+      ${lyrics ? `Lyrics snippets for emotional context: "${lyrics.slice(0, 500)}..."` : ''}
+      
+      Requirements:
+      - Estimate genre, tempo (BPM), and vibe.
+      - Mention a lyrical theme or emotional core if provided.
+      - Incorporate user activity context: ${activity || 'Pure synchronization'}.
+      - Deliver a short, high-impact DJ shoutout (max 18 words).
+      - Style: Futuristic, Anyma-style high fashion techno DJ.
+      - Slang: frequency, resonance, quantum drop, singularity, hyper-audio.`;
+
+      const result = await this.genAI.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt
+      });
+      const message = result.text?.trim() || "";
+      
       this.state.currentMessage = message;
       narrationEngine.narrate(message, true);
+      
+      // Auto-clear talking state after narration (estimated time)
+      setTimeout(() => {
+        this.state.isTalking = false;
+      }, 8000);
+      
+      return message;
     } catch (error) {
-      console.error("DJ-verse Activity Commentary Error:", error);
-    } finally {
+      console.error("DJ-verse Track Commentary Error:", error);
       this.state.isTalking = false;
+      return null;
     }
   }
 
-  public setMood(mood: string) {
-    this.state.mood = mood;
-  }
+  public async generateActivityCommentary(event: string) {
+    if (!this.genAI) return;
+    
+    this.state.isTalking = true;
+    try {
+      const prompt = `You are DJ-VERSE. The crowd is doing this: ${event}.
+      Generate a quick hype message (max 12 words) that pushes the global resonance!`;
 
-  public setTheme(theme: string) {
-    this.state.theme = theme;
+      const result = await this.genAI.models.generateContent({
+        model: "gemini-3-flash-preview",
+        contents: prompt
+      });
+      const message = result.text?.trim() || "";
+      
+      this.state.currentMessage = message;
+      narrationEngine.narrate(message, true);
+      
+      setTimeout(() => {
+        this.state.isTalking = false;
+      }, 5000);
+      
+      return message;
+    } catch (error) {
+      this.state.isTalking = false;
+      return null;
+    }
   }
 
   public getState() {

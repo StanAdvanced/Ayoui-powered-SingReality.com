@@ -20,11 +20,15 @@ import { useSearchParams } from 'react-router-dom';
 
 import { LayerEditor } from '../components/LayerEditor';
 import { ModelViewer } from '../components/ModelViewer';
+import { CommunitySampleLibrary } from '../components/CommunitySampleLibrary';
+import ObjectScanner from '../components/Scanner';
+import AISongwritingAssistant from '../components/AISongwritingAssistant';
+import { Camera } from 'lucide-react';
 
 export function Studio() {
   const [searchParams] = useSearchParams();
   const projectId = searchParams.get('projectId') || 'studio-core';
-  const [activeTab, setActiveTab] = useState<'create' | 'dance' | 'vr' | 'render'>('create');
+  const [activeTab, setActiveTab] = useState<'create' | 'dance' | 'vr' | 'render' | 'library' | 'scan' | 'songwriting'>('create');
   const [intent, setIntent] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [ual, setUal] = useState<string | null>(null);
@@ -100,14 +104,17 @@ export function Studio() {
           <div className="flex bg-white/5 p-1 rounded-full border border-white/10 backdrop-blur-md overflow-x-auto no-scrollbar">
             {[
                { id: 'create', label: 'Psyche-Audio', icon: Mic2 },
+               { id: 'songwriting', label: 'AI Songwriting', icon: Wand2 },
                { id: 'dance', label: 'AI Choreography', icon: Users },
                { id: 'vr', label: 'VR Dance Sync', icon: Zap },
-               { id: 'render', label: 'Layer Editor', icon: LayersIcon }
+               { id: 'render', label: 'Layer Editor', icon: LayersIcon },
+               { id: 'library', label: 'Community Library', icon: Download },
+               { id: 'scan', label: 'Object Scanner', icon: Camera }
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => { playClick(); setActiveTab(tab.id as any); }}
-                className={`flex-1 py-3 px-4 rounded-full text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 ${activeTab === tab.id ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.5)]' : 'text-gray-400 hover:text-white'}`}
+                className={`flex-1 py-3 px-4 rounded-full text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 shrink-0 ${activeTab === tab.id ? 'bg-white text-black shadow-[0_0_20px_rgba(255,255,255,0.5)]' : 'text-gray-400 hover:text-white'}`}
               >
                 <tab.icon className="w-4 h-4" /> {tab.label}
               </button>
@@ -137,6 +144,12 @@ export function Studio() {
                 >
                   {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Synthesizing...</> : <><Sparkles className="w-4 h-4" /> Execute Genesis</>}
                 </button>
+              </motion.div>
+            )}
+
+            {activeTab === 'songwriting' && (
+              <motion.div key="songwriting" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 overflow-y-auto">
+                 <AISongwritingAssistant />
               </motion.div>
             )}
 
@@ -209,6 +222,18 @@ export function Studio() {
             {activeTab === 'render' && (
               <motion.div key="render" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 h-full min-h-[500px]">
                  <LayerEditor />
+              </motion.div>
+            )}
+
+            {activeTab === 'library' && (
+              <motion.div key="library" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 overflow-y-auto">
+                 <CommunitySampleLibrary />
+              </motion.div>
+            )}
+
+            {activeTab === 'scan' && (
+              <motion.div key="scan" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1">
+                 <ObjectScanner />
               </motion.div>
             )}
 
