@@ -17,6 +17,18 @@
         Initializing Quantum Arena...
       </div>
     </div>
+    <script>
+      console.log('SingReality: HTML context established.');
+      window.addEventListener('load', () => {
+        console.log('SingReality: Window load event fired.');
+        setTimeout(() => {
+          const root = document.getElementById('root');
+          if (root && root.innerHTML.includes('Initializing')) {
+            console.warn('SingReality: React app failed to mount within 10s.');
+          }
+        }, 10000);
+      });
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

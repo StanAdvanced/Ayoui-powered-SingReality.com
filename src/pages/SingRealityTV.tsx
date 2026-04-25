@@ -1,7 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { Play, Tv, Sparkles, Search, Tag, ExternalLink } from 'lucide-react';
+import { Play, Tv, Sparkles, Search, Tag, ExternalLink, Globe2, Music } from 'lucide-react';
 import { YouTubeBackground } from '../components/YouTubeBackground';
+import { YouTubeSearch } from '../components/YouTubeSearch';
 import { useStore, GlobalTrack } from '../store/useStore';
 import { useSound } from '../hooks/useSound';
 
@@ -32,6 +33,7 @@ export function SingRealityTV() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   
+  const [activeTab, setActiveTab] = useState<'featured' | 'live'>('featured');
   const { setGlobalTrack } = useStore();
   const { playClick, playTransition } = useSound();
 
@@ -83,93 +85,119 @@ export function SingRealityTV() {
           </p>
         </div>
 
-        {/* Search and Filters */}
-        <div className="mb-12 space-y-6 max-w-4xl mx-auto">
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input 
-              type="text"
-              placeholder="Search channels, genres, or tags..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white outline-none focus:border-singularity/50 focus:bg-white/10 transition-all placeholder:text-gray-500"
-            />
-          </div>
-          
-          <div className="flex flex-wrap gap-2 justify-center">
-            <button
-              onClick={() => setSelectedTag(null)}
-              className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all glass hover:bg-white/10 ${!selectedTag ? 'bg-white/20 border-white/30 text-white' : 'text-gray-400'}`}
-            >
-              All Channels
-            </button>
-            {allTags.map(tag => (
-              <button
-                key={tag}
-                onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
-                className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all glass hover:bg-white/10 flex items-center gap-1 ${tag === selectedTag ? 'bg-singularity/20 border-singularity/30 text-singularity' : 'text-gray-400'}`}
-              >
-                <Tag className="w-3 h-3" /> {tag}
-              </button>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex items-center justify-center gap-4 mb-12">
+          <button
+            onClick={() => { playClick(); setActiveTab('featured'); }}
+            className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-bold uppercase tracking-widest transition-all ${activeTab === 'featured' ? 'bg-singularity text-black shadow-[0_0_20px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-gray-500 hover:bg-white/10'}`}
+          >
+            <Tv className="w-5 h-5" />
+            <span>Featured Channels</span>
+          </button>
+          <button
+            onClick={() => { playClick(); setActiveTab('live'); }}
+            className={`flex items-center gap-2 px-8 py-3 rounded-2xl font-bold uppercase tracking-widest transition-all ${activeTab === 'live' ? 'bg-singularity text-black shadow-[0_0_20px_rgba(0,240,255,0.4)]' : 'bg-white/5 text-gray-500 hover:bg-white/10'}`}
+          >
+            <Globe2 className="w-5 h-5" />
+            <span>Live Search</span>
+          </button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {filteredVideos.map((video, i) => (
-            <motion.div
-              key={video.id + i}
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: i * 0.05 }}
-              onClick={() => handleLaunchToNexusPlayer(video)}
-              className="glass-card rounded-2xl overflow-hidden group cursor-pointer border border-white/5 hover:border-singularity/50 transition-all hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] active:scale-95"
-            >
-              <div className="relative aspect-video">
-                <iframe
-                  className="absolute inset-0 w-full h-full pointer-events-none"
-                  src={`https://www.youtube.com/embed/${video.id}?controls=0&showinfo=0&rel=0&modestbranding=1`}
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        {activeTab === 'featured' ? (
+          <>
+            {/* Search and Filters */}
+            <div className="mb-12 space-y-6 max-w-4xl mx-auto">
+              <div className="relative">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <input 
+                  type="text"
+                  placeholder="Search curated channels, genres, or tags..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-6 text-white outline-none focus:border-singularity/50 focus:bg-white/10 transition-all placeholder:text-gray-500"
                 />
-                <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors flex flex-col items-center justify-center backdrop-blur-[2px] group-hover:backdrop-blur-none">
-                  <Play className="w-12 h-12 text-white scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)]" />
-                  <span className="text-xs font-bold uppercase tracking-widest text-singularity opacity-0 group-hover:opacity-100 mt-3 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
-                    Launch Nexus Player
-                  </span>
-                </div>
               </div>
-              <div className="p-5">
-                <h3 className="font-bold text-sm truncate mb-3 group-hover:text-singularity transition-colors">{video.title}</h3>
-                
-                {/* Tags mapping */}
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {video.tags.map(tag => (
-                    <span key={tag} className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-gray-400 uppercase tracking-wider font-mono">
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="flex items-center justify-between mt-auto">
-                  <div className="flex items-center gap-2 text-[10px] text-singularity font-bold tracking-widest uppercase">
-                    <div className="w-1.5 h-1.5 rounded-full bg-singularity animate-pulse" />
-                    <span>Live Broadcasting</span>
-                  </div>
-                </div>
+              
+              <div className="flex flex-wrap gap-2 justify-center">
+                <button
+                  onClick={() => setSelectedTag(null)}
+                  className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all glass hover:bg-white/10 ${!selectedTag ? 'bg-white/20 border-white/30 text-white' : 'text-gray-400'}`}
+                >
+                  All Channels
+                </button>
+                {allTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => setSelectedTag(tag === selectedTag ? null : tag)}
+                    className={`px-4 py-2 rounded-full text-xs font-bold uppercase tracking-widest transition-all glass hover:bg-white/10 flex items-center gap-1 ${tag === selectedTag ? 'bg-singularity/20 border-singularity/30 text-singularity' : 'text-gray-400'}`}
+                  >
+                    <Tag className="w-3 h-3" /> {tag}
+                  </button>
+                ))}
               </div>
-            </motion.div>
-          ))}
-
-          {filteredVideos.length === 0 && (
-            <div className="col-span-full py-24 text-center">
-              <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
-                <Search className="w-6 h-6 text-gray-500" />
-              </div>
-              <h3 className="text-xl font-bold mb-2">No transmissions found</h3>
-              <p className="text-gray-400">Try adjusting your search query or tag filters in the quantum matrix.</p>
             </div>
-          )}
-        </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {filteredVideos.map((video, i) => (
+                <motion.div
+                  key={video.id + i}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: i * 0.05 }}
+                  onClick={() => handleLaunchToNexusPlayer(video)}
+                  className="glass-card rounded-2xl overflow-hidden group cursor-pointer border border-white/5 hover:border-singularity/50 transition-all hover:shadow-[0_0_30px_rgba(0,240,255,0.2)] active:scale-95"
+                >
+                  <div className="relative aspect-video">
+                    <iframe
+                      className="absolute inset-0 w-full h-full pointer-events-none"
+                      src={`https://www.youtube.com/embed/${video.id}?controls=0&showinfo=0&rel=0&modestbranding=1`}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    />
+                    <div className="absolute inset-0 bg-black/60 group-hover:bg-black/40 transition-colors flex flex-col items-center justify-center backdrop-blur-[2px] group-hover:backdrop-blur-none">
+                      <Play className="w-12 h-12 text-white scale-90 opacity-0 group-hover:scale-100 group-hover:opacity-100 transition-all duration-300 drop-shadow-[0_0_15px_rgba(0,255,255,0.8)]" />
+                      <span className="text-xs font-bold uppercase tracking-widest text-singularity opacity-0 group-hover:opacity-100 mt-3 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                        Launch Nexus Player
+                      </span>
+                    </div>
+                  </div>
+                  <div className="p-5">
+                    <h3 className="font-bold text-sm truncate mb-3 group-hover:text-singularity transition-colors">{video.title}</h3>
+                    
+                    {/* Tags mapping */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {video.tags.map(tag => (
+                        <span key={tag} className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-gray-400 uppercase tracking-wider font-mono">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between mt-auto">
+                      <div className="flex items-center gap-2 text-[10px] text-singularity font-bold tracking-widest uppercase">
+                        <div className="w-1.5 h-1.5 rounded-full bg-singularity animate-pulse" />
+                        <span>Live Broadcasting</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+
+              {filteredVideos.length === 0 && (
+                <div className="col-span-full py-24 text-center">
+                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-4">
+                    <Search className="w-6 h-6 text-gray-500" />
+                  </div>
+                  <h3 className="text-xl font-bold mb-2">No transmissions found</h3>
+                  <p className="text-gray-400">Try adjusting your search query or tag filters in the quantum matrix.</p>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="py-12">
+            <YouTubeSearch />
+          </div>
+        )}
       </div>
       </div>
     </div>

@@ -17,15 +17,33 @@ function Root() {
   useEffect(() => {
     console.log('SingReality: Subscribing to Auth Singularity...');
     let mounted = true;
+    
+    // Safety timeout: If auth takes more than 5s, mark as ready anyway to avoid black screen
+    const safetyTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn('SingReality: Auth Link Timeout - Proceeding as Guest');
+        setAuthReady(true);
+      }
+    }, 5000);
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (mounted) {
+        clearTimeout(safetyTimeout);
         console.log('SingReality: Identity Locked ->', user ? user.uid : 'Anonymous Guest');
         setUser(user);
         setAuthReady(true);
       }
+    }, (error) => {
+      console.error('SingReality: Auth Singularity Collision ->', error);
+      if (mounted) {
+        clearTimeout(safetyTimeout);
+        setAuthReady(true);
+      }
     });
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       unsubscribe();
     };
   }, [setUser, setAuthReady]);
