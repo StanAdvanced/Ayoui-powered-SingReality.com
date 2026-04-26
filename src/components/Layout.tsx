@@ -104,6 +104,9 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   useEffect(() => {
     playTransition();
     
+    // Sync narration engine voice
+    narrationEngine.currentVoice = store.narrationVoice;
+    
     // Audit: Autonomous "God-tier" narration of page context
     const pageTitle = document.title || 'SingReality';
     const currentPath = location.pathname === '/' ? 'Nexus' : location.pathname.slice(1).replace(/-/g, ' ');
@@ -111,10 +114,10 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
     const narrationText = `Entering ${currentPath}. SingReality is converging your reality with the quantum singularity of music. Explore our ${currentPath} and transcend the ordinary.`;
     
     // Kernel Nuance: Automatic delivery without user interference
-    narrationEngine.narrate(narrationText, true);
+    narrationEngine.narrate(narrationText, true, store.narrationVoice);
 
     return () => narrationEngine.stop();
-  }, [location.pathname]);
+  }, [location.pathname, store.narrationVoice]);
 
   const links = [
     { name: 'Showcase', path: '/showcase', icon: Award },
@@ -286,8 +289,49 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
                 onClick={() => { playClick(); setShowSettings(!showSettings); }}
                 className="flex items-center gap-2 text-xs font-mono text-gray-300 hover:text-white transition-colors"
               >
-                <Globe className="w-3 h-3 text-quantum" /> {lang.toUpperCase()}
+                <Globe className="w-3 h-3 text-quantum" /> SETTINGS
               </button>
+              
+              <AnimatePresence>
+                {showSettings && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 10 }}
+                    className="absolute top-16 right-20 w-64 p-4 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col gap-4"
+                  >
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Narration Voice</label>
+                      <select 
+                        value={store.narrationVoice}
+                        onChange={(e) => store.setNarrationVoice(e.target.value as any)}
+                        className="bg-white/5 border border-white/10 text-white rounded-lg p-2 text-sm focus:outline-none focus:border-singularity"
+                      >
+                        <option value="alloy">Alloy (Neutral)</option>
+                        <option value="nova">Nova (Bright)</option>
+                        <option value="shimmer">Shimmer (Exciting)</option>
+                        <option value="echo">Echo (Calm)</option>
+                        <option value="fable">Fable (Storyteller)</option>
+                        <option value="onyx">Onyx (Deep)</option>
+                        <option value="Puck">Puck (Gemini Default)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-2">
+                      <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Language</label>
+                      <select 
+                        value={lang}
+                        onChange={(e) => setLang(e.target.value)}
+                        className="bg-white/5 border border-white/10 text-white rounded-lg p-2 text-sm focus:outline-none focus:border-singularity"
+                      >
+                        {LANGUAGES.map(l => (
+                          <option key={l.code} value={l.code}>{l.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {user ? (

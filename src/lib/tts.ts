@@ -2,10 +2,22 @@ import { GoogleGenAI, Modality } from "@google/genai";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
 
-export type VoiceName = 'Puck' | 'Aoede' | 'Charon' | 'Kore' | 'Fenrir' | 'alloy';
+export type VoiceName = 'Puck' | 'Aoede' | 'Charon' | 'Kore' | 'Fenrir' | 'alloy' | 'nova' | 'shimmer' | 'echo' | 'fable' | 'onyx';
+
+const OAI_TO_GEMINI_MAP: Record<string, string> = {
+  'alloy': 'Puck',
+  'nova': 'Aoede',
+  'shimmer': 'Kore',
+  'echo': 'Charon',
+  'fable': 'Puck', // Duplicate mapping as a fallback
+  'onyx': 'Fenrir'
+};
 
 export async function generateSpeech(text: string, voiceName: VoiceName = 'Puck'): Promise<string | undefined> {
   try {
+    // Map OpenAI names to Gemini names if needed
+    const mappedVoice = OAI_TO_GEMINI_MAP[voiceName] || voiceName;
+    
     // Audit: Using the highest fidelity TTS model available in the Gemini ecosystem
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -15,7 +27,7 @@ export async function generateSpeech(text: string, voiceName: VoiceName = 'Puck'
         speechConfig: {
           voiceConfig: {
             prebuiltVoiceConfig: { 
-              voiceName: voiceName === 'alloy' ? 'Puck' : voiceName, // Map alloy to Puck (neutral/exciting) as a default if alloy is not directly supported by the model, or try passing it directly
+              voiceName: mappedVoice,
               // Kernel Nuance: Ensure the highest possible fidelity and natural prosody
             },
           },

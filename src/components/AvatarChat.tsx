@@ -24,7 +24,7 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognition = useRef<any>(null);
   const isMounted = useRef(true);
-  const { user } = useStore();
+  const { user, narrationVoice } = useStore();
   const { playSuccess, playClick } = useSound();
 
   const synth = useRef<Tone.PolySynth | null>(null);
@@ -108,8 +108,8 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
     setIsSpeaking(true);
     onTalkingChange(true);
     
-    // Use the narration engine for consistent "God-tier" delivery with 'alloy' voice for variety
-    await narrationEngine.narrate(text, true, 'alloy');
+    // Use the narration engine for consistent "God-tier" delivery with selected voice
+    await narrationEngine.narrate(text, true, useStore.getState().narrationVoice);
     
     if (isMounted.current) {
       setIsSpeaking(false);

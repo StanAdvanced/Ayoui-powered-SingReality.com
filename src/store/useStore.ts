@@ -4,6 +4,8 @@ import { auth, googleProvider, db } from '../firebase';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { monitoringService } from '../services/monitoringService';
 
+import { VoiceName } from '../lib/tts';
+
 export interface CartItem {
   id: string;
   title: string;
@@ -42,6 +44,10 @@ interface AppState {
   // Intelligence at Scale - B2B API Portal
   isEnterprisePortalOpen: boolean;
   setEnterprisePortalOpen: (isOpen: boolean) => void;
+  
+  // Narration Voice
+  narrationVoice: VoiceName;
+  setNarrationVoice: (voice: VoiceName) => void;
   
   // Settings
   theme: 'dark' | 'light';
@@ -172,6 +178,13 @@ export const useStore = create<AppState>((set, get) => {
     
     isEnterprisePortalOpen: false,
     setEnterprisePortalOpen: (isEnterprisePortalOpen) => set({ isEnterprisePortalOpen }),
+    
+    narrationVoice: 'Puck', // Default to Puck mapped or default Gen voice
+    setNarrationVoice: (voice: VoiceName) => {
+      // Also update the narrationEngine dynamically if available
+      import('../services/narrationEngine').then(m => m.narrationEngine.currentVoice = voice);
+      set({ narrationVoice: voice });
+    },
     
     login: async () => {
       try {
