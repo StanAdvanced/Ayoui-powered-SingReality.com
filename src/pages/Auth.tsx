@@ -16,7 +16,7 @@ export function Auth() {
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
 
-  const { login, loginWithEmail, signUpWithEmail, resetPassword } = useStore();
+  const { login, loginWithEmail, signUpWithEmail, resetPassword, loginWithFacebook } = useStore();
   const navigate = useNavigate();
   const { playClick, playSuccess, playError } = useSound();
 
@@ -47,6 +47,8 @@ export function Auth() {
       playError();
       if (err.code === 'auth/network-request-failed' || err.message?.includes('network-request-failed')) {
         setError('Network error: Unable to reach authentication server. Please check your internet connection or disable any adblockers/firewalls blocking Google services.');
+      } else if (err.code === 'auth/operation-not-allowed') {
+        setError('This sign-in method is disabled. The site administrator needs to enable Email/Password / Facebook login in the Firebase Console Auth settings.');
       } else {
         setError(err.message || 'Authentication failed');
       }
@@ -64,7 +66,30 @@ export function Auth() {
       navigate('/');
     } catch (err: any) {
       playError();
-      setError(err.message || 'Google login failed');
+      if (err.code === 'auth/operation-not-allowed') {
+        setError('Google login is disabled. Please enable it in the Firebase Console.');
+      } else {
+        setError(err.message || 'Google login failed');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFacebookLogin = async () => {
+    try {
+      setLoading(true);
+      playClick();
+      await loginWithFacebook();
+      playSuccess();
+      navigate('/');
+    } catch (err: any) {
+      playError();
+      if (err.code === 'auth/operation-not-allowed') {
+        setError('Facebook login is disabled. Please enable it in the Firebase Console and configure the App ID and Secret.');
+      } else {
+        setError(err.message || 'Facebook login failed');
+      }
     } finally {
       setLoading(false);
     }
@@ -197,14 +222,24 @@ export function Auth() {
             </span>
           </div>
 
-          <button
-            onClick={handleGoogleLogin}
-            disabled={loading}
-            className="w-full py-4 glass rounded-2xl font-bold text-xs tracking-widest uppercase hover:bg-white/5 transition-all flex items-center justify-center gap-3 border border-white/10"
-          >
-            <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
-            Google
-          </button>
+          <div className="grid grid-cols-2 gap-4">
+            <button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              className="w-full py-4 glass rounded-2xl font-bold text-xs tracking-widest uppercase hover:bg-white/5 transition-all flex items-center justify-center gap-3 border border-white/10"
+            >
+              <img src="https://www.google.com/favicon.ico" className="w-4 h-4" alt="Google" />
+              Google
+            </button>
+            <button
+              onClick={handleFacebookLogin}
+              disabled={loading}
+              className="w-full py-4 glass rounded-2xl font-bold text-xs tracking-widest uppercase hover:bg-white/5 transition-all flex items-center justify-center gap-3 border border-white/10"
+            >
+              <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" className="w-4 h-4" alt="Facebook" />
+              Facebook
+            </button>
+          </div>
         </div>
 
         <div className="mt-10 text-center">

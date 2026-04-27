@@ -18,7 +18,8 @@ import {
   ShoppingBag,
   HandCoins,
   Award,
-  Layers as LayersIcon
+  Layers as LayersIcon,
+  Folder
 } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
 import { useStore } from '../store/useStore';
@@ -62,12 +63,15 @@ import { Music2 } from 'lucide-react';
 import WebAgentInterface from './WebAgentInterface';
 import LiveAgentChat from './LiveAgentChat';
 
+import { AdvancedFrontierModal } from './AdvancedFrontierModal';
+
 export function Layout({ children, onReplayIntro }: { children: React.ReactNode, onReplayIntro?: () => void }) {
   const store = useStore();
   const { isAuthReady } = store;
   
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
   const location = useLocation();
   const navigate = useNavigate();
@@ -127,6 +131,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
     { name: 'SingReality TV', path: '/tv', icon: Tv },
     { name: 'Arenas', path: '/arenas', icon: Radio },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingBag },
+    { name: 'Projects', path: '/projects', icon: Folder },
     { name: 'Nexus', path: '/', icon: Globe },
   ];
 
@@ -172,6 +177,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
       <LiveCollaboration />
       <CartModal />
       <NexusPlayer />
+      <AdvancedFrontierModal isOpen={isAdvancedModalOpen} onClose={() => setIsAdvancedModalOpen(false)} />
       <EnterpriseNexusPortal />
       <DJVerseOverlay />
       {bgEnabled && !isHighComputePath && <GlobalAvatar />}
@@ -281,6 +287,13 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
             </button>
 
             <div className="hidden md:flex items-center gap-4 px-4 py-2 rounded-full bg-white/5 border border-white/10">
+              <button 
+                onClick={() => { playClick(); setIsAdvancedModalOpen(true); }}
+                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#00F0FF] hover:text-[#FF0055] transition-colors bg-black/50 px-3 py-1.5 rounded-full border border-[#00F0FF]/30 glow-text"
+              >
+                MEGA SUMF APIS
+              </button>
+              <div className="w-[1px] h-3 bg-white/10" />
               <div className="flex items-center gap-2 text-xs font-mono text-singularity font-bold">
                 ℟ {resonance.toLocaleString()}
               </div>

@@ -10,6 +10,7 @@ import { useMusicEngine } from '../services/musicEngine';
 import { useStore } from '../store/useStore';
 import { motion, AnimatePresence } from 'motion/react';
 import { narrationEngine } from '../services/narrationEngine';
+import { VoiceSelector } from './VoiceSelector';
 import { GlobalSingALong } from './GlobalSingALong';
 import { MusicCrowdfunding } from './MusicCrowdfunding';
 
@@ -284,6 +285,9 @@ export function KaraokeRoom() {
 
             {/* Global Chat/Translate Integration */}
             <GlobalSingALong />
+
+            {/* AI Voice Selection */}
+            <VoiceSelector />
 
             {/* Music Crowdfunding Integration */}
             <MusicCrowdfunding />

@@ -4,6 +4,8 @@ import { Plus, Folder, Layers, History, Share2, Trash2, ExternalLink, Loader2, D
 import { useStore } from '../store/useStore';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import { ModelViewer } from '../components/ModelViewer';
 import { GoogleMapBackground } from '../components/GoogleMapBackground';
 import { useNavigate } from 'react-router-dom';
@@ -11,12 +13,16 @@ import { useNavigate } from 'react-router-dom';
 interface Project {
   id: string;
   name: string;
+  description?: string;
+  status: 'Planning' | 'In Progress' | 'Review' | 'Completed';
+  deadline?: string;
   modelUrl: string;
   ownerId: string;
   createdAt: any;
   layers?: string[];
   versions?: { id: string; name: string; modelUrl: string; timestamp: any }[];
   isMonetized?: boolean;
+  assets?: { name: string; url: string; type: string; timestamp: any }[];
 }
 
 export function Projects() {
@@ -26,9 +32,14 @@ export function Projects() {
   const [loading, setLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
   const [newProjectName, setNewProjectName] = useState('');
+  const [newProjectDescription, setNewProjectDescription] = useState('');
+  const [newProjectStatus, setNewProjectStatus] = useState<'Planning' | 'In Progress' | 'Review' | 'Completed'>('Planning');
+  const [newProjectDeadline, setNewProjectDeadline] = useState('');
   const [newModelUrl, setNewModelUrl] = useState('');
   const [urlError, setUrlError] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
+  const [uploadingAsset, setUploadingAsset] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -45,9 +56,9 @@ export function Projects() {
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !newProjectName || !newModelUrl) return;
+    if (!user || !newProjectName) return;
 
-    if (!newModelUrl.toLowerCase().endsWith('.glb') && !newModelUrl.toLowerCase().endsWith('.gltf')) {
+    if (newModelUrl && !newModelUrl.toLowerCase().endsWith('.glb') && !newModelUrl.toLowerCase().endsWith('.gltf')) {
       setUrlError('Invalid URL format. Must end with .glb or .gltf');
       return;
     }
@@ -57,15 +68,22 @@ export function Projects() {
     try {
       await addDoc(collection(db, 'projects'), {
         name: newProjectName,
-        modelUrl: newModelUrl,
+        description: newProjectDescription,
+        status: newProjectStatus,
+        deadline: newProjectDeadline,
+        modelUrl: newModelUrl || '',
         ownerId: user.uid,
         createdAt: serverTimestamp(),
         layers: ['Base Layer'],
-        versions: [{ id: 'v1', name: 'v1.0.0', modelUrl: newModelUrl, timestamp: serverTimestamp() }],
-        isMonetized: false
+        versions: newModelUrl ? [{ id: 'v1', name: 'v1.0.0', modelUrl: newModelUrl, timestamp: serverTimestamp() }] : [],
+        isMonetized: false,
+        assets: []
       });
       setNewProjectName('');
+      setNewProjectDescription('');
       setNewModelUrl('');
+      setNewProjectDeadline('');
+      setNewProjectStatus('Planning');
     } catch (error) {
       console.error('Failed to create project:', error);
     } finally {
@@ -124,6 +142,45 @@ export function Projects() {
     }
   };
 
+  const handleAssetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedProject || !user) return;
+
+    setUploadingAsset(true);
+    const storageRef = ref(storage, `projects/${selectedProject.id}/assets/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on('state_changed',
+      (snapshot) => {
+        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+        setUploadProgress(progress);
+      },
+      (error) => {
+        console.error('Upload failed:', error);
+        setUploadingAsset(false);
+      },
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+        const newAsset = {
+          name: file.name,
+          url: downloadURL,
+          type: file.type,
+          timestamp: new Date() // Use client date for simplicity or fetch serverTimestamp, but for array updates we can just push
+        };
+        await updateDoc(doc(db, 'projects', selectedProject.id), {
+          assets: [...(selectedProject.assets || []), newAsset]
+        });
+        setUploadingAsset(false);
+        setUploadProgress(0);
+      }
+    );
+  };
+
+  const handleUpdateStatus = async (status: string) => {
+    if (!selectedProject) return;
+    await updateDoc(doc(db, 'projects', selectedProject.id), { status });
+  };
+
   if (!user) {
     return (
       <div className="max-w-7xl mx-auto px-6 py-24 text-center">
@@ -161,13 +218,45 @@ export function Projects() {
               <input 
                 type="text" 
                 placeholder="Project Name"
+                required
                 value={newProjectName}
                 onChange={(e) => setNewProjectName(e.target.value)}
                 className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm"
               />
+              <textarea 
+                placeholder="Description"
+                value={newProjectDescription}
+                onChange={(e) => setNewProjectDescription(e.target.value)}
+                rows={2}
+                className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm resize-none"
+              />
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="text-[10px] text-gray-500 uppercase tracking-widest pl-1">Status</label>
+                  <select 
+                    value={newProjectStatus}
+                    onChange={(e) => setNewProjectStatus(e.target.value as any)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm text-white"
+                  >
+                    <option value="Planning">Planning</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Review">Review</option>
+                    <option value="Completed">Completed</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] text-gray-500 uppercase tracking-widest pl-1">Deadline</label>
+                  <input 
+                    type="date"
+                    value={newProjectDeadline}
+                    onChange={(e) => setNewProjectDeadline(e.target.value)}
+                    className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm [color-scheme:dark]"
+                  />
+                </div>
+              </div>
               <input 
                 type="text" 
-                placeholder="Model URL (GLB/GLTF)"
+                placeholder="Model URL (Optional GLB/GLTF)"
                 value={newModelUrl}
                 onChange={(e) => {
                   setNewModelUrl(e.target.value);
@@ -178,7 +267,7 @@ export function Projects() {
               {urlError && <p className="text-red-500 text-xs">{urlError}</p>}
               <button 
                 type="submit"
-                disabled={isCreating || !newProjectName || !newModelUrl}
+                disabled={isCreating || !newProjectName}
                 className="w-full py-3 bg-singularity text-black font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
               >
                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'CREATE PROJECT'}
@@ -202,7 +291,8 @@ export function Projects() {
                     onClick={() => setSelectedProject(project)}
                     className={`w-full text-left p-4 rounded-xl transition-all flex items-center justify-between group ${selectedProject?.id === project.id ? 'bg-singularity text-black' : 'bg-white/5 hover:bg-white/10'}`}
                   >
-                    <span className="text-sm font-bold truncate flex items-center gap-2">
+                    <span className="text-sm font-bold truncate flex items-center gap-2 group-hover:text-singularity transition-colors">
+                      <div className={`w-2 h-2 rounded-full ${project.status === 'Completed' ? 'bg-green-500' : project.status === 'Review' ? 'bg-yellow-500' : project.status === 'In Progress' ? 'bg-blue-500' : 'bg-gray-500'}`} />
                       {project.name}
                       {project.isMonetized && <DollarSign className="w-3 h-3 text-green-500" />}
                     </span>
@@ -224,16 +314,36 @@ export function Projects() {
         <div className="lg:col-span-3">
           {selectedProject ? (
             <div className="space-y-8">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                 <div>
-                  <h1 className="text-4xl font-display font-black tracking-tighter uppercase mb-2">
-                    {selectedProject.name}
-                  </h1>
-                  <p className="text-xs font-mono uppercase tracking-widest text-gray-500">
-                    ID: {selectedProject.id} • Created: {new Date(selectedProject.createdAt?.seconds * 1000).toLocaleDateString()}
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-4xl font-display font-black tracking-tighter uppercase">
+                      {selectedProject.name}
+                    </h1>
+                    <select 
+                      value={selectedProject.status}
+                      onChange={(e) => handleUpdateStatus(e.target.value)}
+                      className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-widest outline-none bg-black border ${
+                        selectedProject.status === 'Completed' ? 'border-green-500 text-green-500' : 
+                        selectedProject.status === 'Review' ? 'border-yellow-500 text-yellow-500' : 
+                        selectedProject.status === 'In Progress' ? 'border-blue-500 text-blue-500' : 
+                        'border-gray-500 text-gray-500'
+                      }`}
+                    >
+                      <option value="Planning">Planning</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Review">Review</option>
+                      <option value="Completed">Completed</option>
+                    </select>
+                  </div>
+                  <p className="text-gray-400 text-sm mb-2">{selectedProject.description}</p>
+                  <p className="text-xs font-mono uppercase tracking-widest text-gray-500 flex flex-wrap gap-4">
+                    <span>ID: {selectedProject.id}</span>
+                    <span>Created: {selectedProject.createdAt ? new Date(selectedProject.createdAt.seconds * 1000).toLocaleDateString() : 'Just now'}</span>
+                    {selectedProject.deadline && <span>Deadline: <span className="text-red-400">{selectedProject.deadline}</span></span>}
                   </p>
                 </div>
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-4 shrink-0">
                   <button 
                     onClick={() => navigate(`/studio?projectId=${selectedProject.id}`)}
                     className="px-8 py-3 bg-white text-black font-bold rounded-xl text-xs tracking-widest uppercase hover:scale-105 transition-all flex items-center gap-2"
@@ -251,9 +361,56 @@ export function Projects() {
               </div>
 
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-                {/* 3D Viewer */}
-                <div className="xl:col-span-2 aspect-square xl:aspect-auto xl:h-[600px]">
-                  <ModelViewer />
+                {/* Main Content */}
+                <div className="xl:col-span-2 space-y-8">
+                  {selectedProject.modelUrl ? (
+                    <div className="aspect-square xl:aspect-auto xl:h-[500px]">
+                      <ModelViewer />
+                    </div>
+                  ) : (
+                    <div className="h-64 glass-card rounded-[3rem] flex items-center justify-center border-dashed">
+                      <p className="text-gray-500 font-mono text-sm">NO 3D MODEL ASSIGNED YET</p>
+                    </div>
+                  )}
+
+                  {/* ASSETS SECTION */}
+                  <div className="glass-card rounded-[2rem] p-8">
+                     <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-xl font-bold flex items-center gap-2">
+                          <Folder className="w-5 h-5 text-quantum" /> DESIGN ASSETS
+                        </h3>
+                        <label className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg cursor-pointer transition text-xs font-bold uppercase tracking-widest flex items-center gap-2">
+                          {uploadingAsset ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                          {uploadingAsset ? `${Math.round(uploadProgress)}%` : 'UPLOAD ASSET'}
+                          <input type="file" className="hidden" onChange={handleAssetUpload} />
+                        </label>
+                     </div>
+                     <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                        {selectedProject.assets?.map((asset, idx) => (
+                           <a 
+                             key={idx} 
+                             href={asset.url} 
+                             target="_blank" 
+                             rel="noreferrer"
+                             className="p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition flex flex-col items-center text-center gap-2 group"
+                           >
+                              <div className="w-12 h-12 flex items-center justify-center bg-black/50 rounded-lg group-hover:scale-110 transition-transform">
+                                {asset.type.startsWith('image/') ? (
+                                  <img src={asset.url} alt={asset.name} className="w-full h-full object-cover rounded-lg" />
+                                ) : (
+                                  <Folder className="w-6 h-6 text-gray-400" />
+                                )}
+                              </div>
+                              <span className="text-[10px] text-gray-400 truncate w-full break-all">{asset.name}</span>
+                           </a>
+                        ))}
+                        {(!selectedProject.assets || selectedProject.assets.length === 0) && (
+                          <div className="col-span-full py-8 text-center text-gray-500 text-sm">
+                            No assets uploaded yet. Add images, audio, or documents to your project.
+                          </div>
+                        )}
+                     </div>
+                  </div>
                 </div>
 
                 {/* Project Controls */}

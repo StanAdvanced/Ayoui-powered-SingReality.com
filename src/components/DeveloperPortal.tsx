@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Code, DollarSign, Activity, Key, Box, ArrowLeft } from 'lucide-react';
+import { Code, DollarSign, Activity, Key, Box, ArrowLeft, Bot } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { AyouiAgentBuilder } from './AyouiAgentBuilder';
 
 export default function DeveloperPortal() {
   const { currency } = useStore();
@@ -18,6 +19,7 @@ export default function DeveloperPortal() {
           <button className="w-full text-left px-4 py-3 hover:bg-white/5 rounded-xl font-medium flex items-center gap-3 text-gray-400"><Key className="w-4 h-4"/> API Keys</button>
           <button className="w-full text-left px-4 py-3 hover:bg-white/5 rounded-xl font-medium flex items-center gap-3 text-gray-400"><DollarSign className="w-4 h-4"/> Royalties & Splits</button>
           <button className="w-full text-left px-4 py-3 hover:bg-white/5 rounded-xl font-medium flex items-center gap-3 text-gray-400"><Box className="w-4 h-4"/> Hologram SDK</button>
+          <button className="w-full text-left px-4 py-3 hover:bg-white/5 rounded-xl font-medium flex items-center gap-3 text-singularity"><Bot className="w-4 h-4"/> Ayoui Agents</button>
         </div>
         
         {/* Main Content */}
@@ -44,6 +46,9 @@ export default function DeveloperPortal() {
               <div className="text-xs text-gray-500 mt-2">Next payout in 2 days</div>
             </div>
           </div>
+
+          {/* Ayoui Agent Builder Integration */}
+          <AyouiAgentBuilder />
 
           <div className="glass p-8 rounded-3xl">
             <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><Code className="w-6 h-6 text-singularity"/> Quick Start: Real-time Duets API</h2>
@@ -76,3 +81,4 @@ console.log('Arena ready:', session.arenaUrl);`}</code>
     </div>
   );
 }
+

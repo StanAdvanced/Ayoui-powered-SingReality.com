@@ -30,6 +30,7 @@ interface AppState {
   
   // Auth Actions
   login: () => Promise<void>;
+  loginWithFacebook: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -192,6 +193,17 @@ export const useStore = create<AppState>((set, get) => {
         await createUserDocument(result.user);
       } catch (error) {
         monitoringService.error('Login failed', error as Error);
+        throw error;
+      }
+    },
+    
+    loginWithFacebook: async () => {
+      try {
+        const { facebookProvider } = await import('../firebase');
+        const result = await signInWithPopup(auth, facebookProvider);
+        await createUserDocument(result.user);
+      } catch (error) {
+        monitoringService.error('Facebook login failed', error as Error);
         throw error;
       }
     },
