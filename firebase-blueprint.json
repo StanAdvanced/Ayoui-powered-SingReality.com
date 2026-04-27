@@ -139,12 +139,15 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
-        "biometricData": { "type": "array" },
+        "biometricData": { "type": "object" },
+        "bgmPrompt": { "type": "string" },
+        "bgmRecipe": { "type": "object" },
         "generatedAudioUrl": { "type": "string" },
         "sessionDuration": { "type": "number" },
-        "flowStateAchieved": { "type": "boolean" }
+        "flowStateAchieved": { "type": "boolean" },
+        "createdAt": { "type": "timestamp" }
       },
-      "required": ["id", "userId", "sessionDuration"]
+      "required": ["id", "userId", "createdAt"]
     }
   },
   "firestore": {
