@@ -5,7 +5,7 @@ import { motion } from 'motion/react';
 import { Mail, Lock, User, ArrowRight, Loader2, Github } from 'lucide-react';
 import { useSound } from '../hooks/useSound';
 
-export function Auth() {
+export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isReset, setIsReset] = useState(false);
   const [email, setEmail] = useState('');

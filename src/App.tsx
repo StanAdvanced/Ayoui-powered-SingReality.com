@@ -22,7 +22,7 @@ const AISongStudio = lazy(() => import('./components/AISongStudio').then(m => ({
 const Funding = lazy(() => import('./pages/Funding').then(m => ({ default: m.Funding })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
-const Auth = lazy(() => import('./pages/Auth').then(m => ({ default: m.Auth })));
+const Auth = lazy(() => import('./pages/Auth'));
 const LiveArena = lazy(() => import('./pages/LiveArena').then(m => ({ default: m.LiveArena })));
 const GlobalMap = lazy(() => import('./pages/GlobalMap').then(m => ({ default: m.GlobalMap })));
 const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ default: m.NeuralClones })));

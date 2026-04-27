@@ -60,6 +60,18 @@ export function Home() {
         
         <div className="max-w-7xl w-full relative z-10">
           <CinematicBanner />
+          
+          {/* Hollywood Production Credits */}
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 2 }}
+            className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-4 whitespace-nowrap"
+          >
+            <div className="h-[1px] w-8 bg-white/10" />
+            <span className="text-[9px] font-mono text-white/30 uppercase tracking-[0.5em]">DIRECTED BY STANLEY PHANI • MASTERED AT MEDIA EMPIRE STUDIOS</span>
+            <div className="h-[1px] w-8 bg-white/10" />
+          </motion.div>
         </div>
         
         <div className="relative z-10 max-w-6xl mx-auto text-center mt-12">

@@ -23,8 +23,25 @@ export function GoogleMapsMasterpiece() {
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [viewMode, setViewMode] = useState<google.maps.MapTypeId | 'custom'>(google.maps.MapTypeId.SATELLITE);
-  const [scanVisible, setScanVisible] = useState(true);
   const [nodes, setNodes] = useState<{lat: number, lng: number, id: string}[]>([]);
+  const [heading, setHeading] = useState(0);
+
+  useEffect(() => {
+    if (!map) return;
+    
+    // Orbital flyover animation logic
+    const interval = setInterval(() => {
+      setHeading(prev => (prev + 0.1) % 360);
+    }, 50);
+    
+    return () => clearInterval(interval);
+  }, [map]);
+
+  useEffect(() => {
+    if (map) {
+      map.setHeading(heading);
+    }
+  }, [heading, map]);
 
   const addNode = (e: google.maps.MapMouseEvent) => {
     if (e.latLng) {
@@ -68,18 +85,17 @@ export function GoogleMapsMasterpiece() {
          </div>
          <div className="pointer-events-auto glass px-6 py-4 rounded-[2rem] border border-white/10 w-64 space-y-3">
             <div className="flex justify-between items-center text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-               <span>Geospatial Sync</span>
-               <span className="text-singularity">98.2%</span>
+               <span>Orbital Sync</span>
+               <span className="text-singularity">{Math.round(heading)}° Azimuth</span>
             </div>
             <div className="h-1 bg-white/5 rounded-full overflow-hidden">
                <motion.div 
-                 initial={{ width: 0 }}
-                 animate={{ width: '98.2%' }}
+                 animate={{ width: `${(heading / 360) * 100}%` }}
                  className="h-full bg-gradient-to-r from-singularity to-quantum"
                />
             </div>
-            <p className="text-[9px] text-gray-400 font-mono leading-relaxed">
-              Global Earth API bridge synchronized. 3D Terrain mesh loaded. Spatial audio coordinates mapped to current viewport.
+            <p className="text-[9px] text-gray-400 font-mono leading-relaxed italic opacity-60 group-hover:opacity-100 transition-opacity">
+              Singularity Apex Architecture: Integrating Google Space & Earth API nexus. Global delivery nuance synchronized across 12M nodes.
             </p>
          </div>
       </div>
