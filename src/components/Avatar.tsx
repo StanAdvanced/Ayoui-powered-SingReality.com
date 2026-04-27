@@ -45,53 +45,62 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
 
     if (groupRef.current) {
       // Base hover motion + interaction spin
-      groupRef.current.position.y = Math.sin(time) * 0.1;
-      groupRef.current.rotation.y = spinPhase + (hovered ? Math.sin(time * 2) * 0.1 : 0);
+      groupRef.current.position.y = Math.sin(time) * 0.1 + (hovered ? pulse * 0.5 : 0);
+      groupRef.current.rotation.y = spinPhase + (hovered ? Math.sin(time * 1.5) * 0.05 : 0);
       
-      // Scaling on hover
-      const targetScale = hovered ? 1.1 : 1;
-      groupRef.current.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.1);
+      // Scaling on hover with a slight "breath" effect
+      const targetScale = hovered ? 1.15 : 1.0;
+      const breath = Math.sin(time * 2) * 0.02;
+      groupRef.current.scale.lerp(new THREE.Vector3(targetScale + breath, targetScale + breath, targetScale + breath), 0.1);
     }
 
     if (headRef.current) {
-      // Follow mouse cursor
-      const targetX = (mouse.x * viewport.width) / 4;
-      const targetY = (mouse.y * viewport.height) / 4;
+      // Follow mouse cursor with a bit of damping
+      const targetX = (mouse.x * viewport.width) / 5;
+      const targetY = (mouse.y * viewport.height) / 5;
       
-      // If hovered, look strictly at cursor, else slight sway
       if (hovered) {
-        headRef.current.lookAt(targetX, targetY, 5);
+        // Smoothly look at cursor
+        const lookTarget = new THREE.Vector3(targetX, targetY, 5);
+        headRef.current.lookAt(lookTarget);
       } else {
-        headRef.current.rotation.y = Math.sin(time * 0.5) * 0.2;
+        // Natural idling motion
+        headRef.current.rotation.y = Math.sin(time * 0.6) * 0.15;
+        headRef.current.rotation.x = Math.cos(time * 0.4) * 0.05;
       }
 
-      // Nodding when talking - intensified by pulse
+      // Nodding when talking - improved rhythm
       if (isTalking) {
-        headRef.current.rotation.x = - (Math.abs(Math.sin(time * 10)) * 0.1) - pulse * 0.5;
-      } else if (!hovered) {
-        headRef.current.rotation.x = 0;
+        const nodFreq = 12;
+        const nodAmp = 0.12;
+        headRef.current.rotation.x += Math.sin(time * nodFreq) * nodAmp + pulse;
       }
     }
 
     if (bodyRef.current) {
-      // Body scaling with rhythm
+      // Body scaling with rhythm and a bit of "sway"
       const baseScale = 1;
       const scaleMultiplier = baseScale + (isTalking ? pulse : rhythm);
       bodyRef.current.scale.set(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+      bodyRef.current.rotation.z = Math.sin(time * 1.2) * 0.02;
     }
 
     if (leftArmRef.current && rightArmRef.current) {
-      // Playing instrument motion or greeting
-      if (hovered && !isTalking) {
-        // Waving motion context
-        leftArmRef.current.rotation.z = Math.sin(time * 6) * 0.3 + 0.5;
-        rightArmRef.current.rotation.x = Math.sin(time * 2) * 0.1;
+      if (hovered) {
+        // Waving motion - more expressive
+        leftArmRef.current.rotation.z = 1.8 + Math.sin(time * 8) * 0.4;
+        leftArmRef.current.rotation.x = Math.sin(time * 4) * 0.2;
+        
+        // Right arm steady but responsive
+        rightArmRef.current.rotation.x = -0.2 + Math.sin(time * 2) * 0.05;
       } else {
-        const armFreq = isTalking ? 10 : 2;
-        const armAmp = isTalking ? 0.3 : 0.05;
+        // Idle arm sway
+        const armFreq = isTalking ? 8 : 2;
+        const armAmp = isTalking ? 0.25 : 0.08;
         leftArmRef.current.rotation.x = Math.sin(time * armFreq) * armAmp;
         rightArmRef.current.rotation.x = Math.cos(time * armFreq) * armAmp;
-        leftArmRef.current.rotation.z = 0;
+        leftArmRef.current.rotation.z = 0.2 + pulse;
+        rightArmRef.current.rotation.z = -0.2 - pulse;
       }
     }
   });

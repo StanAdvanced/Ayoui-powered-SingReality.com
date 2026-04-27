@@ -29,6 +29,7 @@ const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ defa
 const SingRealityTV = lazy(() => import('./pages/SingRealityTV').then(m => ({ default: m.SingRealityTV })));
 const KaraokeArena = lazy(() => import('./pages/KaraokeArena').then(m => ({ default: m.KaraokeArena })));
 const Showcase = lazy(() => import('./pages/Showcase'));
+const StudioPro = lazy(() => import('./pages/StudioPro').then(m => ({ default: m.StudioPro })));
 
 import { useStore } from './store/useStore';
 
@@ -70,6 +71,7 @@ export default function App() {
             <Route path="/marketplace/:id" element={<MarketplaceItemDetail />} />
             <Route path="/quantum-lab" element={<QuantumLab />} />
             <Route path="/dev-portal" element={<ProtectedRoute><DeveloperPortal /></ProtectedRoute>} />
+            <Route path="/studio-pro" element={<ProtectedRoute><StudioPro /></ProtectedRoute>} />
             <Route path="/karaoke/:sessionId" element={<KaraokeRoom />} />
             <Route path="/ai-studio" element={<ProtectedRoute><AISongStudio /></ProtectedRoute>} />
             <Route path="/funding" element={<ProtectedRoute><Funding /></ProtectedRoute>} />

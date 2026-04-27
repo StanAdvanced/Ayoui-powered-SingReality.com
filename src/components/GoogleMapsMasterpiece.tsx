@@ -1,4 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Search, MapPin, Navigation } from 'lucide-react';
 import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
 
 const containerStyle = {
@@ -31,6 +33,7 @@ export function GoogleMapsMasterpiece() {
     googleMapsApiKey: (import.meta as any).env.VITE_GOOGLE_MAPS_API_KEY || ''
   });
 
+  const [scanVisible, setScanVisible] = useState(true);
   const [map, setMap] = useState<google.maps.Map | null>(null);
 
   const onLoad = useCallback(function callback(map: google.maps.Map) {
@@ -39,6 +42,11 @@ export function GoogleMapsMasterpiece() {
 
   const onUnmount = useCallback(function callback(map: google.maps.Map) {
     setMap(null);
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => setScanVisible(prev => !prev), 3000);
+    return () => clearInterval(interval);
   }, []);
 
   if (!isLoaded) {
@@ -50,7 +58,25 @@ export function GoogleMapsMasterpiece() {
   }
 
   return (
-    <div className="w-full h-full rounded-3xl overflow-hidden border border-white/5 shadow-inner">
+    <div className="w-full h-full rounded-3xl overflow-hidden border border-white/5 shadow-inner relative group">
+      {/* Scanning Effect Overlay */}
+      <AnimatePresence>
+        {scanVisible && (
+          <motion.div 
+            initial={{ top: '-10%' }}
+            animate={{ top: '110%' }}
+            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
+            className="absolute left-0 right-0 h-20 bg-gradient-to-b from-transparent via-singularity/20 to-transparent pointer-events-none z-10"
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+         <div className="glass px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 text-[8px] font-bold text-white uppercase tracking-widest">
+            <Search className="w-3 h-3 text-singularity" /> Search Nearby Places
+         </div>
+      </div>
+
       <GoogleMap
         mapContainerStyle={containerStyle}
         center={center}

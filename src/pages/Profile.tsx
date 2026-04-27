@@ -3,7 +3,7 @@ import { useStore } from '../store/useStore';
 import { db, storage } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { Loader2, Award, Music, Trophy, Edit2, Save, X, Camera, BarChart2, AlertCircle, Cpu, Zap, Activity } from 'lucide-react';
+import { Loader2, Award, Music, Trophy, Edit2, Save, X, Camera, BarChart2, AlertCircle, Cpu, Zap, Activity, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { soundService } from '../services/soundService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -23,12 +23,15 @@ interface UserProfile {
 
 import { UserAvatar } from '../components/UserAvatar';
 
+import { AvatarStudio } from '../components/AvatarStudio';
+
 export function Profile() {
   const { user, isAuthReady, resonance, biometricSync, setBiometricSync } = useStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
+  const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     displayName: '',
     bio: '',
@@ -198,9 +201,19 @@ export function Profile() {
   return (
     <div className="min-h-screen relative">
       <YouTubeBackground videoId="XpS_6-O9_3s" opacity={0.15} />
+      <AvatarStudio isOpen={isStudioOpen} onClose={() => setIsStudioOpen(false)} />
+
       <div className="max-w-4xl mx-auto px-6 py-12 relative z-10">
       <div className="glass-card rounded-[3rem] p-12 mb-12 relative overflow-hidden">
-        <div className="absolute top-6 right-6">
+        <div className="absolute top-6 right-6 flex gap-2">
+          {!isEditing && (
+            <button 
+              onClick={() => { soundService.playSuccess(); setIsStudioOpen(true); }}
+              className="flex items-center gap-2 px-6 py-3 bg-singularity text-black rounded-full font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_#00F0FF]"
+            >
+              <Sparkles className="w-4 h-4" /> Launch 3D Studio
+            </button>
+          )}
           {!isEditing ? (
             <button 
               onClick={() => { soundService.playClick(); setIsEditing(true); }}

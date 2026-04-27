@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2 } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2, Server, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Leaderboard } from '../components/Leaderboard';
 import { QuantumGlobe } from '../components/QuantumGlobe';
@@ -134,9 +134,9 @@ export function GlobalMap() {
              <div className="space-y-4">
                {[
                  { label: "Active Nodes", value: displayedUsers.length, icon: Users, color: "text-singularity" },
-                 { label: "SUM-F Resonance", value: `${(sumData.sumF * 100).toFixed(1)}%`, icon: Zap, color: "text-quantum" },
-                 { label: "Bluetooth Sync", value: "Enabled", icon: Radio, color: "text-reality" },
-                 { label: "Global Sync", value: "0.02ms", icon: Activity, color: "text-reality" }
+                 { label: "Node Clusters", value: "1,240 Active", icon: Server, color: "text-quantum" },
+                 { label: "Uplink Speed", value: "Hyper-Sync", icon: Zap, color: "text-reality" },
+                 { label: "Sync Delta", value: "0.001ms", icon: Activity, color: "text-reality" }
                ].map((stat) => (
                  <div key={stat.label} className="flex justify-between items-center group cursor-default">
                     <div className="flex items-center gap-3">

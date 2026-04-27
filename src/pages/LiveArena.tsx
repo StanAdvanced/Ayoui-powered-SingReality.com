@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { io } from 'socket.io-client';
 import { motion } from 'motion/react';
-import { Mic, Users, Plus, MousePointer2, Box, Loader2, Brain, Zap } from 'lucide-react';
+import { Mic, Users, Plus, MousePointer2, Box, Loader2, Brain, Zap, Globe } from 'lucide-react';
 import { SafeCanvas } from '../components/SafeCanvas';
 import { useFrame, useThree } from '@react-three/fiber';
 import { OrbitControls, Stars, Float, Text, MeshDistortMaterial } from '@react-three/drei';
@@ -15,6 +15,8 @@ import { DJVerseOverlay } from '../components/DJVerseOverlay';
 import { djVerseService } from '../services/djVerseService';
 
 const socket = io();
+
+import { RealLifeBonfire } from '../components/RealLifeBonfire';
 
 function RemoteCursor({ position, userId }: { position: [number, number, number], userId: string }) {
   return (
@@ -42,7 +44,7 @@ function RemoteAvatar({ position, rotation, userId }: { position: [number, numbe
   );
 }
 
-function Scene({ arenaId, onCursorMove, biometricData }: { arenaId: string, onCursorMove: (pos: [number, number, number]) => void, biometricData: any }) {
+function Scene({ arenaId, onCursorMove, biometricData, venueType }: { arenaId: string, onCursorMove: (pos: [number, number, number]) => void, biometricData: any, venueType: string }) {
   const { viewport, mouse } = useThree();
   const [remoteCursors, setRemoteCursors] = useState<Record<string, [number, number, number]>>({});
   const [remoteAvatars, setRemoteAvatars] = useState<Record<string, { position: [number, number, number], rotation: [number, number, number] }>>({});
@@ -72,7 +74,8 @@ function Scene({ arenaId, onCursorMove, biometricData }: { arenaId: string, onCu
       <pointLight position={[10, 10, 10]} />
       <Stars radius={100} depth={50} count={5000} factor={4} saturation={0} fade speed={1} />
       
-      <SuperBrain biometricData={biometricData} onClick={() => console.log('Brain clicked!')} />
+      {venueType === 'bonfire' && <RealLifeBonfire />}
+      {venueType === 'global' && <SuperBrain biometricData={biometricData} onClick={() => console.log('Brain clicked!')} />}
 
       {Object.entries(remoteCursors).map(([id, pos]) => (
         <RemoteCursor key={id} userId={id} position={pos} />
@@ -89,6 +92,7 @@ function Scene({ arenaId, onCursorMove, biometricData }: { arenaId: string, onCu
 
 export function LiveArena() {
   const [arenaId, setArenaId] = useState('global-arena');
+  const [venueType, setVenueType] = useState<'global' | 'bonfire' | 'practice'>('global');
   const [joined, setJoined] = useState(false);
   const [queue, setQueue] = useState<string[]>([]);
   const [currentLyrics, setCurrentLyrics] = useState('');
@@ -234,10 +238,26 @@ export function LiveArena() {
           <div className="lg:col-span-3 space-y-8">
             {/* 3D Scene */}
             <div className="h-[600px] glass rounded-[3rem] border border-white/10 relative overflow-hidden">
+              <div className="absolute top-8 left-8 z-20 flex gap-2">
+                 {[
+                   { id: 'global', name: 'Global Stage', icon: Globe },
+                   { id: 'bonfire', name: 'Virtual Bonfire', icon: Zap },
+                   { id: 'practice', name: 'Band Practice', icon: Mic }
+                 ].map(venue => (
+                   <button 
+                     key={venue.id}
+                     onClick={() => setVenueType(venue.id as any)}
+                     className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${venueType === venue.id ? 'bg-singularity text-black' : 'glass text-gray-400 hover:text-white'}`}
+                   >
+                     {venue.name}
+                   </button>
+                 ))}
+              </div>
+
               <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
-                <SafeCanvas camera={{ position: [0, 0, 10], fov: 50 }}>
+                <SafeCanvas camera={{ position: [0, 2, 10], fov: 50 }}>
                   <audioListener />
-                  <Scene arenaId={arenaId} onCursorMove={handleCursorMove} biometricData={biometricData} />
+                  <Scene arenaId={arenaId} onCursorMove={handleCursorMove} biometricData={biometricData} venueType={venueType} />
                 </SafeCanvas>
               </Suspense>
               

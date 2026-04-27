@@ -18,6 +18,7 @@ import {
   ShoppingBag,
   HandCoins,
   Award,
+  Maximize2,
   Layers as LayersIcon,
   Folder
 } from 'lucide-react';
@@ -124,8 +125,9 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   }, [location.pathname, store.narrationVoice]);
 
   const links = [
-    { name: 'Showcase', path: '/showcase', icon: Award },
+    { name: 'Gallery', path: '/showcase', icon: Award },
     { name: 'Studio', path: '/studio', icon: LayersIcon },
+    { name: 'Studio Pro', path: '/studio-pro', icon: Maximize2 },
     { name: 'Karaoke', path: '/karaoke-arena', icon: Mic2 },
     { name: 'Quantum Lab', path: '/quantum-lab', icon: Cpu },
     { name: 'SingReality TV', path: '/tv', icon: Tv },

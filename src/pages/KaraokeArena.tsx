@@ -33,6 +33,8 @@ const THEMES = [
   { id: 'retro', name: 'Retro Vibes', icon: Music, color: 'from-orange-500 to-red-600', atmosphere: 'bg-orange-500/10' },
 ];
 
+import { GlobalAudioSync } from '../components/GlobalAudioSync';
+
 export function KaraokeArena() {
   const { 
     karaokeTheme, setKaraokeTheme, 
@@ -302,6 +304,8 @@ export function KaraokeArena() {
               </div>
             </div>
           </div>
+
+          <GlobalAudioSync />
 
           {/* The Machine Screen */}
           <div className="relative aspect-video rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl group">

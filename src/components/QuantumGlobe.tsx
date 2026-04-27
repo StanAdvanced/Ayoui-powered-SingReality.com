@@ -46,6 +46,17 @@ export function QuantumGlobe({ width, height, resonance, users, arcs }: QuantumG
     return () => cancelAnimationFrame(frameId);
   }, []);
 
+  // Mock node clusters for "Global Sync" visualization
+  const nodeClusters = useMemo(() => {
+    return [
+      { lat: 40.7128, lng: -74.0060, name: 'Core Cluster - NYC', status: 'HYPER-SYNC' },
+      { lat: 35.6762, lng: 139.6503, name: 'Edge Node - TYO', status: 'RESONATING' },
+      { lat: 51.5074, lng: -0.1278, name: 'Quantum Relay - LDN', status: 'LINKED' },
+      { lat: -33.8688, lng: 151.2093, name: 'Sub-Node - SYD', status: 'STABLE' },
+      { lat: 55.7558, lng: 37.6173, name: 'Proxy Matrix - MOW', status: 'RESONATING' },
+    ];
+  }, []);
+
   return (
     <Globe
       ref={globeEl}
@@ -77,6 +88,16 @@ export function QuantumGlobe({ width, height, resonance, users, arcs }: QuantumG
       arcDashGap={0.2}
       arcDashAnimateTime={1000 / (0.5 + resonance)}
       arcStroke={0.3}
+      
+      // Node Clusters Labels
+      labelsData={nodeClusters}
+      labelLat="lat"
+      labelLng="lng"
+      labelText="name"
+      labelSize={1.5}
+      labelDotRadius={0.5}
+      labelColor={() => '#00f0ff'}
+      labelResolution={2}
       
       // Custom Layer for "Quantum Resonance Halo"
       hexBinPointsData={users}

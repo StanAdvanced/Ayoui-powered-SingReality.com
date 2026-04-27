@@ -17,6 +17,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
+import { SumFormulaVisualizer } from '../components/SumFormulaVisualizer';
 import { CinematicBackscreen } from '../components/CinematicBackscreen';
 
 export function DeveloperPortal() {
@@ -49,6 +50,11 @@ export function DeveloperPortal() {
             real-time collaboration APIs, and ethical revenue sharing models.
           </p>
         </header>
+
+        {/* Algorithm Visualization */}
+        <div className="mb-16 h-[500px]">
+           <SumFormulaVisualizer />
+        </div>
 
         {/* Dash Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
