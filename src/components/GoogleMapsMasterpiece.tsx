@@ -1,30 +1,18 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, MapPin, Navigation } from 'lucide-react';
-import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
+import { Search, MapPin, Navigation, Globe, Box, Zap, Compass, Filter, Layers, Radio } from 'lucide-react';
+import { GoogleMap, useJsApiLoader, Marker, Circle, HeatmapLayer, GroundOverlay } from '@react-google-maps/api';
 
-const containerStyle = {
-  width: '100%',
-  height: '100%'
-};
+const center = { lat: 34.0522, lng: -118.2437 }; // LA - Media Empire HQ
 
-const center = {
-  lat: 40.7128,
-  lng: -74.0060
-};
-
-// Advanced Dark Mode Styles for "Quantum Maps"
 const mapStyles = [
-  { "elementType": "geometry", "stylers": [{ "color": "#121212" }] },
-  { "elementType": "labels.text.fill", "stylers": [{ "color": "#8e8e8e" }] },
+  { "elementType": "geometry", "stylers": [{ "color": "#0a0a0a" }] },
+  { "elementType": "labels.text.fill", "stylers": [{ "color": "#00f0ff" }] },
   { "elementType": "labels.text.stroke", "stylers": [{ "color": "#000000" }] },
-  { "featureType": "administrative", "elementType": "geometry.stroke", "stylers": [{ "color": "#333333" }] },
-  { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#1a1a1a" }] },
-  { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#444444" }] },
-  { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#2c2c2c" }] },
-  { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212121" }] },
-  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
-  { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#3d3d3d" }] }
+  { "featureType": "administrative", "stylers": [{ "visibility": "simplified" }] },
+  { "featureType": "landscape", "stylers": [{ "color": "#050505" }] },
+  { "featureType": "road", "stylers": [{ "color": "#1a1a1a" }] },
+  { "featureType": "water", "stylers": [{ "color": "#000000" }] }
 ];
 
 export function GoogleMapsMasterpiece() {
@@ -33,89 +21,120 @@ export function GoogleMapsMasterpiece() {
     googleMapsApiKey: (import.meta as any).env.VITE_GOOGLE_MAPS_API_KEY || ''
   });
 
-  const [scanVisible, setScanVisible] = useState(true);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [viewMode, setViewMode] = useState<google.maps.MapTypeId | 'custom'>(google.maps.MapTypeId.SATELLITE);
+  const [scanVisible, setScanVisible] = useState(true);
+  const [nodes, setNodes] = useState<{lat: number, lng: number, id: string}[]>([]);
 
-  const onLoad = useCallback(function callback(map: google.maps.Map) {
-    setMap(map);
-  }, []);
+  const addNode = (e: google.maps.MapMouseEvent) => {
+    if (e.latLng) {
+      setNodes([...nodes, { lat: e.latLng.lat(), lng: e.latLng.lng(), id: Math.random().toString() }]);
+    }
+  };
 
-  const onUnmount = useCallback(function callback(map: google.maps.Map) {
-    setMap(null);
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(() => setScanVisible(prev => !prev), 3000);
-    return () => clearInterval(interval);
-  }, []);
-
-  if (!isLoaded) {
-    return (
-      <div className="w-full h-full bg-black flex items-center justify-center font-mono text-[10px] text-gray-500 animate-pulse uppercase tracking-widest">
-        Initializing Geospatial Matrix...
-      </div>
-    );
-  }
+  if (!isLoaded) return <div className="w-full h-full bg-black" />;
 
   return (
-    <div className="w-full h-full rounded-3xl overflow-hidden border border-white/5 shadow-inner relative group">
-      {/* Scanning Effect Overlay */}
-      <AnimatePresence>
-        {scanVisible && (
-          <motion.div 
-            initial={{ top: '-10%' }}
-            animate={{ top: '110%' }}
-            transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
-            className="absolute left-0 right-0 h-20 bg-gradient-to-b from-transparent via-singularity/20 to-transparent pointer-events-none z-10"
-          />
-        )}
-      </AnimatePresence>
+    <div className="w-full h-full rounded-[2.5rem] overflow-hidden border border-white/5 relative group bg-black shadow-2xl">
+      {/* Control Stack */}
+      <div className="absolute top-6 left-6 z-20 flex flex-col gap-3 pointer-events-none">
+         <motion.div 
+           initial={{ x: -20, opacity: 0 }}
+           animate={{ x: 0, opacity: 1 }}
+           className="pointer-events-auto glass p-2 rounded-2xl border border-white/10 flex flex-col gap-1"
+         >
+            {[
+              { id: google.maps.MapTypeId.SATELLITE, icon: Globe, label: 'Orbital' },
+              { id: google.maps.MapTypeId.ROADMAP, icon: Filter, label: 'Grid' },
+              { id: google.maps.MapTypeId.HYBRID, icon: Layers, label: 'Hybrid' },
+            ].map(type => (
+              <button 
+                key={type.id}
+                onClick={() => setViewMode(type.id as any)}
+                className={`p-3 rounded-xl transition-all flex items-center gap-3 ${viewMode === type.id ? 'bg-singularity text-black active-pulse' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
+              >
+                 <type.icon className="w-4 h-4" />
+                 <span className="text-[10px] font-black uppercase tracking-widest leading-none">{type.label}</span>
+              </button>
+            ))}
+         </motion.div>
+      </div>
 
-      <div className="absolute top-4 left-4 z-20 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-         <div className="glass px-3 py-1.5 rounded-full border border-white/10 flex items-center gap-2 text-[8px] font-bold text-white uppercase tracking-widest">
-            <Search className="w-3 h-3 text-singularity" /> Search Nearby Places
+      {/* Floating HUD */}
+      <div className="absolute bottom-6 right-6 z-20 flex flex-col items-end gap-3 pointer-events-none">
+         <div className="pointer-events-auto glass px-4 py-2 rounded-full border border-singularity/30 flex items-center gap-3">
+            <Radio className="w-4 h-4 text-singularity animate-pulse" />
+            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Node Injection Active</span>
+         </div>
+         <div className="pointer-events-auto glass px-6 py-4 rounded-[2rem] border border-white/10 w-64 space-y-3">
+            <div className="flex justify-between items-center text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+               <span>Geospatial Sync</span>
+               <span className="text-singularity">98.2%</span>
+            </div>
+            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+               <motion.div 
+                 initial={{ width: 0 }}
+                 animate={{ width: '98.2%' }}
+                 className="h-full bg-gradient-to-r from-singularity to-quantum"
+               />
+            </div>
+            <p className="text-[9px] text-gray-400 font-mono leading-relaxed">
+              Global Earth API bridge synchronized. 3D Terrain mesh loaded. Spatial audio coordinates mapped to current viewport.
+            </p>
          </div>
       </div>
 
       <GoogleMap
-        mapContainerStyle={containerStyle}
+        mapContainerStyle={{ width: '100%', height: '100%' }}
         center={center}
         zoom={12}
-        onLoad={onLoad}
-        onUnmount={onUnmount}
+        mapTypeId={viewMode === 'custom' ? google.maps.MapTypeId.ROADMAP : viewMode}
+        onLoad={setMap}
+        onClick={addNode}
         options={{
           styles: mapStyles,
           disableDefaultUI: true,
-          zoomControl: false,
-          streetViewControl: false,
-          mapTypeControl: false,
-          fullscreenControl: false
+          tilt: 45,
+          heading: 90
         }}
       >
-        {/* Dynamic Resonance Pulse circles on the map */}
+        {nodes.map(node => (
+          <Marker 
+            key={node.id}
+            position={{ lat: node.lat, lng: node.lng }}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 8,
+              fillColor: '#00f0ff',
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 2
+            }}
+          />
+        ))}
+        
         <Circle
           center={center}
           radius={5000}
           options={{
-            fillColor: '#00f0ff',
-            fillOpacity: 0.1,
-            strokeColor: '#00f0ff',
+            fillColor: '#7000ff',
+            fillOpacity: 0.05,
+            strokeColor: '#7000ff',
             strokeOpacity: 0.3,
             strokeWeight: 1
           }}
         />
-        <Marker 
-          position={center}
-          icon={{
-            path: 'M 0,0 m -5,-5 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0',
-            fillColor: '#7000ff',
-            fillOpacity: 1,
-            strokeWeight: 2,
-            strokeColor: '#ffffff',
-            scale: 2
-          }}
-        />
       </GoogleMap>
+
+      {/* Media Empire Scanning Overlay */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+         <motion.div 
+            initial={{ y: -100, opacity: 0 }}
+            animate={{ y: [0, 400, 0], opacity: [0, 0.2, 0] }}
+            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
+            className="w-full h-1 bg-singularity shadow-[0_0_50px_rgba(0,240,255,1)]"
+         />
+      </div>
     </div>
   );
 }

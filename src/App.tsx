@@ -49,7 +49,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
-  const [showIntro, setShowIntro] = useState(true);
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem('singreality_intro_seen'));
 
   const handleReplayIntro = () => {
     sessionStorage.removeItem('singreality_intro_seen');

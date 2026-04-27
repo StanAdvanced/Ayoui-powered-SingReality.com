@@ -8,10 +8,10 @@ export function IntroVideo({ onComplete }: { onComplete?: () => void }) {
 
   const triggerExit = () => {
     setIsExiting(true);
-    // Allow 1.5s for the fade out as requested by the Director
+    // Allow 2s for the fade out as requested by the Producer
     setTimeout(() => {
       handleComplete();
-    }, 1500);
+    }, 2000);
   };
 
   const handleComplete = () => {
@@ -26,33 +26,35 @@ export function IntroVideo({ onComplete }: { onComplete?: () => void }) {
           className="fixed inset-0 z-[10000] bg-black flex items-center justify-center overflow-hidden"
           initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 1.5, ease: "easeInOut" }}
+          exit={{ opacity: 0, filter: 'blur(20px) scale(1.1)' }}
+          transition={{ duration: 2, ease: [0.43, 0.13, 0.23, 0.96] }}
         >
+          <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-black/20 to-black pointer-events-none" />
+          
           <video
             ref={videoRef}
-            src="https://drive.google.com/uc?export=download&id=1OFuhiy8bbF0sdJwJzg2HUFJVQyCwH12t"
-            className="w-full h-full object-cover"
+            src="https://drive.google.com/uc?export=download&id=1Tn6Rf05djgrqqDTjyD2GOj2_o3iVRHj36fznwsaAIo8"
+            className="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
             autoPlay
             muted
             playsInline
             onEnded={triggerExit}
             onError={(e) => {
               const errMsg = e.currentTarget?.error?.message || "Unknown error";
-              console.warn(`Stanley Phani: Neural link disrupted. Skipping intro... [${errMsg}]`);
+              console.warn(`Stanley Phani Media: Transmission failed. [${errMsg}]`);
               handleComplete();
             }}
           />
           
-          {/* Stanley Phani Experience Branding - Subtle/Director Style */}
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center overflow-hidden">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: [0, 0.1, 0] }}
-              transition={{ duration: 4, repeat: Infinity, times: [0, 0.5, 1] }}
-              className="font-display text-[10vw] font-black text-white/5 tracking-[0.2em] whitespace-nowrap"
+          {/* Hollywood Style Intro Overlays */}
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: [0, 0.5, 0] }}
+              transition={{ duration: 10, repeat: Infinity }}
+              className="text-white/10 font-display text-[15vw] font-black uppercase tracking-[0.5em] blur-2xl"
             >
-              STANLEY PHANI EXPERIENCE
+              SINGREALITY
             </motion.div>
           </div>
 

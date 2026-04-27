@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2, Server, Filter } from 'lucide-react';
+import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2, Server, Filter, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Leaderboard } from '../components/Leaderboard';
 import { QuantumGlobe } from '../components/QuantumGlobe';
@@ -130,6 +130,28 @@ export function GlobalMap() {
              </div>
 
              <h2 className="text-2xl font-display font-black tracking-tight mb-6">SINGULARITY MAP</h2>
+             
+             <div className="flex items-center gap-4 mb-8">
+               <button 
+                  onClick={() => {
+                    const newNode = {
+                      lat: (Math.random() - 0.5) * 160,
+                      lng: (Math.random() - 0.5) * 360,
+                      size: 0.8,
+                      color: '#00f0ff',
+                      name: 'User_Node_Uplink',
+                      isVip: true,
+                      frequency: 440
+                    };
+                    setUsers(prev => [...prev, newNode]);
+                    playClick();
+                  }}
+                  className="px-6 py-3 bg-white/5 border border-white/10 hover:border-singularity/50 rounded-xl font-black text-[10px] uppercase tracking-[0.25em] flex items-center justify-center gap-3 transition-all group pointer-events-auto"
+                >
+                  <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> 
+                  Broadcasting Personal Node
+                </button>
+             </div>
              
              <div className="space-y-4">
                {[
