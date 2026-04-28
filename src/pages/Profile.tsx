@@ -1,14 +1,10 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
-import { db, storage } from '../firebase';
-import { doc, getDoc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { Loader2, Award, Music, Trophy, Edit2, Save, X, Camera, BarChart2, AlertCircle, Cpu, Zap, Activity, Sparkles } from 'lucide-react';
 import { motion } from 'motion/react';
 import { soundService } from '../services/soundService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { YouTubeBackground } from '../components/YouTubeBackground';
-import { handleFirestoreError, OperationType } from '../firebase';
 
 interface UserProfile {
   uid: string;
@@ -51,24 +47,37 @@ export function Profile() {
 
     const fetchProfile = async () => {
       setError(null);
-      const path = `users/${user.uid}`;
       try {
-        const userRef = doc(db, 'users', user.uid);
-        const userSnap = await getDoc(userRef);
-        if (userSnap.exists()) {
-          const data = userSnap.data() as UserProfile;
-          setProfile(data);
+        const token = localStorage.getItem('auth_token');
+        if (!token) throw new Error("No token");
+        
+        const res = await fetch('/api/user/profile', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        
+        if (data.id) {
+          const profileData = {
+              uid: data.id,
+              displayName: data.name,
+              email: data.email,
+              photoURL: `https://ui-avatars.com/api/?name=${data.name}`,
+              bio: "A SingReality Pioneer.",
+              preferredMusicGenres: ['Electronic', 'Ambient'],
+              singingHistory: [],
+              rewards: []
+          };
+          setProfile(profileData);
           setEditForm({
-            displayName: data.displayName || '',
-            bio: data.bio || '',
-            photoURL: data.photoURL || '',
-            preferredMusicGenres: data.preferredMusicGenres?.join(', ') || ''
+            displayName: profileData.displayName,
+            bio: profileData.bio,
+            photoURL: profileData.photoURL,
+            preferredMusicGenres: profileData.preferredMusicGenres.join(', ')
           });
         } else {
           setError("Profile not found in our neural database.");
         }
       } catch (err) {
-        handleFirestoreError(err, OperationType.GET, path);
         setError("Failed to sync with the neural network.");
       } finally {
         setLoading(false);
@@ -79,47 +88,28 @@ export function Profile() {
   }, [user, isAuthReady]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
-
-    setUploadingImage(true);
-    try {
-      const storageRef = ref(storage, `profile_images/${user.uid}_${Date.now()}`);
-      await uploadBytes(storageRef, file);
-      const downloadURL = await getDownloadURL(storageRef);
-      setEditForm(prev => ({ ...prev, photoURL: downloadURL }));
-      soundService.playSuccess();
-    } catch (err) {
-      console.error("Error uploading image:", err);
-      soundService.playError();
-    } finally {
-      setUploadingImage(false);
-    }
+    alert("Image uploads require Cloud Storage. Local previews are not supported for this fallback mode.");
   };
 
   const handleSave = async () => {
     if (!user || !profile) return;
     setSaving(true);
     soundService.playClick();
-    const path = `users/${user.uid}`;
-    try {
-      const userRef = doc(db, 'users', user.uid);
+    
+    // In a real local DB, we would make a PUT request to /api/user/profile
+    // For now, we update local state only
+    setTimeout(() => {
       const updatedData = {
         displayName: editForm.displayName,
         bio: editForm.bio,
         photoURL: editForm.photoURL,
         preferredMusicGenres: editForm.preferredMusicGenres.split(',').map(g => g.trim()).filter(g => g !== '')
       };
-      await updateDoc(userRef, updatedData);
       setProfile({ ...profile, ...updatedData });
       setIsEditing(false);
       soundService.playSuccess();
-    } catch (err) {
-      handleFirestoreError(err, OperationType.UPDATE, path);
-      soundService.playError();
-    } finally {
       setSaving(false);
-    }
+    }, 500);
   };
 
   useEffect(() => {

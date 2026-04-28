@@ -4,8 +4,6 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from './firebase';
 import { useStore } from './store/useStore';
 
 console.log('SingReality: Mounting Quantum Architecture...');
@@ -15,37 +13,34 @@ function Root() {
   const setAuthReady = useStore(state => state.setAuthReady);
 
   useEffect(() => {
-    console.log('SingReality: Subscribing to Auth Singularity...');
-    let mounted = true;
+    console.log('SingReality: Subscribing to Local Auth...');
     
-    // Safety timeout: If auth takes more than 5s, mark as ready anyway to avoid black screen
-    const safetyTimeout = setTimeout(() => {
-      if (mounted) {
-        console.warn('SingReality: Auth Link Timeout - Proceeding as Guest');
-        setAuthReady(true);
-      }
-    }, 5000);
-
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (mounted) {
-        clearTimeout(safetyTimeout);
-        console.log('SingReality: Identity Locked ->', user ? user.uid : 'Anonymous Guest');
-        setUser(user);
-        setAuthReady(true);
-      }
-    }, (error) => {
-      console.error('SingReality: Auth Singularity Collision ->', error);
-      if (mounted) {
-        clearTimeout(safetyTimeout);
-        setAuthReady(true);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      clearTimeout(safetyTimeout);
-      unsubscribe();
-    };
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      fetch('/api/user/profile', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.id) {
+            setUser({ uid: data.id, email: data.email, displayName: data.name, photoURL: null, token });
+          } else {
+            localStorage.removeItem('auth_token');
+            setUser(null);
+          }
+        })
+        .catch(err => {
+          console.error(err);
+          localStorage.removeItem('auth_token');
+          setUser(null);
+        })
+        .finally(() => {
+          setAuthReady(true);
+        });
+    } else {
+      setAuthReady(true);
+      setUser(null);
+    }
   }, [setUser, setAuthReady]);
 
   return (

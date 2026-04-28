@@ -1,10 +1,14 @@
 import { create } from 'zustand';
-import { User, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
-import { auth, googleProvider, db } from '../firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { monitoringService } from '../services/monitoringService';
-
 import { VoiceName } from '../lib/tts';
+
+export interface User {
+  uid: string;
+  email: string | null;
+  displayName: string | null;
+  photoURL: string | null;
+  token?: string;
+}
 
 export interface CartItem {
   id: string;
@@ -135,24 +139,6 @@ interface Layer {
   isHologram?: boolean;
 }
 
-const createUserDocument = async (user: User) => {
-  const userRef = doc(db, 'users', user.uid);
-  const userSnap = await getDoc(userRef);
-  
-  if (!userSnap.exists()) {
-    await setDoc(userRef, {
-      uid: user.uid,
-      displayName: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=random`,
-      createdAt: serverTimestamp(),
-      score: 0,
-      singingHistory: [],
-      rewards: []
-    });
-  }
-};
-
 const initialLayers: Layer[] = [
   { id: '1', name: 'Base Layer', visible: true, url: 'https://raw.githubusercontent.com/pmndrs/drei-assets/master/truck.gltf', objects: [], color: '#00f0ff', opacity: 0.6, materialProps: {}, isHologram: true }
 ];
@@ -168,7 +154,7 @@ export const useStore = create<AppState>((set, get) => {
 
   return {
     user: null,
-    isAuthReady: false,
+    isAuthReady: true, // we can set to true immediately since no firebase init
     setUser: (user) => set({ user }),
     setAuthReady: (isAuthReady) => set({ isAuthReady }),
 
@@ -188,9 +174,16 @@ export const useStore = create<AppState>((set, get) => {
     },
     
     login: async () => {
+      // Mocked out because oauth requires separate backend handling, falling back to a quick demo user instead
       try {
-        const result = await signInWithPopup(auth, googleProvider);
-        await createUserDocument(result.user);
+        const email = "demo@example.com";
+        const pass = "password";
+        // Attempt login, if not exist, sign up
+        try {
+          await get().loginWithEmail(email, pass);
+        } catch {
+          await get().signUpWithEmail(email, pass, "Demo User");
+        }
       } catch (error) {
         monitoringService.error('Login failed', error as Error);
         throw error;
@@ -198,19 +191,20 @@ export const useStore = create<AppState>((set, get) => {
     },
     
     loginWithFacebook: async () => {
-      try {
-        const { facebookProvider } = await import('../firebase');
-        const result = await signInWithPopup(auth, facebookProvider);
-        await createUserDocument(result.user);
-      } catch (error) {
-        monitoringService.error('Facebook login failed', error as Error);
-        throw error;
-      }
+      // Not implemented without Firebase
     },
     
     loginWithEmail: async (email, pass) => {
       try {
-        await signInWithEmailAndPassword(auth, email, pass);
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        localStorage.setItem('auth_token', data.token);
+        set({ user: { uid: data.user.id, email: data.user.email, displayName: data.user.name, photoURL: null, token: data.token } });
       } catch (error) {
         monitoringService.error('Email login failed', error as Error);
         throw error;
@@ -219,9 +213,15 @@ export const useStore = create<AppState>((set, get) => {
     
     signUpWithEmail: async (email, pass, name) => {
       try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-        await updateProfile(userCredential.user, { displayName: name });
-        await createUserDocument(userCredential.user);
+        const res = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password: pass, name })
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+        localStorage.setItem('auth_token', data.token);
+        set({ user: { uid: data.user.id, email: data.user.email, displayName: data.user.name, photoURL: null, token: data.token } });
       } catch (error) {
         monitoringService.error('Sign up failed', error as Error);
         throw error;
@@ -229,17 +229,13 @@ export const useStore = create<AppState>((set, get) => {
     },
     
     resetPassword: async (email) => {
-      try {
-        await sendPasswordResetEmail(auth, email);
-      } catch (error) {
-        monitoringService.error('Password reset failed', error as Error);
-        throw error;
-      }
+      throw new Error("Local auth doesn't support password reset yet.");
     },
     
     logout: async () => {
       try {
-        await signOut(auth);
+        localStorage.removeItem('auth_token');
+        set({ user: null });
       } catch (error) {
         monitoringService.error('Logout failed', error as Error);
         throw error;

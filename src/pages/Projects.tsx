@@ -2,10 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Plus, Folder, Layers, History, Share2, Trash2, ExternalLink, Loader2, DollarSign } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { db } from '../firebase';
-import { collection, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { storage } from '../firebase';
 import { ModelViewer } from '../components/ModelViewer';
 import { GoogleMapBackground } from '../components/GoogleMapBackground';
 import { useNavigate } from 'react-router-dom';
@@ -43,15 +39,27 @@ export function Projects() {
 
   useEffect(() => {
     if (!user) return;
-
-    const q = query(collection(db, 'projects'), where('ownerId', '==', user.uid));
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const projectsData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Project[];
-      setProjects(projectsData);
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
       setLoading(false);
-    });
+      return;
+    }
+    
+    // Fetch profile containing projects
+    fetch('/api/user/profile', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.projects) {
+          setProjects(data.projects);
+        } else {
+          setProjects([]);
+        }
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
 
-    return () => unsubscribe();
   }, [user]);
 
   const handleCreateProject = async (e: React.FormEvent) => {
@@ -66,26 +74,41 @@ export function Projects() {
 
     setIsCreating(true);
     try {
-      await addDoc(collection(db, 'projects'), {
+      const newProj = {
         name: newProjectName,
         description: newProjectDescription,
         status: newProjectStatus,
         deadline: newProjectDeadline,
         modelUrl: newModelUrl || '',
         ownerId: user.uid,
-        createdAt: serverTimestamp(),
+        createdAt: new Date().toISOString(),
         layers: ['Base Layer'],
-        versions: newModelUrl ? [{ id: 'v1', name: 'v1.0.0', modelUrl: newModelUrl, timestamp: serverTimestamp() }] : [],
+        versions: newModelUrl ? [{ id: 'v1', name: 'v1.0.0', modelUrl: newModelUrl, timestamp: new Date().toISOString() }] : [],
         isMonetized: false,
         assets: []
+      };
+      
+      const token = localStorage.getItem('auth_token');
+      const res = await fetch('/api/user/projects', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ project: newProj })
       });
+      const data = await res.json();
+      
+      if (data.projects) {
+        setProjects(data.projects);
+      }
       setNewProjectName('');
       setNewProjectDescription('');
       setNewModelUrl('');
       setNewProjectDeadline('');
       setNewProjectStatus('Planning');
     } catch (error) {
-      console.error('Failed to create project:', error);
+      console.error('Error creating project:', error);
     } finally {
       setIsCreating(false);
     }
@@ -94,7 +117,7 @@ export function Projects() {
   const handleDeleteProject = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this project?')) {
       try {
-        await deleteDoc(doc(db, 'projects', id));
+        setProjects(prev => prev.filter(p => p.id !== id));
         if (selectedProject?.id === id) setSelectedProject(null);
       } catch (error) {
         console.error('Failed to delete project:', error);
@@ -104,9 +127,9 @@ export function Projects() {
 
   const handleRevertVersion = async (version: { modelUrl: string }) => {
     if (!selectedProject) return;
-    await updateDoc(doc(db, 'projects', selectedProject.id), {
-      modelUrl: version.modelUrl
-    });
+    const updated = { ...selectedProject, modelUrl: version.modelUrl };
+    setSelectedProject(updated);
+    setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
   };
 
   const [newVersionName, setNewVersionName] = useState('');
@@ -117,11 +140,11 @@ export function Projects() {
       id: Date.now().toString(),
       name: newVersionName,
       modelUrl: selectedProject.modelUrl,
-      timestamp: serverTimestamp()
+      timestamp: new Date().toISOString()
     };
-    await updateDoc(doc(db, 'projects', selectedProject.id), {
-      versions: [...(selectedProject.versions || []), newVersion]
-    });
+    const updated = { ...selectedProject, versions: [...(selectedProject.versions || []), newVersion] };
+    setSelectedProject(updated);
+    setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
     setNewVersionName('');
   };
 
@@ -130,11 +153,9 @@ export function Projects() {
     const price = window.prompt(`Enter price in ${currency} to list on Marketplace:`, "100");
     if (price && !isNaN(Number(price))) {
       try {
-        await updateDoc(doc(db, 'projects', selectedProject.id), {
-          isMonetized: true,
-          price: Number(price)
-        });
-        // In a real app, also create a marketplace listing document here
+        const updated = { ...selectedProject, isMonetized: true, price: Number(price) };
+        setSelectedProject(updated);
+        setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
         alert(`Project listed on Marketplace for ${price} ${currency}!`);
       } catch (error) {
         console.error('Failed to monetize project:', error);
@@ -143,42 +164,15 @@ export function Projects() {
   };
 
   const handleAssetUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !selectedProject || !user) return;
-
-    setUploadingAsset(true);
-    const storageRef = ref(storage, `projects/${selectedProject.id}/assets/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on('state_changed',
-      (snapshot) => {
-        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        setUploadProgress(progress);
-      },
-      (error) => {
-        console.error('Upload failed:', error);
-        setUploadingAsset(false);
-      },
-      async () => {
-        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-        const newAsset = {
-          name: file.name,
-          url: downloadURL,
-          type: file.type,
-          timestamp: new Date() // Use client date for simplicity or fetch serverTimestamp, but for array updates we can just push
-        };
-        await updateDoc(doc(db, 'projects', selectedProject.id), {
-          assets: [...(selectedProject.assets || []), newAsset]
-        });
-        setUploadingAsset(false);
-        setUploadProgress(0);
-      }
-    );
+    alert("File uploads require Cloud Storage. Please use an external URL.");
   };
+
 
   const handleUpdateStatus = async (status: string) => {
     if (!selectedProject) return;
-    await updateDoc(doc(db, 'projects', selectedProject.id), { status });
+    const updated = { ...selectedProject, status: status as any };
+    setSelectedProject(updated);
+    setProjects(prev => prev.map(p => p.id === updated.id ? updated : p));
   };
 
   if (!user) {
