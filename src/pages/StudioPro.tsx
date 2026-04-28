@@ -7,8 +7,17 @@ import {
 } from 'lucide-react';
 import { Canvas, useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage, PerspectiveCamera, Grid, Box, TorusKnot } from '@react-three/drei';
+import { XR, createXRStore } from '@react-three/xr';
 import { useStore } from '../store/useStore';
 import io, { Socket } from 'socket.io-client';
+
+let xrStore: any = null;
+try {
+  // Only attempt to start XR store if we are in a capable environment
+  xrStore = createXRStore();
+} catch (e) {
+  console.warn("WebXR not supported in this environment");
+}
 
 interface Layer {
   id: string;
@@ -270,22 +279,51 @@ export function StudioPro() {
                  SingReality <span className="text-gradient">Studio</span>
                </h1>
             </div>
+            
+            <div className="pointer-events-auto flex gap-2">
+               {xrStore ? (
+                  <>
+                     <button onClick={() => xrStore?.enterAR()} className="px-4 py-2 glass rounded-full border border-white/10 hover:bg-white/5 transition-all text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                        <Maximize2 className="w-4 h-4" /> Enter AR
+                     </button>
+                     <button onClick={() => xrStore?.enterVR()} className="px-4 py-2 glass rounded-full border border-white/10 hover:bg-white/5 transition-all text-white text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                        <Maximize2 className="w-4 h-4" /> Enter VR
+                     </button>
+                  </>
+               ) : (
+                  <div className="px-4 py-2 glass rounded-full border border-white/10 text-white/50 text-[10px] font-bold uppercase tracking-widest">
+                     WebXR Not Supported
+                  </div>
+               )}
+            </div>
          </div>
 
          {/* 3D Scene */}
          <div className="flex-1 bg-[radial-gradient(circle_at_50%_50%,#0a0a0a_0%,#000_100%)] relative">
-            <Canvas shadows gl={{ antialias: true }}>
-               <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
-               <color attach="background" args={['#000']} />
-               
-               <CollabCursorTracker socket={socketRef.current} sessionId={sessionId} user={user} />
-               
-               <Stage environment="night" intensity={0.5}>
-                 <ModelViewer layers={layers} />
-               </Stage>
-
-               <Grid infiniteGrid fadeDistance={15} sectionColor="#111" cellColor="#050505" sectionSize={1} cellSize={1} />
-               <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />
+            <Canvas shadows>
+               {xrStore ? (
+                 <XR store={xrStore}>
+                   <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
+                   <color attach="background" args={['#000']} />
+                   <CollabCursorTracker socket={socketRef.current} sessionId={sessionId} user={user} />
+                   <Stage environment="night" intensity={0.5}>
+                     <ModelViewer layers={layers} />
+                   </Stage>
+                   <Grid infiniteGrid fadeDistance={15} sectionColor="#111" cellColor="#050505" sectionSize={1} cellSize={1} />
+                   <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />
+                 </XR>
+               ) : (
+                 <>
+                   <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
+                   <color attach="background" args={['#000']} />
+                   <CollabCursorTracker socket={socketRef.current} sessionId={sessionId} user={user} />
+                   <Stage environment="night" intensity={0.5}>
+                     <ModelViewer layers={layers} />
+                   </Stage>
+                   <Grid infiniteGrid fadeDistance={15} sectionColor="#111" cellColor="#050505" sectionSize={1} cellSize={1} />
+                   <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />
+                 </>
+               )}
             </Canvas>
             
             {/* Overlay Cursors */}
