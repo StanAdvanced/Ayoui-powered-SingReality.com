@@ -5,7 +5,8 @@ import {
   Upload, Maximize2, MousePointer2, MessageSquare, Send,
   Box as BoxIcon, Search, Image as ImageIcon, Briefcase, Frame
 } from 'lucide-react';
-import { Canvas, useThree, useFrame } from '@react-three/fiber';
+import { SafeCanvas } from '../components/SafeCanvas';
+import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stage, PerspectiveCamera, Grid, Box, TorusKnot } from '@react-three/drei';
 import { XR, createXRStore } from '@react-three/xr';
 import { useStore } from '../store/useStore';
@@ -300,7 +301,7 @@ export function StudioPro() {
 
          {/* 3D Scene */}
          <div className="flex-1 bg-[radial-gradient(circle_at_50%_50%,#0a0a0a_0%,#000_100%)] relative">
-            <Canvas shadows>
+            <SafeCanvas shadows gl={{ antialias: true, alpha: true }}>
                {xrStore ? (
                  <XR store={xrStore}>
                    <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
@@ -324,7 +325,7 @@ export function StudioPro() {
                    <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 1.75} />
                  </>
                )}
-            </Canvas>
+            </SafeCanvas>
             
             {/* Overlay Cursors */}
             {Object.values(cursors).map(cursor => (

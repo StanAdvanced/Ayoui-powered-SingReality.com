@@ -1,10 +1,8 @@
-import React, { useState, Suspense, useEffect, Component, ReactNode } from 'react';
+import React, { useState, Suspense, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { Play, Globe2, Cpu, Sparkles, ArrowRight, Search, Zap, Users, TrendingUp, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
-import { Canvas } from '@react-three/fiber';
-import { Environment, ContactShadows, Float } from '@react-three/drei';
 import { useSound } from '../hooks/useSound';
 import { useStore } from '../store/useStore';
 import { AvatarChat } from '../components/AvatarChat';
@@ -17,22 +15,6 @@ import { ShowcaseBanners } from '../components/ShowcaseBanners';
 import { ProjectShowcase } from '../components/ProjectShowcase';
 import { PromoBanners } from '../components/PromoBanners';
 import { DJVerseLiveFeed } from '../components/DJVerseLiveFeed';
-
-class CanvasErrorBoundary extends Component<{children: ReactNode, fallback: ReactNode}, {hasError: boolean}> {
-  state = { hasError: false };
-  static getDerivedStateFromError() {
-    return { hasError: true };
-  }
-  componentDidCatch(error: Error) {
-    console.error('Canvas Error:', error);
-  }
-  render() {
-    if (this.state.hasError) {
-      return this.props.fallback;
-    }
-    return this.props.children;
-  }
-}
 
 export function Home() {
   const [searchQuery, setSearchQuery] = useState('');

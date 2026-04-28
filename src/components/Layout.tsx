@@ -91,7 +91,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   const { playClick, playTransition } = useSound();
 
   // Audit: Identify 3D-Heavy Routes
-  const isHighComputePath = ['/studio', '/live-arena', '/karaoke-arena', '/arenas', '/global-map'].includes(location.pathname);
+  const isHighComputePath = ['/studio', '/studio-pro', '/live-arena', '/karaoke-arena', '/arenas', '/global-map'].includes(location.pathname);
   
   useEffect(() => {
     // Automatically throttle backgrounds on high-compute paths
