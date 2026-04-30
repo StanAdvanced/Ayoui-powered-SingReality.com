@@ -21,16 +21,13 @@ export function HeyNumtrixCompanion() {
     setIsProcessing(true);
 
     try {
-      const response = await aiService.generateChatResponse([
-        { role: 'system', content: 'You are HeyNumtrix, a wise, musical, and helpful AI companion in the Numtrixian Chronicles.' },
-        ...messages.map(m => ({ role: m.role, content: m.content })),
-        { role: 'user', content: userMessage }
-      ]);
+      const chatMessages = messages.map(m => ({ role: m.role, content: m.content }));
+      const response = await aiService.generateResponse(userMessage, chatMessages);
 
       const reply = response || 'The frequencies are clouded right now. Let us try again.';
       setMessages(prev => [...prev, { role: 'assistant', content: reply }]);
       
-      const audioContent = await generateSpeech(reply, 'en-US-Journey-F');
+      const audioContent = await generateSpeech(reply, 'Puck');
       if (audioContent) {
         await playRawAudio(audioContent);
       }

@@ -9,8 +9,6 @@ export function DynamicLOD({
   children: React.ReactNode
 }) {
   return (
-    <Detailed distances={distances}>
-      {children}
-    </Detailed>
+    <Detailed distances={distances} children={children as any} />
   );
 }
