@@ -1,0 +1,1 @@
+This directory holds crucial cinematic assets for the SingReality boot sequence.

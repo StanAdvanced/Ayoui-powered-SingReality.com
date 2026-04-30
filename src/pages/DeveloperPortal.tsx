@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { SumFormulaVisualizer } from '../components/SumFormulaVisualizer';
-import { CinematicBackscreen } from '../components/CinematicBackscreen';
+import { HyperMediaBackscreen } from '../components/HyperMediaBackscreen';
 
 export function DeveloperPortal() {
   const { user } = useStore();
@@ -32,10 +32,7 @@ export function DeveloperPortal() {
 
   return (
     <div className="min-h-screen relative bg-black/60">
-      <CinematicBackscreen 
-        imageUrl="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop"
-        opacity={0.2}
-      />
+      <HyperMediaBackscreen />
       
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
         <header className="mb-16">

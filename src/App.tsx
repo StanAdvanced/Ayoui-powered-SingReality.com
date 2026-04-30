@@ -56,7 +56,6 @@ export default function App() {
 
   useEffect(() => {
     if (!isBooting) {
-      // Small delay after video ends to let transition breath
       const timer = setTimeout(() => setIsFullyInitialized(true), 100);
       return () => clearTimeout(timer);
     }
@@ -64,48 +63,51 @@ export default function App() {
 
   const handleReplayIntro = () => {
     sessionStorage.removeItem('singreality_boot_complete');
-    window.location.reload(); // Hard reload to trigger full boot sequence again
+    window.location.reload();
   };
 
   return (
     <ErrorBoundary>
-      {isBooting && (
+      {!isFullyInitialized && (
         <IntroVideo onComplete={completeBoot} />
       )}
-      
-      <CinematicTransition isReady={!isBooting}>
-        <AdvancedOnboarding />
-        <AudioPlayer />
-        <Layout onReplayIntro={handleReplayIntro}>
-          <Suspense fallback={<LoadingFallback />}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/studio" element={<ProtectedRoute><Studio /></ProtectedRoute>} />
-              <Route path="/clones" element={<ProtectedRoute><NeuralClones /></ProtectedRoute>} />
-              <Route path="/marketplace" element={<Marketplace />} />
-              <Route path="/marketplace/:id" element={<MarketplaceItemDetail />} />
-              <Route path="/quantum-lab" element={<QuantumLab />} />
-              <Route path="/dev-portal" element={<ProtectedRoute><DeveloperPortal /></ProtectedRoute>} />
-              <Route path="/studio-pro" element={<ProtectedRoute><StudioPro /></ProtectedRoute>} />
-              <Route path="/karaoke/:sessionId" element={<KaraokeRoom />} />
-              <Route path="/ai-studio" element={<ProtectedRoute><AISongStudio /></ProtectedRoute>} />
-              <Route path="/funding" element={<ProtectedRoute><Funding /></ProtectedRoute>} />
-              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-              <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/portal" element={<Portal />} />
-              <Route path="/arenas" element={<Arenas />} />
-              <Route path="/live-arena" element={<LiveArena />} />
-              <Route path="/karaoke-arena" element={<KaraokeArena />} />
-              <Route path="/global-map" element={<GlobalMap />} />
-              <Route path="/tv" element={<SingRealityTV />} />
-              <Route path="/showcase" element={<Showcase />} />
-              <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </Suspense>
-        </Layout>
-      </CinematicTransition>
+
+      {isFullyInitialized && (
+        <CinematicTransition isReady={true}>
+          <AdvancedOnboarding />
+          <AudioPlayer />
+          <Layout onReplayIntro={handleReplayIntro}>
+            <Suspense fallback={<LoadingFallback />}>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/studio" element={<ProtectedRoute><Studio /></ProtectedRoute>} />
+                <Route path="/clones" element={<ProtectedRoute><NeuralClones /></ProtectedRoute>} />
+                <Route path="/marketplace" element={<Marketplace />} />
+                <Route path="/marketplace/:id" element={<MarketplaceItemDetail />} />
+                <Route path="/quantum-lab" element={<QuantumLab />} />
+                <Route path="/dev-portal" element={<ProtectedRoute><DeveloperPortal /></ProtectedRoute>} />
+                <Route path="/studio-pro" element={<ProtectedRoute><StudioPro /></ProtectedRoute>} />
+                <Route path="/karaoke/:sessionId" element={<KaraokeRoom />} />
+                <Route path="/ai-studio" element={<ProtectedRoute><AISongStudio /></ProtectedRoute>} />
+                <Route path="/funding" element={<ProtectedRoute><Funding /></ProtectedRoute>} />
+                <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
+                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/portal" element={<Portal />} />
+                <Route path="/arenas" element={<Arenas />} />
+                <Route path="/live-arena" element={<LiveArena />} />
+                <Route path="/karaoke-arena" element={<KaraokeArena />} />
+                <Route path="/global-map" element={<GlobalMap />} />
+                <Route path="/tv" element={<SingRealityTV />} />
+                <Route path="/showcase" element={<Showcase />} />
+                <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Routes>
+            </Suspense>
+          </Layout>
+        </CinematicTransition>
+      )}
     </ErrorBoundary>
   );
 }
+

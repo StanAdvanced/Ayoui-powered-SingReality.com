@@ -8,7 +8,7 @@ import { OrbitControls, Stars, Float, Text, MeshDistortMaterial } from '@react-t
 import * as THREE from 'three';
 import { AISongSincvEngine } from '../services/aisongSincvEngine';
 import { SuperBrain } from '../components/SuperBrain';
-import { YouTubeBackground } from '../components/YouTubeBackground';
+import { InteractiveArenaBackground } from '../components/InteractiveArenaBackground';
 import { ConcertEffects } from '../components/ConcertEffects';
 import { BiometricPanel } from '../components/BiometricPanel';
 import { DJVerseOverlay } from '../components/DJVerseOverlay';
@@ -191,8 +191,8 @@ export function LiveArena() {
   };
 
   return (
-    <div className="min-h-screen relative">
-      <YouTubeBackground videoId="XpS_6-O9_3s" opacity={0.15} />
+    <div className="min-h-screen relative bg-black">
+      <InteractiveArenaBackground biometricData={biometricData} />
       <ConcertEffects />
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
       <div className="flex items-center justify-between mb-8">

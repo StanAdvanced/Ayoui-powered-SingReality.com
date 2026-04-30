@@ -24,6 +24,7 @@ import { CommunitySampleLibrary } from '../components/CommunitySampleLibrary';
 import ObjectScanner from '../components/Scanner';
 import AISongwritingAssistant from '../components/AISongwritingAssistant';
 import { Camera } from 'lucide-react';
+import { SpatialCard } from '../components/SpatialCard';
 
 export function Studio() {
   const [searchParams] = useSearchParams();
@@ -123,7 +124,7 @@ export function Studio() {
 
           <AnimatePresence mode="wait">
             {activeTab === 'create' && (
-              <motion.div key="create" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 glass-card p-6 rounded-[2rem] border border-white/10 relative overflow-hidden flex flex-col gap-4">
+              <SpatialCard className="flex-1 p-6 relative flex flex-col gap-4">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-singularity via-quantum to-reality" />
                 <h2 className="text-xl font-display font-bold uppercase tracking-widest flex items-center gap-3">
                   <Activity className="w-5 h-5 text-singularity" /> Psyche-Input Vector
@@ -144,7 +145,7 @@ export function Studio() {
                 >
                   {isGenerating ? <><Loader2 className="w-4 h-4 animate-spin" /> Synthesizing...</> : <><Sparkles className="w-4 h-4" /> Execute Genesis</>}
                 </button>
-              </motion.div>
+              </SpatialCard>
             )}
 
             {activeTab === 'songwriting' && (
@@ -154,7 +155,7 @@ export function Studio() {
             )}
 
             {activeTab === 'dance' && (
-              <motion.div key="dance" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 glass-card p-6 rounded-[2rem] border border-white/10 relative overflow-hidden flex flex-col gap-4">
+              <SpatialCard glowColor="#ff00ff" className="flex-1 p-6 relative flex flex-col gap-4">
                  <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#ff00ff] to-[#00f0ff]" />
                  <h2 className="text-xl font-display font-bold uppercase tracking-widest flex items-center gap-3">
                   <Wand2 className="w-5 h-5 text-[#ff00ff]" /> Text-to-Dance Generation
@@ -216,7 +217,7 @@ export function Studio() {
                       <Sparkles className="w-4 h-4" /> Generate Choreo & Music
                     </button>
                    )}
-              </motion.div>
+              </SpatialCard>
             )}
             
             {activeTab === 'render' && (
@@ -238,7 +239,7 @@ export function Studio() {
             )}
 
             {activeTab === 'vr' && (
-              <motion.div key="vr" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="flex-1 glass-card p-6 rounded-[2rem] border border-[#00f0ff]/30 bg-[#00f0ff]/5 relative overflow-hidden flex flex-col gap-4">
+              <SpatialCard glowColor="#00f0ff" className="flex-1 p-6 bg-[#00f0ff]/5 relative flex flex-col gap-4">
                  <div className="absolute top-0 left-0 w-full h-1 bg-[#00f0ff] shadow-[0_0_10px_#00f0ff]" />
                  <h2 className="text-xl font-display font-bold uppercase tracking-widest flex items-center gap-3">
                   <Activity className="w-5 h-5 text-[#00f0ff]" /> Live VR Telemetry
@@ -258,7 +259,7 @@ export function Studio() {
                  <button onClick={() => { playClick(); narrateAction('vr_mode'); }} className="w-full py-4 bg-[#00f0ff] text-black rounded-xl font-black text-xs uppercase tracking-widest hover:scale-[1.02] transition-all flex items-center justify-center gap-2 shadow-[0_0_30px_rgba(0,240,255,0.4)]">
                    <Zap className="w-4 h-4" /> Enter Immersive WebXR Mode
                  </button>
-              </motion.div>
+              </SpatialCard>
             )}
           </AnimatePresence>
 
