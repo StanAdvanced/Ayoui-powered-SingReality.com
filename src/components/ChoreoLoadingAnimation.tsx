@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 
 export const ChoreoLoadingAnimation = ({ complexity, style, emotionIntensity }: { complexity: number, style: string, emotionIntensity: number }) => {
   const isFluid = style === 'fluid';

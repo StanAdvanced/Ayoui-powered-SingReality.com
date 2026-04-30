@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { ShoppingCart, Tag, Download, Play, Heart, Share2, Mic2, Layers, Zap, Cpu, TrendingUp, Star, Globe, Database, Network, Search, PenTool } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';

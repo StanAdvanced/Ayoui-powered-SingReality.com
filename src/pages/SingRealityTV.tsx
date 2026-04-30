@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Play, Tv, Sparkles, Search, Tag, ExternalLink, Globe2, Music } from 'lucide-react';
 import { YouTubeBackground } from '../components/YouTubeBackground';
 import { YouTubeSearch } from '../components/YouTubeSearch';

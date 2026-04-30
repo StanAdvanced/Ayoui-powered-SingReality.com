@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Plus, Folder, Layers, History, Share2, Trash2, ExternalLink, Loader2, DollarSign } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { ModelViewer } from '../components/ModelViewer';

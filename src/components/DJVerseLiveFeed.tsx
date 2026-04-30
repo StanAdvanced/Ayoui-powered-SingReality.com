@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Volume2, Database, Share2, Youtube, Music, Radio, Zap } from 'lucide-react';
 import { YouTubeBackground } from './YouTubeBackground';
 import { djVerseService } from '../services/djVerseService';

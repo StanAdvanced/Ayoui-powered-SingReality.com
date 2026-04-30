@@ -1,5 +1,5 @@
 import React, { useState, Suspense, useEffect } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Play, Globe2, Cpu, Sparkles, ArrowRight, Search, Zap, Users, TrendingUp, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';

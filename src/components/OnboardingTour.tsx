@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Joyride, STATUS } from 'react-joyride';
+import Joyride, { STATUS } from 'react-joyride';
 import { useStore } from '../store/useStore';
 import { generateSpeech, playRawAudio, stopAudio } from '../lib/tts';
 

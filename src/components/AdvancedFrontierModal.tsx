@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Globe, Radio, Cpu, Network, Database, Sparkles, Layers, Search, Code, Lock, Shield,
   Zap, Navigation, Video, Mic, Smartphone, Map

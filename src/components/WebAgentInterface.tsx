@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Search, Map as MapIcon, Globe, Sparkles, Navigation, Send } from "lucide-react";
 import { GoogleGenAI } from "@google/genai";
-import { motion, AnimatePresence } from "motion/react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function WebAgentInterface() {
   const [isOpen, setIsOpen] = useState(false);

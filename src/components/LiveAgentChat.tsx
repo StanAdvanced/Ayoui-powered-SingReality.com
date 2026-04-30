@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MessageSquare, X, Send, User, Headset, Mic, MicOff, Maximize2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export default function LiveAgentChat() {
   const [isOpen, setIsOpen] = useState(false);

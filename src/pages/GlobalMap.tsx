@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2, Server, Filter, Plus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Leaderboard } from '../components/Leaderboard';

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Radio, Globe2, Zap, Languages, Check, Server } from 'lucide-react';
 
 export function GlobalAudioSync() {

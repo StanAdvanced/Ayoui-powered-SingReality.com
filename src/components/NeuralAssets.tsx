@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Database, Music, Drum, Mic2, Code } from 'lucide-react';
 
 const assets = [

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Youtube, ExternalLink, Play, Eye, ThumbsUp } from 'lucide-react';
 import { searchVideos } from '../services/YouTubeService';
 

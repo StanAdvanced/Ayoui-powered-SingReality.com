@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Mic2, Globe, Zap, Cpu, Layers, Music, Star, ArrowRight, Play } from 'lucide-react';
 import { cn } from '@/src/lib/utils';
 import { playSpark } from '../lib/audioEngine';

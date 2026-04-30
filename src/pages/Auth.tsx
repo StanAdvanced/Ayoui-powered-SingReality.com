@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Mail, Lock, User, ArrowRight, Loader2, Github } from 'lucide-react';
 import { useSound } from '../hooks/useSound';
 

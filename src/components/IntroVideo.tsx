@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { BootOverlay } from './BootOverlay';
 import { Volume2, VolumeX, FastForward, Play, AlertCircle } from 'lucide-react';
 

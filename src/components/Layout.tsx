@@ -22,7 +22,7 @@ import {
   Layers as LayersIcon,
   Folder
 } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
 import { useStore } from '../store/useStore';
 import { Loader2 } from 'lucide-react';
 import { InteractiveBackground } from './InteractiveBackground';

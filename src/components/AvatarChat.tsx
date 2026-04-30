@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, Send, X, Mic, Volume2, Sparkles, Music, Zap, Globe, MicOff } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { useStore } from '../store/useStore';

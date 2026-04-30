@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Mic2, Search, Users, Share2, Calendar, Globe, 
   Music, Zap, Star, Rocket, Sparkles, Heart,

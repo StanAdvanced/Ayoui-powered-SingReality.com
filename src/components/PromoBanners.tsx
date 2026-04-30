@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Zap, Globe, ArrowRight, Play, Star } from 'lucide-react';
 
 export function PromoBanners() {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Network, Server, Key, Cpu, Zap, Activity, ShieldCheck, Binary, Globe2, FileJson, ArrowUpRight, Copy } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { InteractiveBackground } from './InteractiveBackground';

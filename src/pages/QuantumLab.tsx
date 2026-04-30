@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Cpu, Zap, Activity, Sliders, Play, Share2, Save, Wand2 } from 'lucide-react';
 import { QuantumMusicEngine } from '../services/quantumMusicEngine';
 import { CinematicBackscreen } from '../components/CinematicBackscreen';

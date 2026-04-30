@@ -6,7 +6,7 @@ import { EffectComposer, Bloom } from '@react-three/postprocessing';
 import * as THREE from 'three';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAvatarSpeech } from '../hooks/useAvatarSpeech';
-import { AnimatePresence, motion } from 'motion/react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useSound } from '../hooks/useSound';
 
 import { Humanoid } from './Avatar';

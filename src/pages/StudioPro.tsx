@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Layers, Eye, EyeOff, Trash2, Plus, ChevronUp, ChevronDown, 
   Upload, Maximize2, MousePointer2, MessageSquare, Send,

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Zap, X, Radio, Volume2, Cpu } from 'lucide-react';
 import { djVerseService } from '../services/djVerseService';
 import { useStore } from '../store/useStore';

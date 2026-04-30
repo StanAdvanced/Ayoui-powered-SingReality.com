@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AISongSincvEngine, BiometricData } from '../services/aisongSincvEngine';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Brain, Zap, Music, Play, Pause, Sparkles, Volume2, Save, FolderOpen, Loader2, Trash2 } from 'lucide-react';
 import { generateBgmRecipe, generateSpeech } from '../services/geminiService';
 import { playSpark, SparkRecipe } from '../lib/audioEngine';

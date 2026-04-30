@@ -1,5 +1,5 @@
 import React, { useState, Suspense, Component, ReactNode, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Play, Loader2, Share2, Activity, Zap, BrainCircuit, Mic2, Users, Wand2, Music as MusicIcon, Video, Download, Layers as LayersIcon } from 'lucide-react';
 import { ChoreoLoadingAnimation } from '../components/ChoreoLoadingAnimation';
 import { Avatar } from '../components/Avatar';

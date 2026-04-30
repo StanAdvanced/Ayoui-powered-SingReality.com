@@ -8,7 +8,7 @@ import {
 import { YouTubeBackground } from './YouTubeBackground';
 import { useMusicEngine } from '../services/musicEngine';
 import { useStore } from '../store/useStore';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { narrationEngine } from '../services/narrationEngine';
 import { VoiceSelector } from './VoiceSelector';
 import { GlobalSingALong } from './GlobalSingALong';

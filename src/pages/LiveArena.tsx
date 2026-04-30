@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, Suspense } from 'react';
 import { io } from 'socket.io-client';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Mic, Users, Plus, MousePointer2, Box, Loader2, Brain, Zap, Globe } from 'lucide-react';
 import { SafeCanvas } from '../components/SafeCanvas';
 import { useFrame, useThree } from '@react-three/fiber';

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ModelViewer } from './ModelViewer';
 import { Box, Layers, Globe, Zap, Plus, Search, Filter, Trash2, Settings2, ArrowRight, Undo2, Redo2 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../store/useStore';
 
 export function ThreeWorkspace() {

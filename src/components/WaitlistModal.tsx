@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, Sparkles, CheckCircle2 } from 'lucide-react';
 import { useSound } from '../hooks/useSound';
 

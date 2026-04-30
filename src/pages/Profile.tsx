@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
 import { Loader2, Award, Music, Trophy, Edit2, Save, X, Camera, BarChart2, AlertCircle, Cpu, Zap, Activity, Sparkles } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { soundService } from '../services/soundService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { YouTubeBackground } from '../components/YouTubeBackground';

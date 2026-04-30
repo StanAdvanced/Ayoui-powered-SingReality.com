@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Bot, Layers, Zap, Search, Globe, Code, Box, Shield, Workflow, Eye, BrainCircuit } from 'lucide-react';
 
 const AGENT_TEMPLATES = [

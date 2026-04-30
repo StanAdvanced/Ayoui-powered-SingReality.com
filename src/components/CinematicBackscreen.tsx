@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion, useAnimation } from 'motion/react';
+import { motion, useAnimation } from 'framer-motion';
 import { SUMFEngine, ConvergenceState } from '../services/sumfEngine';
 
 interface CinematicBackscreenProps {

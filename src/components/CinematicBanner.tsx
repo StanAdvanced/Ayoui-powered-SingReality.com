@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Globe2, Cpu, Sparkles, ShieldCheck, ShoppingCart, TestTube, User, Tv, Mic2, Box, Terminal, Brain, Play } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useActionNarrator } from '../hooks/useActionNarrator';

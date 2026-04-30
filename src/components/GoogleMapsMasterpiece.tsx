@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Search, MapPin, Navigation, Globe, Box, Zap, Compass, Filter, Layers, Radio } from 'lucide-react';
 import { GoogleMap, useJsApiLoader, Marker, Circle, HeatmapLayer, GroundOverlay } from '@react-google-maps/api';
 

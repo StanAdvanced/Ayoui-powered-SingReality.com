@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useStore } from '../store/useStore';
 import { AudioLines, ChevronDown, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export function VoiceSelector() {
   const { narrationVoice, setNarrationVoice } = useStore();

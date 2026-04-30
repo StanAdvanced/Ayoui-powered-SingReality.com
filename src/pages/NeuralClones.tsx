@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion';
 import { Play, ShoppingCart, Cpu, Waves, Sliders, Zap } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { YouTubeBackground } from '../components/YouTubeBackground';

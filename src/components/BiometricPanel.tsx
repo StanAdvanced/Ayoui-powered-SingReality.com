@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { motion, AnimatePresence, useSpring, useTransform } from 'motion/react';
+import { motion, AnimatePresence, useSpring, useTransform } from 'framer-motion';
 import { Activity, Brain, Radio, Zap } from 'lucide-react';
 
 interface BiometricPanelProps {
