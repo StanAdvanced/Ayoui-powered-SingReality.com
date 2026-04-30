@@ -51,7 +51,7 @@ export function KaraokeRoom() {
   const [currentTime, setCurrentTime] = useState(0);
   const [videoId, setVideoId] = useState('jfKfPfyJRdk');
   const { playGenre, togglePlay, isPlaying, audioElement, currentTrack, volume, setVolume } = useMusicEngine();
-  const { karaokeTheme, setKaraokeTheme } = useStore();
+  const { karaokeTheme, setKaraokeTheme, narrationVoice } = useStore();
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -117,10 +117,10 @@ export function KaraokeRoom() {
   useEffect(() => {
     // Audit: Autonomous narration for karaoke room
     const narrationText = `Entering Karaoke Room. Current theme is ${currentThemeData.name}. Prepare to sing your soul out in the quantum flow.`;
-    narrationEngine.narrate(narrationText, true);
+    narrationEngine.narrate(narrationText, true, narrationVoice);
 
     return () => narrationEngine.stop();
-  }, [karaokeTheme]);
+  }, [karaokeTheme, narrationVoice]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-1000 ${currentThemeData.atmosphere}`}>

@@ -10,15 +10,12 @@ export function VoiceSelector() {
   const voices = [
     { id: 'Puck', label: 'Puck', desc: 'Default Quantum Voice' },
     { id: 'Aoede', label: 'Aoede', desc: 'Bright & Energetic' },
-    { id: 'Charon', label: 'Charon', desc: 'Calm & Warm' },
-    { id: 'Kore', label: 'Kore', desc: 'Clear & Exciting' },
-    { id: 'Fenrir', label: 'Fenrir', desc: 'Deep & Authoritative' },
     { id: 'alloy', label: 'Alloy', desc: 'Neutral & Versatile' },
     { id: 'nova', label: 'Nova', desc: 'Bright (Mapped to Aoede)' },
-    { id: 'shimmer', label: 'Shimmer', desc: 'Clear (Mapped to Kore)' },
-    { id: 'echo', label: 'Echo', desc: 'Warm (Mapped to Charon)' },
+    { id: 'shimmer', label: 'Shimmer', desc: 'Clear' },
+    { id: 'echo', label: 'Echo', desc: 'Warm' },
     { id: 'fable', label: 'Fable', desc: 'Storyteller' },
-    { id: 'onyx', label: 'Onyx', desc: 'Deep (Mapped to Fenrir)' },
+    { id: 'onyx', label: 'Onyx', desc: 'Deep' },
   ];
 
   const currentVoice = voices.find(v => v.id === narrationVoice) || voices[0];

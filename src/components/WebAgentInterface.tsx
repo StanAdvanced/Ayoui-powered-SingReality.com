@@ -1,9 +1,7 @@
-"use client";
-
 import React, { useState } from "react";
 import { Search, Map as MapIcon, Globe, Sparkles, Navigation, Send } from "lucide-react";
 import { GoogleGenAI } from "@google/genai";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 
 export default function WebAgentInterface() {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,14 +22,11 @@ export default function WebAgentInterface() {
 
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      const model = ai.models.generateContent({
+      const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [
-          { role: 'user', parts: [{ text: `You are an elite Google AI Agent with Web Search and Maps capabilities. Answer the following query as if you just performed a quantum search across real-time networks: ${userMessage}` }] }
-        ]
+        contents: `You are an elite Google AI Agent with Web Search and Maps capabilities. Answer the following query as if you just performed a quantum search across real-time networks: ${userMessage}`
       });
-
-      const response = await model;
+      
       setMessages(prev => [...prev, { role: 'assistant', content: response.text || "No data recovered." }]);
     } catch (error) {
       console.error(error);
