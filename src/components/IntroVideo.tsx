@@ -1,129 +1,152 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Logo } from './Logo';
+import { BootOverlay } from './BootOverlay';
+import { Volume2, VolumeX, FastForward, Play } from 'lucide-react';
 
-export function IntroVideo({ onComplete }: { onComplete?: () => void }) {
-  const [phase, setPhase] = useState(1);
+export function IntroVideo({ onComplete }: { onComplete: () => void }) {
+  const [isMuted, setIsMuted] = useState(false); // Default to unmuted as requested: "Autoplay with sound enabled"
+  const [hasStarted, setHasStarted] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  const videoSources = {
-    1: "https://drive.google.com/uc?export=download&id=1Tn6Rf05djgrqqDTjyD2GOj2_o3iVRHj36fznwsaAIo8", // Gorilla Intro
-    2: "https://drive.google.com/uc?export=download&id=1OFuhiy8bbF0sdJwJzg2HUFJVQyCwH12t" // Main Cinematic
+  // Video assets - assuming intro.mp4 in public or local
+  const videoUrl = "/intro.mp4"; 
+
+  useEffect(() => {
+    // Attempt auto-play with sound
+    // Most browsers will block this unless user has interacted or site is allowlisted
+    if (videoRef.current) {
+      const playPromise = videoRef.current.play();
+      
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.warn("Autoplay with sound blocked. Waiting for user interaction...", error);
+          setIsMuted(true); // Fallback to muted to allow autoplay to start visually
+        });
+      }
+    }
+  }, []);
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      const p = (videoRef.current.currentTime / videoRef.current.duration) * 100;
+      setProgress(p);
+    }
   };
 
-  const handlePhaseEnd = () => {
-    if (phase === 1) {
-      setPhase(2);
-    } else {
-      triggerExit();
-    }
+  const handleSkip = () => {
+    triggerExit();
   };
 
   const triggerExit = () => {
     setIsExiting(true);
-    // Allow 2s for the fade out as requested by the Producer
     setTimeout(() => {
-      handleComplete();
-    }, 2000);
+      onComplete();
+    }, 1500); // Dissolve duration
   };
 
-  const handleComplete = () => {
-    sessionStorage.setItem('singreality_intro_seen', 'true');
-    if (onComplete) onComplete();
+  const startWithAudio = () => {
+    if (videoRef.current) {
+      videoRef.current.muted = false;
+      setIsMuted(false);
+      videoRef.current.play();
+      setHasStarted(true);
+    }
   };
 
   return (
     <AnimatePresence>
       {!isExiting && (
         <motion.div
-          className="fixed inset-0 z-[10000] bg-black flex items-center justify-center overflow-hidden"
-          initial={{ opacity: 1 }}
+          className="fixed inset-0 z-[9999] bg-black flex items-center justify-center overflow-hidden cursor-none"
+          initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          exit={{ opacity: 0, filter: 'blur(20px) scale(1.1)' }}
-          transition={{ duration: 2, ease: [0.43, 0.13, 0.23, 0.96] }}
+          exit={{ opacity: 0, scale: 1.1, filter: 'blur(30px)' }}
+          transition={{ duration: 1.5, ease: 'easeInOut' }}
         >
-          <div className="absolute inset-0 z-0 bg-gradient-to-b from-transparent via-black/20 to-black pointer-events-none" />
-          
-          <video
-            key={`phase-${phase}`}
-            ref={videoRef}
-            src={videoSources[phase as keyof typeof videoSources]}
-            className="w-full h-full object-cover grayscale-[0.2] contrast-[1.1]"
-            autoPlay
-            muted
-            playsInline
-            onEnded={handlePhaseEnd}
-            onError={(e) => {
-              const errMsg = e.currentTarget?.error?.message || "Unknown error";
-              console.warn(`Stanley Phani Media: Transmission failed phase ${phase}. [${errMsg}]`);
-              handlePhaseEnd();
-            }}
-          />
-          
-          {/* Hollywood Style Intro Overlays */}
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: [0, 0.3, 0] }}
-              transition={{ duration: 10, repeat: Infinity }}
-              className="text-white/10 font-display text-[15vw] font-black uppercase tracking-[0.5em] blur-[40px] absolute"
-            >
-              SINGREALITY
-            </motion.div>
-            
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={`credits-${phase}`}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ duration: 1.5, delay: 1 }}
-                className="flex flex-col items-center gap-4 z-20"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="h-[1px] w-12 bg-white/20" />
-                  <span className="text-[10px] font-mono text-white/40 uppercase tracking-[0.4em]">A Stanley Phani Film</span>
-                  <div className="h-[1px] w-12 bg-white/20" />
-                </div>
-                
-                <h2 className="text-4xl md:text-6xl font-display font-black text-white italic tracking-tighter opacity-80 mix-blend-overlay">
-                  {phase === 1 ? "ORIGINS" : "THE SINGULARITY"}
-                </h2>
+          {videoUrl && (
+            <video
+              ref={videoRef}
+              src={videoUrl}
+              className="w-full h-full object-cover"
+              autoPlay
+              playsInline
+              muted={isMuted}
+              onTimeUpdate={handleTimeUpdate}
+              onEnded={triggerExit}
+              onPlay={() => setHasStarted(true)}
+            />
+          )}
 
-                {phase === 2 && (
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 2 }}
-                    className="flex items-center gap-3 mt-4 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full backdrop-blur-md"
-                  >
-                    <div className="w-1.5 h-1.5 rounded-full bg-singularity animate-pulse" />
-                    <span className="text-[8px] font-mono text-white/60 uppercase tracking-widest">Mastered in 8K Neural-Dolby Atmos</span>
-                  </motion.div>
-                )}
-              </motion.div>
-            </AnimatePresence>
+          <BootOverlay />
+
+          {/* Dynamic HUD Elements */}
+          <div className="absolute top-12 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 pointer-events-none">
+            <span className="text-[10px] font-mono text-singularity opacity-60 uppercase tracking-[0.5em]">System Boot Sequence</span>
+            <div className="w-64 h-[1px] bg-white/10 relative">
+              <motion.div 
+                className="absolute inset-y-0 left-0 bg-singularity shadow-[0_0_15px_rgba(0,184,212,0.8)]"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+              />
+            </div>
           </div>
 
-          {/* Escape Hatch (Skip Button) */}
-          <motion.button
-            className="absolute bottom-12 right-12 px-6 py-2 bg-black/40 hover:bg-singularity/20 backdrop-blur-xl border border-white/10 hover:border-singularity/50 rounded-full text-white/50 hover:text-singularity font-mono text-[10px] uppercase tracking-[0.3em] transition-all z-[10001] group"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 2, duration: 1 }}
-            onClick={triggerExit}
-          >
-            <span className="relative z-10">SKIP INTRO</span>
-            <div className="absolute inset-0 bg-singularity/5 opacity-0 group-hover:opacity-100 blur-md transition-opacity rounded-full" />
-          </motion.button>
+          {/* Interactivity layer if blocked */}
+          {!hasStarted && isMuted && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm z-[10002]"
+            >
+              <button 
+                onClick={startWithAudio}
+                className="flex flex-col items-center gap-6 group"
+              >
+                <div className="w-24 h-24 rounded-full border-2 border-singularity/50 flex items-center justify-center group-hover:scale-110 group-hover:border-singularity transition-all duration-500">
+                  <Play className="w-10 h-10 text-singularity ml-1" />
+                </div>
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-display font-black text-white italic tracking-widest group-hover:text-singularity transition-colors">INITIATE GLASSVERSE</h2>
+                  <p className="text-[10px] font-mono text-white/40 uppercase tracking-[0.3em]">Audio Permission Required for Full Immersion</p>
+                </div>
+              </button>
+            </motion.div>
+          )}
 
-          {/* The Director's Corner */}
-          <div className="absolute top-12 left-12 mix-blend-exclusion">
-            <div className="flex flex-col gap-1">
-              <div className="h-0.5 w-12 bg-singularity/40" />
-              <p className="text-[10px] font-mono text-singularity/60 tracking-widest uppercase">Initializing Stanley Phani Nexus</p>
+          {/* Controls */}
+          <div className="absolute bottom-12 left-12 right-12 flex justify-between items-end z-[10003]">
+            <div className="flex flex-col gap-4">
+              <div className="flex items-center gap-4 text-white/30 font-mono text-[9px] uppercase tracking-widest">
+                <span>Core: AI_SINGULARITY_V4</span>
+                <span className="opacity-20">|</span>
+                <span>Buffer: OPTIMIZED</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button 
+                  onClick={() => setIsMuted(!isMuted)}
+                  className="p-3 glass rounded-full hover:bg-white/10 transition-colors"
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4 text-red-500" /> : <Volume2 className="w-4 h-4 text-singularity" />}
+                </button>
+              </div>
             </div>
+
+            <button
+              onClick={handleSkip}
+              className="flex items-center gap-4 px-8 py-3 glass rounded-xl border border-white/10 hover:border-singularity/50 hover:bg-singularity/5 text-white/50 hover:text-white transition-all group overflow-hidden relative"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.4em]">Skip Sequence</span>
+              <FastForward className="w-4 h-4 opacity-50 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+            </button>
+          </div>
+
+          {/* Ambient Lighting Particles */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute top-0 left-1/4 w-[1px] h-full bg-gradient-to-b from-transparent via-singularity/10 to-transparent opacity-20" />
+            <div className="absolute top-0 right-1/4 w-[1px] h-full bg-gradient-to-b from-transparent via-singularity/10 to-transparent opacity-20" />
           </div>
         </motion.div>
       )}
