@@ -7,6 +7,7 @@ import { YouTubeSearch } from '../components/marketplace/YouTubeSearch';
 import { YouTubeBackground } from '../components/YouTubeBackground';
 import { UserAvatar } from '../components/UserAvatar';
 import { PromoBanners } from '../components/PromoBanners';
+import { DescribeToCompose } from '../components/marketplace/DescribeToCompose';
 
 const ASSETS = [
   {
@@ -384,6 +385,11 @@ export function Marketplace() {
       </div>
 
       <PromoBanners />
+
+      {/* DeepSeek Describe to Compose */}
+      <div className="mb-12">
+        <DescribeToCompose />
+      </div>
 
       {/* Trending Assets */}
       <div className="mb-12 flex items-center justify-between">

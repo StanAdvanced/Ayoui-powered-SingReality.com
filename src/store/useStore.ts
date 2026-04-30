@@ -91,13 +91,13 @@ interface AppState {
   addToKaraokeQueue: (song: { id: string; title: string; youtubeId: string }) => void;
   removeFromKaraokeQueue: (id: string) => void;
 
-  // SingReality Singularity State
+  // Resonance & Currency
   resonance: number;
   addResonance: (amount: number) => void;
-
-  // Currency State
   currency: string;
   setCurrency: (currency: string) => void;
+  credits: number;
+  setCredits: (credits: number) => void;
 
   // Shopping Cart State
   cartItems: CartItem[];
@@ -325,9 +325,10 @@ export const useStore = create<AppState>((set, get) => {
 
     resonance: 14729881, // Starting with a high number from the lore
     addResonance: (amount) => set((state) => ({ resonance: state.resonance + amount })),
-
     currency: 'AUD',
     setCurrency: (currency) => set({ currency }),
+    credits: 0,
+    setCredits: (credits) => set({ credits }),
 
     cartItems: [],
     isCartOpen: false,

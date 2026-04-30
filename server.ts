@@ -5,10 +5,24 @@ import { createServer as createViteServer } from "vite";
 import path from "path";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import Stripe from "stripe";
 
 // Basic in-memory db for auth fallback since Firebase was declined
 const users = new Map<string, any>();
 const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-for-local-dev";
+
+let stripeClient: Stripe | null = null;
+function getStripe(): Stripe {
+  if (!stripeClient) {
+    const key = process.env.STRIPE_SECRET_KEY;
+    if (!key) {
+      console.warn('STRIPE_SECRET_KEY environment variable is missing');
+      return new Stripe('sk_test_mock', { apiVersion: '2023-10-16' });
+    }
+    stripeClient = new Stripe(key, { apiVersion: '2023-10-16' });
+  }
+  return stripeClient;
+}
 
 async function startServer() {
   const app = express();
@@ -148,6 +162,61 @@ async function startServer() {
     } catch (error) {
       console.error("YouTube API Error:", error);
       res.status(500).json({ error: "Failed to fetch from YouTube" });
+    }
+  });
+
+  app.post("/api/payment/create-intent", async (req, res) => {
+    try {
+      const { amount } = req.body;
+      const stripe = getStripe();
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount,
+        currency: 'usd',
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/compose", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      const apiKey = process.env.DEEPSEEK_API_KEY;
+      if (!apiKey) {
+        throw new Error('DEEPSEEK_API_KEY is not configured');
+      }
+
+      const response = await fetch('https://api.deepseek.com/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({
+          model: 'deepseek-r1-0528',
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an AI music composer. Given a prompt, generate a short melody using music notes (e.g. C4, D4, E4) and durations (8n, 4n). Format your response STRICTLY as a JSON array where each item has "note" and "duration" properties. No markdown formatting.'
+            },
+            { role: 'user', content: prompt }
+          ]
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error?.message || 'Failed to generate composition');
+      }
+
+      let content = data.choices[0].message.content;
+      content = content.replace(/```json/g, '').replace(/```/g, '').trim();
+      const melody = JSON.parse(content);
+      res.json({ melody });
+    } catch (error: any) {
+      console.error("DeepSeek Compose Error:", error);
+      res.status(500).json({ error: error.message });
     }
   });
 
