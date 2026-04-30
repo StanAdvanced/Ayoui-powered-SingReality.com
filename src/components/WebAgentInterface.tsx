@@ -23,7 +23,7 @@ export default function WebAgentInterface() {
     setIsSearching(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
       const model = ai.models.generateContent({
         model: 'gemini-3-flash-preview',
         contents: [

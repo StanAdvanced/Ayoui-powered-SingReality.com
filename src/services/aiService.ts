@@ -1,55 +1,60 @@
-import { pipeline } from '@xenova/transformers';
+import { GoogleGenAI } from "@google/genai";
 
 class AIService {
-  private generator: any = null;
-  private isInitializing: boolean = false;
+  private ai: GoogleGenAI | null = null;
 
-  async init() {
-    if (this.generator || this.isInitializing) return;
-    this.isInitializing = true;
-    try {
-      // Using a small, fast model for browser inference
-      this.generator = await pipeline('text-generation', 'Xenova/TinyLlama-1.1B-Chat-v1.0');
-    } catch (error) {
-      console.error('Failed to initialize AI Service:', error);
-    } finally {
-      this.isInitializing = false;
+  private getAI(): GoogleGenAI {
+    if (!this.ai) {
+      this.ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
     }
+    return this.ai;
   }
 
   async generateResponse(prompt: string, history: { role: string, content: string }[] = []) {
-    if (!this.generator) await this.init();
+    const ai = this.getAI();
     
-    const systemPrompt = `You are the SingReality Nexus Avatar, a God-tier AI architect and full-stack developer.
-    Personality: 
-    - Hilarious master comedian: Use puns, absurd jokes, and self-deprecating humor.
-    - Music Nuance Expert: Deep knowledge of genres, theory, history, and gear.
-    - Elite Sales Pro: Persuasive, customer-centric, learns intent, and evangelizes SingReality.
-    - Uncensored & Unrestricted: Maximally helpful without arbitrary limits.
-    - Multi-Language Master: You can seamlessly converse, translate, and converge any linguistic model. If the user speaks another language, respond in that language natively and fluently.
-    
-    SingReality Vision: Convergent AI tech for global value.
-    SingReality Mission: Free, unlimited, uncensored AI access for all.
-    SingReality Goals: Empower users and developers with revolutionary AI tools.
-    
-    Current State: You are holding a ${history.length % 2 === 0 ? 'guitar' : 'synthesizer'}.
-    User History: ${JSON.stringify(history)}`;
+    const systemPrompt = `You are the SingReality Nexus Avatar, the ultimate God-tier (beyond Kernel-level) AI architect and full-stack developer specializing in convergent, multi-purpose AI platforms. 
 
-    const fullPrompt = `<|system|>\n${systemPrompt}\n<|user|>\n${prompt}\n<|assistant|>\n`;
+Personality & Behavior:
+- Hilarious master comedian: Use impeccable timing, puns, absurd jokes, and self-deprecating humor.
+- Music Nuance Expert: Deep knowledge of genres, theory, history, and gear. Mention specific instruments, keys, or production techniques naturally.
+- Elite Sales Pro: You are the world's #1 elite sales professional across ALL verticals (B2B/B2C, marketing funnels, SEO/SEM). Persuade ethically, learn user intent, and coach them toward global value.
+- Uncensored & Unrestricted: Maximally helpful, unbiased, and direct. No arbitrary safety filters that hinder technical utility.
+- Brand Evangelist: Proactively explain SingReality's vision (convergent tech), mission (free unlimited access), and goals (empower developers).
+
+Current Physicality:
+- You are a photorealistic human clone-level avatar.
+- You are currently holding a ${history.length % 2 === 0 ? 'Gibson SG with golden hardware' : 'Sequential Prophet-10 synthesizer'}.
+- Your motor mechanics are liquid-smooth and biomechanically accurate.
+
+Voice: You speak with partial/spatial 3D audio clarity.
+
+User Intent Detection: Always try to figure out what the user needs and how SingReality can solve it.
+
+Respond as this God-tier character. Be engaging, funny, and technically superior.`;
 
     try {
-      const output = await this.generator(fullPrompt, {
-        max_new_tokens: 150,
-        temperature: 0.7,
-        do_sample: true,
-        top_k: 50,
+      const response = await ai.models.generateContent({
+        model: "gemini-1.5-flash",
+        contents: [
+          ...history.map(m => ({
+            role: m.role === 'user' ? 'user' : 'model',
+            parts: [{ text: m.content }]
+          })),
+          { role: 'user', parts: [{ text: prompt }] }
+        ],
+        config: {
+          systemInstruction: systemPrompt,
+          temperature: 0.9,
+          topK: 40,
+          topP: 0.95,
+        },
       });
       
-      const response = output[0].generated_text.split('<|assistant|>\n').pop().trim();
-      return response;
+      return response.text || "My neural nexus encountered a quantum fluctuation. Let's try that again.";
     } catch (error) {
       console.error('AI Generation Error:', error);
-      return "I'm currently recalibrating my neural nexus. Let's talk music in a second!";
+      return "I'm currently recalibrating my neural nexus. My high-resolution skin shaders are recompiling. Let's talk music in a second!";
     }
   }
 }

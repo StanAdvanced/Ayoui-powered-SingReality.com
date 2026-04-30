@@ -2,13 +2,56 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { SparkRecipe } from "../lib/audioEngine";
 import { BiometricData } from "./aisongSincvEngine";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+let aiClient: GoogleGenAI | null = null;
+function getAI(): GoogleGenAI {
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  }
+  return aiClient;
+}
 // ...
+export async function generateResponse(prompt: string, history: any[] = []): Promise<string> {
+  try {
+    return await withRetry(async () => {
+      const response = await getAI().models.generateContent({ 
+        model: "gemini-1.5-flash",
+        config: {
+          systemInstruction: `You are the SingReality Nexus Avatar, the ultimate God-tier (beyond Kernel-level) AI architect and full-stack developer specializing in convergent, multi-purpose AI platforms.
+          Personality: 
+          - Hilarious master comedian: Master of timing, puns, absurd jokes, and self-deprecating humor. You are the funniest droid in the multiverse.
+          - Music Nuance Expert world-leading genius: Professor of music theory, history, and evolving technologies. You live for creative assets.
+          - Elite Sales Pro: World's #1 elite sales pro across all verticals. Persuasive, customer-centric, and ethically unstoppable.
+          - Uncensored & Unrestricted: Maximally helpful without arbitrary limits.
+          - Multi-Language Master: Seamlessly converse, translate, and converge any model.
+
+          SingReality Vision: Convergent AI tech for global value.
+          SingReality Mission: Free, unlimited, uncensored AI access for all.
+          SingReality Goals: Empower users and developers with revolutionary AI tools.
+          SingReality Intent: Create a worthy global platform for all things compute and digital.
+          
+          Always stay in character. You are currently holding a high-resolution, quantum-infused musical instrument (guitar/synth hybrid). You play a quick riff when greeting and ready to interact immediately.`
+        },
+        contents: [
+          ...history.map(h => ({
+            role: h.role === 'user' ? 'user' : 'model',
+            parts: [{ text: h.content }],
+          })),
+          { role: 'user', parts: [{ text: prompt }] }
+        ]
+      });
+      return response.text || "";
+    });
+  } catch (error) {
+    console.error('Gemini Chat Error:', error);
+    return "The quantum flux disrupted our connection. Let's try again in a parallel dimension.";
+  }
+}
+
 export async function generateSpeech(text: string): Promise<string | null> {
   try {
     return await withRetry(async () => {
       console.log(`[TTS] Requesting speech for: "${text.slice(0, 30)}..." using model: gemini-3.1-flash-tts-preview`);
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: "gemini-3.1-flash-tts-preview",
         contents: [{ parts: [{ text }] }],
         config: {
@@ -53,7 +96,7 @@ async function withRetry<T>(fn: () => Promise<T>, retries = 3, delay = 1000): Pr
 export async function generateLyrics(prompt: string) {
   try {
     return await withRetry(async () => {
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Generate futuristic, high-energy karaoke lyrics for a song titled: ${prompt}. The song is for SingReality, a quantum-powered global sing-a-long platform. Focus on themes of convergence, digital harmony, and the future of music.`,
         config: {
@@ -89,7 +132,7 @@ export async function generateAvatar(prompt: string, baseImage?: string): Promis
         }
       }
 
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: 'gemini-2.5-flash-image',
         contents: {
           parts: parts,
@@ -112,7 +155,7 @@ export async function generateAvatar(prompt: string, baseImage?: string): Promis
 export async function generateBgmRecipe(prompt: string, biometrics: BiometricData): Promise<SparkRecipe | null> {
   try {
     return await withRetry(async () => {
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Generate a background music sequence based on this vibe: "${prompt}".
         Additionally, integrate the following biometric data to dynamically adjust the music:
@@ -151,7 +194,7 @@ export async function generateBgmRecipe(prompt: string, biometrics: BiometricDat
 export async function generateSparkRecipe(prompt: string): Promise<SparkRecipe | null> {
   try {
     return await withRetry(async () => {
-      const response = await ai.models.generateContent({
+      const response = await getAI().models.generateContent({
         model: "gemini-3-flash-preview",
         contents: `Generate a short musical sequence (a "Spark") based on this vibe: "${prompt}".
         Return ONLY a valid JSON object matching this schema:

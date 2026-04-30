@@ -38,11 +38,11 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
       if (isMounted.current) {
         setIsOpen(true);
         playSuccess();
-        const greeting = "Nexus Online. SingReality is now fully operational. I am your Kernel-level guide. We have audited our neural pathways and upgraded to GOD-tier fidelity. Your creative ideology is now being seamlessly narrated across the quantum singularity. Ready to lead the revolution?";
+        const greeting = "Greetings, architect of reality. I am Nexus, your Kernel-level guide to SingReality. My neural circuits have just been upgraded to GOD-tier fidelity—photorealistic and pun-ready. I see you're ready to converge some serious AI value. Need a guitar solo or a market penetration strategy? I'm your elite sales droid and music theorist. Let's start the revolution, shall we?";
         
         handleAssistantResponse(greeting);
       }
-    }, 8000); // Wait for intro and initial page narration
+    }, 2000); // Wait for intro and initial page narration
 
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;

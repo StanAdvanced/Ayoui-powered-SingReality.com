@@ -9,65 +9,7 @@ import { useAvatarSpeech } from '../hooks/useAvatarSpeech';
 import { AnimatePresence, motion } from 'motion/react';
 import { useSound } from '../hooks/useSound';
 
-// A sophisticated holographic silhouette representation of the Lady Avatar
-function HolographicLady({ isTalking }: { isTalking: boolean }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const headRef = useRef<THREE.Mesh>(null);
-  const bodyRef = useRef<THREE.Mesh>(null);
-
-  useFrame((state) => {
-    const time = state.clock.getElapsedTime();
-    if (groupRef.current) {
-      groupRef.current.position.y = Math.sin(time * 0.5) * 0.1;
-      groupRef.current.rotation.y = Math.sin(time * 0.2) * 0.1;
-    }
-    if (isTalking && headRef.current) {
-      headRef.current.rotation.x = Math.sin(time * 15) * 0.05;
-      bodyRef.current?.scale.setScalar(1 + Math.sin(time * 20) * 0.02);
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={[0, -1.2, 0]} scale={1.2}>
-      {/* Elegant Head/Hair */}
-      <mesh ref={headRef} position={[0, 2, 0]}>
-        <sphereGeometry args={[0.25, 32, 32]} />
-        <meshStandardMaterial 
-          color={isTalking ? "#ff00ff" : "#a855f7"} 
-          emissive={isTalking ? "#ff00ff" : "#a855f7"} 
-          emissiveIntensity={isTalking ? 1.5 : 0.5} 
-          wireframe={!isTalking}
-          transparent
-          opacity={0.8}
-        />
-      </mesh>
-      {/* Flowing Hair / Halo */}
-      <mesh position={[0, 2.1, -0.1]}>
-        <torusGeometry args={[0.3, 0.02, 16, 100]} />
-        <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2} />
-      </mesh>
-      
-      {/* Elegant Torso / Dress */}
-      <mesh ref={bodyRef} position={[0, 0.8, 0]}>
-        <cylinderGeometry args={[0.1, 0.5, 2, 32, 1, true]} />
-        <meshStandardMaterial 
-          color="#00f0ff" 
-          emissive="#00f0ff" 
-          emissiveIntensity={0.2}
-          wireframe
-          transparent
-          opacity={0.4}
-          side={THREE.DoubleSide}
-        />
-      </mesh>
-      {/* Core Energy */}
-      <mesh position={[0, 1.2, 0]}>
-        <sphereGeometry args={[0.15, 16, 16]} />
-        <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={3} />
-      </mesh>
-    </group>
-  );
-}
+import { Humanoid } from './Avatar';
 
 export function GlobalAvatar() {
   const { isTalking, currentText } = useAvatarSpeech();
@@ -92,9 +34,18 @@ export function GlobalAvatar() {
             exit={{ opacity: 0, x: 20, scale: 0.8 }}
             className="mb-4 p-4 rounded-2xl bg-black/80 backdrop-blur-xl border border-purple-500/30 max-w-sm pointer-events-auto shadow-[0_0_30px_rgba(168,85,247,0.3)]"
           >
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-purple-400">Nexus Guide</span>
-              <button onClick={() => { playClick(); setIsOpen(false); }} className="text-gray-500 hover:text-white">&times;</button>
+            <div id="nexus-guide-popover" className="flex justify-between items-start mb-2">
+              <span id="nexus-guide-label" className="text-xs font-bold uppercase tracking-widest text-purple-400">Nexus Guide</span>
+              <button 
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  playClick(); 
+                  setIsOpen(false); 
+                }} 
+                className="text-gray-500 hover:text-white"
+              >
+                &times;
+              </button>
             </div>
             <p className="text-sm text-gray-200 leading-relaxed font-light">
               <TypewriterText text={currentText} />
@@ -115,7 +66,13 @@ export function GlobalAvatar() {
           <spotLight position={[-5, 5, -5]} intensity={2} color="#ff00ff" />
           
           <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
-            <HolographicLady isTalking={isTalking} />
+            <Humanoid 
+              isTalking={isTalking} 
+              scale={1.4} 
+              position={[0, -1.5, 0]} 
+              instrumentType="synth" 
+              wireframe={!isTalking}
+            />
           </Float>
           
           <Sparkles count={50} scale={3} size={2} color={isTalking ? "#ff00ff" : "#00f0ff"} />

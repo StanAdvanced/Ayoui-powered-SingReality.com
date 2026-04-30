@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import { useSound } from '../hooks/useSound';
 import { useStore } from '../store/useStore';
 import { AvatarChat } from '../components/AvatarChat';
+import { Avatar } from '../components/Avatar';
 import { isWebGLAvailable } from '../lib/webgl';
 import { CinematicBanner } from '../components/CinematicBanner';
 import { YouTubeBackground } from '../components/YouTubeBackground';
@@ -32,15 +33,21 @@ export function Home() {
       <YouTubeBackground videoId="XpS_6-O9_3s" opacity={0.1} />
       <ConcertEffects />
       <WaitlistModal isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
+      
       <div className="relative z-10">
       
       {/* Avatar Chat Interface */}
       <AvatarChat onTalkingChange={setAvatarTalking} />
 
       {/* Hero Section */}
-      <section className="relative min-h-[95vh] flex flex-col items-center justify-center overflow-hidden px-6 pt-24">
+      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-24">
         
-        <div className="max-w-7xl w-full relative z-10">
+        {/* Photorealistic 3D Avatar Background/Midground */}
+        <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
+          <Avatar isTalking={isAvatarTalking} />
+        </div>
+
+        <div className="max-w-7xl w-full relative z-10 pointer-events-none">
           <CinematicBanner />
           
           {/* Hollywood Production Credits */}
@@ -62,19 +69,19 @@ export function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <h1 className="text-6xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] mb-12">
+            <h1 className="text-6xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] mb-12 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]">
               WHAT A TIME <br />
               <span className="text-gradient">TO BE LIVE!</span>
             </h1>
 
             {/* Global Search Bar */}
-            <div className="max-w-2xl mx-auto mb-16 relative group">
+            <div className="max-w-2xl mx-auto mb-16 relative group pointer-events-auto">
               <div className="absolute inset-0 bg-gradient-to-r from-singularity/20 to-quantum/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative glass rounded-2xl p-2 flex items-center gap-4 border border-white/10 focus-within:border-singularity/50 transition-all">
                 <Search className="w-6 h-6 text-gray-500 ml-4" />
                 <input 
                   type="text" 
-                  placeholder="Search 33M+ Psyche-Resonant Conduits..." 
+                  placeholder="Ask the Nexus Avatar anything..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="bg-transparent border-none outline-none flex-1 text-lg font-light py-3 placeholder:text-gray-600"
@@ -83,12 +90,12 @@ export function Home() {
                   onClick={playClick}
                   className="px-8 py-3 bg-white text-black rounded-xl font-bold text-sm tracking-widest uppercase hover:scale-105 transition-all"
                 >
-                  Search
+                  Analyze
                 </button>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pointer-events-auto">
               <button 
                 onClick={() => { playClick(); setIsWaitlistOpen(true); }}
                 className="group relative px-10 py-5 bg-white text-black rounded-2xl font-bold text-sm tracking-widest uppercase overflow-hidden transition-all hover:scale-105 flex items-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.3)]"

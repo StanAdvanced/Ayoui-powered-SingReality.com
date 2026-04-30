@@ -1,6 +1,12 @@
 import { GoogleGenAI, Modality } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+let aiClient: GoogleGenAI | null = null;
+function getAI(): GoogleGenAI {
+  if (!aiClient) {
+    aiClient = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+  }
+  return aiClient;
+}
 
 export type VoiceName = 'Puck' | 'Aoede' | 'Charon' | 'Kore' | 'Fenrir' | 'alloy' | 'nova' | 'shimmer' | 'echo' | 'fable' | 'onyx';
 
@@ -19,7 +25,7 @@ export async function generateSpeech(text: string, voiceName: VoiceName = 'Puck'
     const mappedVoice = OAI_TO_GEMINI_MAP[voiceName] || voiceName;
     
     // Audit: Using the highest fidelity TTS model available in the Gemini ecosystem
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: [{ parts: [{ text }] }],
       config: {
