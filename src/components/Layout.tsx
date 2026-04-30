@@ -59,7 +59,7 @@ const CURRENCIES = [
 import { Logo } from './Logo';
 import { UserAvatar } from './UserAvatar';
 import { GlobalSearch } from './GlobalSearch';
-import { CinematicBackscreen } from './CinematicBackscreen';
+import { HyperMediaBackscreen } from './HyperMediaBackscreen';
 import { Music2 } from 'lucide-react';
 import WebAgentInterface from './WebAgentInterface';
 import LiveAgentChat from './LiveAgentChat';
@@ -88,7 +88,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
     bgEnabled,
     setBgEnabled
   } = store;
-  const { playClick, playTransition } = useSound();
+  const { playClick } = useSound();
 
   // Audit: Identify 3D-Heavy Routes
   const isHighComputePath = ['/studio', '/studio-pro', '/live-arena', '/karaoke-arena', '/arenas', '/global-map'].includes(location.pathname);
@@ -104,25 +104,6 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, 0, 200], [0, 1, 0]);
-
-  // Autonomous Narration Logic
-  useEffect(() => {
-    playTransition();
-    
-    // Sync narration engine voice
-    narrationEngine.currentVoice = store.narrationVoice;
-    
-    // Audit: Autonomous "God-tier" narration of page context
-    const pageTitle = document.title || 'SingReality';
-    const currentPath = location.pathname === '/' ? 'Nexus' : location.pathname.slice(1).replace(/-/g, ' ');
-    
-    const narrationText = `Entering ${currentPath}. SingReality is converging your reality with the quantum singularity of music. Explore our ${currentPath} and transcend the ordinary.`;
-    
-    // Kernel Nuance: Automatic delivery without user interference
-    narrationEngine.narrate(narrationText, true, store.narrationVoice);
-
-    return () => narrationEngine.stop();
-  }, [location.pathname, store.narrationVoice]);
 
   const links = [
     { name: 'Gallery', path: '/showcase', icon: Award },
@@ -175,7 +156,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-quantum/10 rounded-full blur-[120px] animate-morph" style={{ animationDelay: '-4s' }} />
       </div>
 
-      {bgEnabled && !isHighComputePath && <CinematicBackscreen />}
+      {bgEnabled && !isHighComputePath && <HyperMediaBackscreen />}
       <LiveCollaboration />
       <CartModal />
       <NexusPlayer />

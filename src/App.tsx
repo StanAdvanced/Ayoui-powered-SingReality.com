@@ -3,7 +3,7 @@ import { Navigate, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { Loader2 } from 'lucide-react';
-import { OnboardingTour } from './components/OnboardingTour';
+import { AdvancedOnboarding } from './components/AdvancedOnboarding';
 import { AudioPlayer } from './components/AudioPlayer';
 import { IntroVideo } from './components/IntroVideo';
 import AdminDashboard from './components/AdminDashboard';
@@ -74,7 +74,7 @@ export default function App() {
       )}
       
       <CinematicTransition isReady={!isBooting}>
-        <OnboardingTour />
+        <AdvancedOnboarding />
         <AudioPlayer />
         <Layout onReplayIntro={handleReplayIntro}>
           <Suspense fallback={<LoadingFallback />}>
