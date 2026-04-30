@@ -17,6 +17,9 @@ import { ProjectShowcase } from '../components/ProjectShowcase';
 import { PromoBanners } from '../components/PromoBanners';
 import { DJVerseLiveFeed } from '../components/DJVerseLiveFeed';
 import { YouTubeFeatured } from '../components/YouTubeFeatured';
+import { NumtrixianDatabase } from '../components/NumtrixianDatabase';
+import { AvatarBioLink } from '../components/AvatarBioLink';
+import { HeyNumtrixCompanion } from '../components/HeyNumtrixCompanion';
 
 export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -39,6 +42,10 @@ export function Home() {
       
       {/* Avatar Chat Interface */}
       <AvatarChat onTalkingChange={setAvatarTalking} />
+      
+      {/* Numtrixian Integrations */}
+      <AvatarBioLink />
+      <HeyNumtrixCompanion />
 
       {/* Hero Section */}
       <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-24">
@@ -129,6 +136,10 @@ export function Home() {
       </section>
 
       <ShowcaseBanners />
+
+      <section className="relative px-6 py-24 max-w-7xl mx-auto">
+        <NumtrixianDatabase />
+      </section>
 
       <YouTubeFeatured />
 

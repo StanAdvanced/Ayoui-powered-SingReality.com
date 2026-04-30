@@ -22,7 +22,7 @@ export function GoogleMapsMasterpiece() {
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [viewMode, setViewMode] = useState<google.maps.MapTypeId | 'custom'>(google.maps.MapTypeId.SATELLITE);
+  const [viewMode, setViewMode] = useState<string>('satellite');
   const [nodes, setNodes] = useState<{lat: number, lng: number, id: string}[]>([]);
   const [heading, setHeading] = useState(0);
 
@@ -61,9 +61,9 @@ export function GoogleMapsMasterpiece() {
            className="pointer-events-auto glass p-2 rounded-2xl border border-white/10 flex flex-col gap-1"
          >
             {[
-              { id: google.maps.MapTypeId.SATELLITE, icon: Globe, label: 'Orbital' },
-              { id: google.maps.MapTypeId.ROADMAP, icon: Filter, label: 'Grid' },
-              { id: google.maps.MapTypeId.HYBRID, icon: Layers, label: 'Hybrid' },
+              { id: 'satellite', icon: Globe, label: 'Orbital' },
+              { id: 'roadmap', icon: Filter, label: 'Grid' },
+              { id: 'hybrid', icon: Layers, label: 'Hybrid' },
             ].map(type => (
               <button 
                 key={type.id}
@@ -104,7 +104,7 @@ export function GoogleMapsMasterpiece() {
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={center}
         zoom={12}
-        mapTypeId={viewMode === 'custom' ? google.maps.MapTypeId.ROADMAP : viewMode}
+        mapTypeId={viewMode === 'custom' ? 'roadmap' : viewMode}
         onLoad={setMap}
         onClick={addNode}
         options={{
@@ -119,7 +119,7 @@ export function GoogleMapsMasterpiece() {
             key={node.id}
             position={{ lat: node.lat, lng: node.lng }}
             icon={{
-              path: google.maps.SymbolPath.CIRCLE,
+              path: 0,
               scale: 8,
               fillColor: '#00f0ff',
               fillOpacity: 1,

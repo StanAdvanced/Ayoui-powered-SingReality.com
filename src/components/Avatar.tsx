@@ -7,6 +7,8 @@ import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useSound } from '../hooks/useSound';
 import { narrationEngine } from '../services/narrationEngine';
+import { DynamicLOD } from './DynamicLOD';
+import { QuantumEnergyOrb } from './QuantumEnergyOrb';
 
 function Instrument({ type, isTalking }: { type: 'guitar' | 'synth', isTalking: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
@@ -78,7 +80,7 @@ function Instrument({ type, isTalking }: { type: 'guitar' | 'synth', isTalking: 
   );
 }
 
-export function Humanoid({ isTalking, onInteract, instrumentType, scale = 1, position = [0, -0.5, 0], wireframe = false }: { isTalking: boolean, onInteract?: () => void, instrumentType: 'guitar' | 'synth', scale?: number, position?: [number, number, number], wireframe?: boolean }) {
+export function Humanoid({ isTalking, onInteract, instrumentType, scale = 1, position = [0, -0.5, 0], wireframe = false, detailLevel = 'high' }: { isTalking: boolean, onInteract?: () => void, instrumentType: 'guitar' | 'synth', scale?: number, position?: [number, number, number], wireframe?: boolean, detailLevel?: 'high' | 'medium' | 'low' }) {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Group>(null);
   const mouthRef = useRef<THREE.Mesh>(null);
@@ -89,6 +91,16 @@ export function Humanoid({ isTalking, onInteract, instrumentType, scale = 1, pos
   
   const [hovered, setHovered] = useState(false);
   const [spinPhase, setSpinPhase] = useState(0);
+
+  const getAvatarRes = () => {
+    switch(detailLevel) {
+      case 'low': return { head: [16, 16], hair: 8, eyes: [8, 8], torso: [16, 16], arms: [8, 16] };
+      case 'medium': return { head: [32, 32], hair: 16, eyes: [16, 16], torso: [24, 32], arms: [12, 16] };
+      case 'high': default: return { head: [64, 64], hair: 24, eyes: [32, 16], torso: [32, 64], arms: [16, 32] };
+    }
+  };
+
+  const res = getAvatarRes();
 
   // Elite Skin Material
   const skinMaterial = useMemo(() => new THREE.MeshPhysicalMaterial({
@@ -174,27 +186,29 @@ export function Humanoid({ isTalking, onInteract, instrumentType, scale = 1, pos
     >
       <group ref={headRef} position={[0, 1.8, 0]}>
         <mesh>
-          <sphereGeometry args={[0.26, 64, 64]} />
+          <sphereGeometry args={[0.26, res.head[0], res.head[1]]} />
           <primitive object={skinMaterial} />
         </mesh>
         
         {/* Advanced Hair Strands */}
-        <group ref={hairRef} position={[0, 0.1, 0]}>
-          {Array.from({ length: 24 }).map((_, i) => (
-            <mesh key={i} position={[Math.sin(i) * 0.2, 0.15, Math.cos(i) * 0.2]} rotation={[0.2, 0, 0.5]}>
-              <capsuleGeometry args={[0.015, 0.4, 4, 16]} />
-              <meshStandardMaterial color="#1a0f00" roughness={0.1} />
-            </mesh>
-          ))}
-        </group>
+        {detailLevel !== 'low' && (
+          <group ref={hairRef} position={[0, 0.1, 0]}>
+            {Array.from({ length: res.hair }).map((_, i) => (
+              <mesh key={i} position={[Math.sin(i) * 0.2, 0.15, Math.cos(i) * 0.2]} rotation={[0.2, 0, 0.5]}>
+                <capsuleGeometry args={[0.015, 0.4, 4, detailLevel === 'high' ? 16 : 8]} />
+                <meshStandardMaterial color="#1a0f00" roughness={0.1} />
+              </mesh>
+            ))}
+          </group>
+        )}
 
         {/* Eyes */}
         <mesh ref={leftEyeRef} position={[-0.09, 0.05, 0.24]}>
-          <sphereGeometry args={[0.035, 32, 16]} />
+          <sphereGeometry args={[0.035, res.eyes[0], res.eyes[1]]} />
           <meshStandardMaterial color="#fff" emissive="#00f0ff" emissiveIntensity={isTalking ? 10 : 2} />
         </mesh>
         <mesh ref={rightEyeRef} position={[0.09, 0.05, 0.24]}>
-          <sphereGeometry args={[0.035, 32, 16]} />
+          <sphereGeometry args={[0.035, res.eyes[0], res.eyes[1]]} />
           <meshStandardMaterial color="#fff" emissive="#00f0ff" emissiveIntensity={isTalking ? 10 : 2} />
         </mesh>
 
@@ -207,17 +221,17 @@ export function Humanoid({ isTalking, onInteract, instrumentType, scale = 1, pos
 
       {/* Structured Torso */}
       <mesh position={[0, 1, 0]}>
-        <capsuleGeometry args={[0.3, 1, 32, 64]} />
+        <capsuleGeometry args={[0.3, 1, res.torso[0], res.torso[1]]} />
         <primitive object={clothMaterial} />
       </mesh>
 
       {/* Detailed Arms */}
       <mesh position={[-0.5, 1.4, 0]} rotation={[0, 0, 0.4]}>
-        <capsuleGeometry args={[0.09, 0.7, 16, 32]} />
+        <capsuleGeometry args={[0.09, 0.7, res.arms[0], res.arms[1]]} />
         <primitive object={skinMaterial} />
       </mesh>
       <mesh position={[0.5, 1.4, 0]} rotation={[0, 0, -0.4]}>
-        <capsuleGeometry args={[0.09, 0.7, 16, 32]} />
+        <capsuleGeometry args={[0.09, 0.7, res.arms[0], res.arms[1]]} />
         <primitive object={skinMaterial} />
       </mesh>
 
@@ -274,8 +288,15 @@ export function Avatar({ isTalking }: { isTalking: boolean }) {
             azimuth={[-Math.PI / 4, Math.PI / 4]}
           >
             <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-              <Humanoid isTalking={internalTalking} onInteract={handleInteraction} instrumentType={instrument} />
+              <DynamicLOD distances={[0, 10, 25]}>
+                <Humanoid isTalking={internalTalking} onInteract={handleInteraction} instrumentType={instrument} detailLevel="high" />
+                <Humanoid isTalking={internalTalking} onInteract={handleInteraction} instrumentType={instrument} detailLevel="medium" />
+                <Humanoid isTalking={internalTalking} onInteract={handleInteraction} instrumentType={instrument} detailLevel="low" />
+              </DynamicLOD>
             </Float>
+            <group position={[2, 1, -1]}>
+              <QuantumEnergyOrb />
+            </group>
           </PresentationControls>
           
           <Sparkles 
