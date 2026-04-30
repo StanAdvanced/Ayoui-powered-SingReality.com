@@ -1,32 +1,42 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { BootOverlay } from './BootOverlay';
-import { Volume2, VolumeX, FastForward, Play } from 'lucide-react';
+import { Volume2, VolumeX, FastForward, Play, AlertCircle } from 'lucide-react';
 
 export function IntroVideo({ onComplete }: { onComplete: () => void }) {
-  const [isMuted, setIsMuted] = useState(false); // Default to unmuted as requested: "Autoplay with sound enabled"
+  const [isMuted, setIsMuted] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [progress, setProgress] = useState(0);
   const [isExiting, setIsExiting] = useState(false);
+  const [videoError, setVideoError] = useState(false);
+  const [useYouTubeFallback, setUseYouTubeFallback] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
-  // Video assets - assuming intro.mp4 in public or local
-  const videoUrl = "/intro.mp4"; 
+  const localVideoUrl = "/intro.mp4";
+  const cdnVideoUrl = "https://player.vimeo.com/external/517088497.hd.mp4?s=d007d3910c538a7c293674c1071427a13d74f260&profile_id=172";
+  const youtubeFallbackId = "XpS_6-O9_3s"; // Cinematic GlassVerse-style fallback
+
+  const videoUrl = videoError ? cdnVideoUrl : localVideoUrl;
 
   useEffect(() => {
-    // Attempt auto-play with sound
-    // Most browsers will block this unless user has interacted or site is allowlisted
-    if (videoRef.current) {
+    if (videoRef.current && !useYouTubeFallback) {
       const playPromise = videoRef.current.play();
-      
       if (playPromise !== undefined) {
-        playPromise.catch(error => {
-          console.warn("Autoplay with sound blocked. Waiting for user interaction...", error);
-          setIsMuted(true); // Fallback to muted to allow autoplay to start visually
-        });
+        playPromise.catch(() => setIsMuted(true));
       }
     }
-  }, []);
+  }, [videoUrl, useYouTubeFallback]);
+
+  const handleVideoError = () => {
+    if (!videoError) {
+      console.warn("Local intro failed, trying CDN...");
+      setVideoError(true);
+    } else {
+      console.error("CDN intro failed, switching to YouTube Fallback...");
+      setUseYouTubeFallback(true);
+      setHasStarted(true); // YouTube autoplay usually works better with iframe
+    }
+  };
 
   const handleTimeUpdate = () => {
     if (videoRef.current) {
@@ -65,18 +75,43 @@ export function IntroVideo({ onComplete }: { onComplete: () => void }) {
           exit={{ opacity: 0, scale: 1.1, filter: 'blur(30px)' }}
           transition={{ duration: 1.5, ease: 'easeInOut' }}
         >
-          {videoUrl && (
-            <video
-              ref={videoRef}
-              src={videoUrl}
-              className="w-full h-full object-cover"
-              autoPlay
-              playsInline
-              muted={isMuted}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={triggerExit}
-              onPlay={() => setHasStarted(true)}
-            />
+          {!useYouTubeFallback ? (
+            videoUrl && !videoError ? (
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                className="w-full h-full object-cover"
+                autoPlay
+                playsInline
+                muted={isMuted}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={triggerExit}
+                onPlay={() => setHasStarted(true)}
+                onError={handleVideoError}
+                onCanPlay={() => {
+                  if (!isMuted) videoRef.current?.play();
+                }}
+              />
+            ) : (
+              <div className="w-full h-full bg-black flex items-center justify-center">
+                <motion.div 
+                  animate={{ opacity: [0.2, 0.5, 0.2] }}
+                  transition={{ duration: 2, repeat: Infinity }}
+                  className="text-singularity font-mono text-[10px] uppercase tracking-[1em]"
+                >
+                  Establishing Link...
+                </motion.div>
+              </div>
+            )
+          ) : (
+            <div className="w-full h-full relative">
+              <iframe
+                className="w-full h-full object-cover pointer-events-none scale-[1.3]"
+                src={`https://www.youtube.com/embed/${youtubeFallbackId}?autoplay=1&mute=${isMuted ? 1 : 0}&controls=0&showinfo=0&rel=0&loop=1&playlist=${youtubeFallbackId}&modestbranding=1`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              />
+              <div className="absolute inset-0 bg-black/20" />
+            </div>
           )}
 
           <BootOverlay />

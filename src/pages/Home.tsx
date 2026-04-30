@@ -16,6 +16,7 @@ import { ShowcaseBanners } from '../components/ShowcaseBanners';
 import { ProjectShowcase } from '../components/ProjectShowcase';
 import { PromoBanners } from '../components/PromoBanners';
 import { DJVerseLiveFeed } from '../components/DJVerseLiveFeed';
+import { YouTubeFeatured } from '../components/YouTubeFeatured';
 
 export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,6 +129,8 @@ export function Home() {
       </section>
 
       <ShowcaseBanners />
+
+      <YouTubeFeatured />
 
       <PromoBanners />
 
