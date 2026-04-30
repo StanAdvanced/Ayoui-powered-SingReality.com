@@ -17,6 +17,9 @@ export function SpatialCard({ children, className = '', glowColor = '#00f0ff' }:
     mouseY.set(clientY - top);
   }
 
+  // Only inject motion values into useMotionTemplate
+  const background = useMotionTemplate`radial-gradient(650px circle at ${mouseX}px ${mouseY}px, var(--glow-color), transparent 80%)`;
+
   return (
     <div
       className={`group relative overflow-hidden rounded-[2rem] border border-white/10 glass-card transition-all hover:border-[${glowColor}]/50 ${className}`}
@@ -25,14 +28,9 @@ export function SpatialCard({ children, className = '', glowColor = '#00f0ff' }:
       <motion.div
         className="pointer-events-none absolute -inset-px rounded-xl opacity-0 transition duration-300 group-hover:opacity-100"
         style={{
-          background: useMotionTemplate`
-            radial-gradient(
-              650px circle at ${mouseX}px ${mouseY}px,
-              ${glowColor}15,
-              transparent 80%
-            )
-          `,
-        }}
+          background,
+          "--glow-color": `${glowColor}15`
+        } as any}
       />
       {children}
     </div>

@@ -97,6 +97,13 @@ export function KaraokeRoom() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [audioElement]);
 
+  const activeIndex = React.useMemo(() => {
+    return PREDEFINED_LYRICS.reduce((acc, lyric, index) => {
+      if (currentTime >= lyric.time) return index;
+      return acc;
+    }, 0);
+  }, [currentTime]);
+
   // Auto-scroll lyrics
   useEffect(() => {
     if (lyricsContainerRef.current) {
@@ -105,12 +112,7 @@ export function KaraokeRoom() {
         activeLyric.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [currentTime]);
-
-  const activeIndex = PREDEFINED_LYRICS.reduce((acc, lyric, index) => {
-    if (currentTime >= lyric.time) return index;
-    return acc;
-  }, 0);
+  }, [activeIndex]);
 
   const currentThemeData = THEMES.find(t => t.id === karaokeTheme) || THEMES[0];
 
