@@ -220,6 +220,56 @@ async function startServer() {
     }
   });
 
+  app.post("/api/nvidia/generate", async (req, res) => {
+    try {
+      const { prompt } = req.body;
+      const apiKey = process.env.NVIDIA_API_KEY;
+      if (!apiKey) {
+        throw new Error('NVIDIA_API_KEY is not configured');
+      }
+
+      // Using NVIDIA NIM API (e.g., Llama 3 or Nemotron provided via build.nvidia.com)
+      const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`,
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({
+          model: 'meta/llama3-70b-instruct', // or nv-embedqa, nemotron, etc.
+          messages: [
+            {
+              role: 'system',
+              content: 'You are an NVIDIA Omniverse digital twin assistant helping build physically accurate music simulation assets for SingReality.'
+            },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 1024
+        })
+      });
+
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.detail || data.error?.message || 'NVIDIA NIM API error');
+      }
+
+      res.json({ result: data.choices[0].message.content });
+    } catch (error: any) {
+      console.error("NVIDIA API Error:", error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/nvidia/speech-to-text", async (req, res) => {
+    try {
+      // Mock integration for NVIDIA Riva Speech Skills
+      res.json({ text: "Simulated speech recognition via NVIDIA Riva. In production, connect to Riva gRPC or HTTP API." });
+    } catch (error: any) {
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   // WebSocket logic
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);

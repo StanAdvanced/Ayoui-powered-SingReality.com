@@ -19,6 +19,7 @@ import {
 import { useStore } from '../store/useStore';
 import { SumFormulaVisualizer } from '../components/SumFormulaVisualizer';
 import { HyperMediaBackscreen } from '../components/HyperMediaBackscreen';
+import { ApiKeysManager } from '../components/ApiKeysManager';
 
 export function DeveloperPortal() {
   const { user } = useStore();
@@ -136,10 +137,6 @@ export function DeveloperPortal() {
 
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
                 <button className="p-6 glass rounded-2xl text-center hover:bg-white/5 transition-all">
-                  <Key className="w-5 h-5 mx-auto mb-3 text-quantum" />
-                  <span className="text-[10px] font-bold uppercase tracking-widest block">Manage Keys</span>
-                </button>
-                <button className="p-6 glass rounded-2xl text-center hover:bg-white/5 transition-all">
                   <Box className="w-5 h-5 mx-auto mb-3 text-singularity" />
                   <span className="text-[10px] font-bold uppercase tracking-widest block">SDK Docs</span>
                 </button>
@@ -149,6 +146,8 @@ export function DeveloperPortal() {
                 </button>
               </div>
             </div>
+
+            <ApiKeysManager />
 
             <div className="glass rounded-[3rem] p-10 border border-white/5">
               <h2 className="text-2xl font-bold flex items-center gap-3 mb-8">

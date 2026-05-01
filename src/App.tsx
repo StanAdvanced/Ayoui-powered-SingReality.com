@@ -10,6 +10,8 @@ import { GeoARStage } from './components/GeoARStage';
 
 // Lazy load pages for performance
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
+const NvidiaOmniversePortal = lazy(() => import('./pages/NvidiaOmniversePortal').then(m => ({ default: m.NvidiaOmniversePortal })));
+const HPCDashboard = lazy(() => import('./pages/HPCDashboard').then(m => ({ default: m.HPCDashboard })));
 const Studio = lazy(() => import('./pages/Studio').then(m => ({ default: m.Studio })));
 const Portal = lazy(() => import('./pages/Portal').then(m => ({ default: m.Portal })));
 const Arenas = lazy(() => import('./pages/Arenas').then(m => ({ default: m.Arenas })));
@@ -63,6 +65,8 @@ export default function App() {
           <Routes>
             <Route path="/" element={<GeoARStage />} />
             <Route path="/home" element={<Home />} />
+            <Route path="/nvidia-omniverse" element={<ProtectedRoute><NvidiaOmniversePortal /></ProtectedRoute>} />
+            <Route path="/hpc-cluster" element={<ProtectedRoute><HPCDashboard /></ProtectedRoute>} />
             <Route path="/studio" element={<ProtectedRoute><Studio /></ProtectedRoute>} />
             <Route path="/clones" element={<ProtectedRoute><NeuralClones /></ProtectedRoute>} />
             <Route path="/marketplace" element={<Marketplace />} />
