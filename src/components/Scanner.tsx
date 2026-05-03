@@ -1,56 +1,18 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import { Camera, QrCode, Scan, Loader2 } from "lucide-react";
 import { GoogleGenAI } from "@google/genai";
-import jsQR from "jsqr";
-import Quagga from "@ericblade/quagga2";
 
 export default function ObjectScanner() {
   const [mode, setMode] = useState<'object' | 'qr' | 'barcode' | null>(null);
   const [result, setResult] = useState("");
   const [isScanning, setIsScanning] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
-  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const startCamera = async (selectedMode: 'object' | 'qr' | 'barcode') => {
     setMode(selectedMode);
     setResult("");
-    setIsScanning(true);
-    
-    if (selectedMode === 'barcode') {
-      // Need to delay initialization slightly to allow DOM to render the video element
-      setTimeout(() => {
-        Quagga.init({
-          inputStream: {
-            type: "LiveStream",
-            target: videoRef.current!,
-            constraints: {
-              facingMode: "environment"
-            },
-          },
-          decoder: {
-            readers: ["ean_reader", "upc_reader", "code_128_reader", "ean_8_reader"]
-          }
-        }, function (err) {
-            if (err) {
-                console.error(err);
-                setResult("Barcode scanner init failed");
-                return;
-            }
-            Quagga.start();
-        });
-
-        Quagga.onDetected((data) => {
-          if (data.codeResult && data.codeResult.code) {
-             setResult("Barcode found: " + data.codeResult.code);
-             stopCamera();
-          }
-        });
-      }, 100);
-      return;
-    }
-
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
       if (videoRef.current) {
@@ -64,62 +26,21 @@ export default function ObjectScanner() {
   };
 
   const stopCamera = () => {
-    if (mode === 'barcode') {
-      try {
-        Quagga.stop();
-        Quagga.offDetected();
-      } catch (e) {
-        // ignore
-      }
-    } else {
-      if (videoRef.current && videoRef.current.srcObject) {
-        const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach(track => track.stop());
-        videoRef.current.srcObject = null;
-      }
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
     }
     setMode(null);
     setIsScanning(false);
   };
 
-  useEffect(() => {
-    let animationFrameId: number;
-    
-    const checkQR = () => {
-      if (mode === 'qr' && videoRef.current && canvasRef.current && videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-        const canvas = canvasRef.current;
-        const ctx = canvas.getContext("2d");
-        if (ctx) {
-          canvas.width = videoRef.current.videoWidth;
-          canvas.height = videoRef.current.videoHeight;
-          ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
-          const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          const code = jsQR(imageData.data, imageData.width, imageData.height, {
-            inversionAttempts: "dontInvert",
-          });
-          if (code) {
-            setResult("QR Code found: " + code.data);
-            stopCamera();
-            return;
-          }
-        }
-      }
-      animationFrameId = requestAnimationFrame(checkQR);
-    };
-
-    if (mode === 'qr') {
-      checkQR();
-    }
-    return () => {
-      if (animationFrameId) cancelAnimationFrame(animationFrameId);
-    };
-  }, [mode]);
-
   const captureAndAnalyze = async () => {
-    if (!videoRef.current || !canvasRef.current) return;
+    if (!videoRef.current) return;
     setIsScanning(true);
     
-    const canvas = canvasRef.current;
+    // Simulate capture and API call
+    const canvas = document.createElement("canvas");
     canvas.width = videoRef.current.videoWidth;
     canvas.height = videoRef.current.videoHeight;
     const ctx = canvas.getContext("2d");
@@ -128,18 +49,20 @@ export default function ObjectScanner() {
     }
     
     try {
-      // In a full application, we would send the image Base64 to Gemini here
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
-      const prompt = "Analyze this image and identify the object. If it's an instrument, tell me what kind of music it's best for. (Simulated text prompt since standard REST File API applies)";
+      // In a real app we'd convert canvas to base64 and send to Gemini Vision
+      // const base64Image = canvas.toDataURL("image/jpeg");
+      const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
+      const prompt = "Analyze this image and identify the object. If it's an instrument, tell me what kind of music it's best for. (Simulated text prompt since actual image upload requires File API)";
       
-      const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+      const model = ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
         contents: prompt
       });
 
-      setResult(response.text || "Scan complete. Object identified.");
+      const res = await model;
+      setResult(res.text || "Scan complete. Object identified.");
     } catch (e) {
-      setResult("Scan failed. " + String(e));
+      setResult("Scan failed. " + (e as Error).message);
     } finally {
       setIsScanning(false);
       stopCamera();
@@ -190,7 +113,6 @@ export default function ObjectScanner() {
             <button onClick={stopCamera} className="absolute top-4 right-4 bg-black/50 text-white px-3 py-1 rounded-full text-xs">
               Cancel
             </button>
-            <canvas ref={canvasRef} className="hidden" />
           </div>
         </div>
       )}

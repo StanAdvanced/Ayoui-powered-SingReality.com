@@ -3,26 +3,6 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcryptjs";
-import Stripe from "stripe";
-
-// Basic in-memory db for auth fallback since Firebase was declined
-const users = new Map<string, any>();
-const JWT_SECRET = process.env.JWT_SECRET || "super-secret-key-for-local-dev";
-
-let stripeClient: Stripe | null = null;
-function getStripe(): Stripe {
-  if (!stripeClient) {
-    const key = process.env.STRIPE_SECRET_KEY;
-    if (!key) {
-      console.warn('STRIPE_SECRET_KEY environment variable is missing');
-      return new Stripe('sk_test_mock', { apiVersion: '2023-10-16' });
-    }
-    stripeClient = new Stripe(key, { apiVersion: '2023-10-16' });
-  }
-  return stripeClient;
-}
 
 async function startServer() {
   const app = express();
@@ -36,116 +16,9 @@ async function startServer() {
 
   const PORT = 3000;
 
-  // Middleware
-  app.use(express.json());
-
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
-  });
-
-  // Authentication API
-  app.post("/api/auth/signup", async (req, res) => {
-    try {
-      const { email, password, name } = req.body;
-      if (users.has(email)) {
-        return res.status(400).json({ error: "Email already exists" });
-      }
-      
-      const salt = await bcrypt.genSalt(10);
-      const hashedPassword = await bcrypt.hash(password, salt);
-      
-      const user = {
-        id: Math.random().toString(36).substring(2, 10),
-        email,
-        password: hashedPassword,
-        name,
-        projects: []
-      };
-      
-      users.set(email, user);
-      
-      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
-    } catch (e) {
-      console.error(e);
-      res.status(500).json({ error: "Server error" });
-    }
-  });
-
-  app.post("/api/auth/login", async (req, res) => {
-    try {
-      const { email, password } = req.body;
-      const user = users.get(email);
-      
-      if (!user) {
-        return res.status(400).json({ error: "Invalid credentials" });
-      }
-      
-      const isMatch = await bcrypt.compare(password, user.password);
-      if (!isMatch) {
-        return res.status(400).json({ error: "Invalid credentials" });
-      }
-      
-      const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
-      res.json({ token, user: { id: user.id, email: user.email, name: user.name } });
-    } catch(e) {
-      res.status(500).json({ error: "Server error" });
-    }
-  });
-
-  // Profile / Projects
-  app.get("/api/user/profile", (req, res) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
-    
-    try {
-      const decoded: any = jwt.verify(token, JWT_SECRET);
-      let userDetails = null;
-      for (const user of users.values()) {
-        if (user.id === decoded.id) {
-          userDetails = user;
-          break;
-        }
-      }
-      if (!userDetails) return res.status(404).json({ error: "User not found" });
-      
-      res.json({ 
-        id: userDetails.id, 
-        email: userDetails.email, 
-        name: userDetails.name, 
-        projects: userDetails.projects 
-      });
-    } catch(e) {
-      res.status(401).json({ error: "Invalid token" });
-    }
-  });
-
-  app.post("/api/user/projects", (req, res) => {
-    const token = req.headers.authorization?.split(" ")[1];
-    if (!token) return res.status(401).json({ error: "Unauthorized" });
-    
-    try {
-      const decoded: any = jwt.verify(token, JWT_SECRET);
-      const { project } = req.body;
-      let userDetails = null;
-      for (const user of users.values()) {
-        if (user.id === decoded.id) {
-          userDetails = user;
-          break;
-        }
-      }
-      
-      if (userDetails) {
-        // Just store a snapshot string or metadata
-        userDetails.projects.push({ ...project, id: Math.random().toString(36).substring(2, 10) });
-        res.json({ success: true, projects: userDetails.projects });
-      } else {
-        res.status(404).json({ error: "User not found" });
-      }
-    } catch(e) {
-      res.status(401).json({ error: "Invalid token" });
-    }
   });
 
   app.get("/api/youtube/search", async (req, res) => {
@@ -165,154 +38,25 @@ async function startServer() {
     }
   });
 
-  app.post("/api/payment/create-intent", async (req, res) => {
-    try {
-      const { amount } = req.body;
-      const stripe = getStripe();
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency: 'usd',
-      });
-      res.json({ clientSecret: paymentIntent.client_secret });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/compose", async (req, res) => {
-    try {
-      const { prompt } = req.body;
-      const apiKey = process.env.DEEPSEEK_API_KEY;
-      if (!apiKey) {
-        throw new Error('DEEPSEEK_API_KEY is not configured');
-      }
-
-      const response = await fetch('https://api.deepseek.com/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'deepseek-r1-0528',
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an AI music composer. Given a prompt, generate a short melody using music notes (e.g. C4, D4, E4) and durations (8n, 4n). Format your response STRICTLY as a JSON array where each item has "note" and "duration" properties. No markdown formatting.'
-            },
-            { role: 'user', content: prompt }
-          ]
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error?.message || 'Failed to generate composition');
-      }
-
-      let content = data.choices[0].message.content;
-      content = content.replace(/```json/g, '').replace(/```/g, '').trim();
-      const melody = JSON.parse(content);
-      res.json({ melody });
-    } catch (error: any) {
-      console.error("DeepSeek Compose Error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/nvidia/generate", async (req, res) => {
-    try {
-      const { prompt } = req.body;
-      const apiKey = process.env.NVIDIA_API_KEY;
-      if (!apiKey) {
-        throw new Error('NVIDIA_API_KEY is not configured');
-      }
-
-      // Using NVIDIA NIM API (e.g., Llama 3 or Nemotron provided via build.nvidia.com)
-      const response = await fetch('https://integrate.api.nvidia.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'meta/llama3-70b-instruct', // or nv-embedqa, nemotron, etc.
-          messages: [
-            {
-              role: 'system',
-              content: 'You are an NVIDIA Omniverse digital twin assistant helping build physically accurate music simulation assets for SingReality.'
-            },
-            { role: 'user', content: prompt }
-          ],
-          max_tokens: 1024
-        })
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || data.error?.message || 'NVIDIA NIM API error');
-      }
-
-      res.json({ result: data.choices[0].message.content });
-    } catch (error: any) {
-      console.error("NVIDIA API Error:", error);
-      res.status(500).json({ error: error.message });
-    }
-  });
-
-  app.post("/api/nvidia/speech-to-text", async (req, res) => {
-    try {
-      // Mock integration for NVIDIA Riva Speech Skills
-      res.json({ text: "Simulated speech recognition via NVIDIA Riva. In production, connect to Riva gRPC or HTTP API." });
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  });
-
   // WebSocket logic
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    // Collaboration Session
-    socket.on("join-collab", (sessionId, user) => {
-      socket.join(`collab-${sessionId}`);
-      console.log(`User ${user.name} joined collab session ${sessionId}`);
-      io.to(`collab-${sessionId}`).emit("chat-update", { sender: "System", message: `${user.name} joined the session`, time: new Date() });
-    });
-
-    socket.on("leave-collab", (sessionId, user) => {
-      socket.leave(`collab-${sessionId}`);
-      io.to(`collab-${sessionId}`).emit("chat-update", { sender: "System", message: `${user.name} left the session`, time: new Date() });
-    });
-
-    socket.on("collab-cursor-move", (data) => {
-      // data: { sessionId, userId, name, position: [x,y,z], color }
-      socket.to(`collab-${data.sessionId}`).emit("collab-cursor-update", {
-        userId: data.userId,
-        name: data.name,
-        position: data.position,
-        color: data.color
-      });
-    });
-
-    socket.on("collab-chat-message", (data) => {
-      // data: { sessionId, sender, message, time }
-      io.to(`collab-${data.sessionId}`).emit("chat-update", {
-        sender: data.sender,
-        message: data.message,
-        time: data.time
-      });
-    });
-
-    socket.on("collab-scene-update", (data) => {
-      // Sync 3D objects
-      socket.to(`collab-${data.sessionId}`).emit("scene-update", data.objects);
-    });
-
-    // Retro-compatibility with earlier arenas
     socket.on("join-arena", (arenaId) => {
       socket.join(arenaId);
+      console.log(`User ${socket.id} joined arena ${arenaId}`);
+    });
+
+    socket.on("sing-a-long", (data) => {
+      io.to(data.arenaId).emit("sing-a-long-update", data);
+    });
+
+    socket.on("add-to-queue", (data) => {
+      io.to(data.arenaId).emit("queue-update", data);
+    });
+
+    socket.on("sync-lyrics", (data) => {
+      io.to(data.arenaId).emit("lyrics-update", data);
     });
 
     socket.on("cursor-move", (data) => {
@@ -322,7 +66,22 @@ async function startServer() {
       });
     });
 
+    socket.on("avatar-move", (data) => {
+      socket.to(data.arenaId).emit("avatar-update", {
+        userId: socket.id,
+        position: data.position,
+        rotation: data.rotation
+      });
+    });
+
+    // Project Collaboration
+    socket.on("join-project", (projectId) => {
+      socket.join(`project-${projectId}`);
+      console.log(`User ${socket.id} joined project ${projectId}`);
+    });
+
     socket.on("project-cursor-move", (data) => {
+      // data: { projectId: string, x: number, y: number, color: string, name: string }
       socket.to(`project-${data.projectId}`).emit("project-cursor-update", {
         id: socket.id,
         x: data.x,
@@ -332,10 +91,16 @@ async function startServer() {
       });
     });
 
+    socket.on("project-chat-message", (data) => {
+      // data: { projectId: string, message: object }
+      io.to(`project-${data.projectId}`).emit("project-chat-message", data.message);
+    });
+
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
+      // We'd need to track rooms per socket to emit specific removes, 
+      // but broadcast remove for now as a fallback.
       socket.broadcast.emit("cursor-remove", socket.id);
-      socket.broadcast.emit("collab-cursor-remove", socket.id);
     });
   });
 

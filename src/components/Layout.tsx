@@ -18,11 +18,9 @@ import {
   ShoppingBag,
   HandCoins,
   Award,
-  Maximize2,
-  Layers as LayersIcon,
-  Folder
+  Layers as LayersIcon
 } from 'lucide-react';
-import { motion, AnimatePresence, useMotionValue, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useMotionValue, useTransform } from 'motion/react';
 import { useStore } from '../store/useStore';
 import { Loader2 } from 'lucide-react';
 import { InteractiveBackground } from './InteractiveBackground';
@@ -59,12 +57,9 @@ const CURRENCIES = [
 import { Logo } from './Logo';
 import { UserAvatar } from './UserAvatar';
 import { GlobalSearch } from './GlobalSearch';
-import { HyperMediaBackscreen } from './HyperMediaBackscreen';
+import { CinematicBackscreen } from './CinematicBackscreen';
 import { Music2 } from 'lucide-react';
 import WebAgentInterface from './WebAgentInterface';
-import LiveAgentChat from './LiveAgentChat';
-
-import { AdvancedFrontierModal } from './AdvancedFrontierModal';
 
 export function Layout({ children, onReplayIntro }: { children: React.ReactNode, onReplayIntro?: () => void }) {
   const store = useStore();
@@ -72,7 +67,6 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   
   const [isOpen, setIsOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [isAdvancedModalOpen, setIsAdvancedModalOpen] = useState(false);
   const [lang, setLang] = useState('en');
   const location = useLocation();
   const navigate = useNavigate();
@@ -88,10 +82,10 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
     bgEnabled,
     setBgEnabled
   } = store;
-  const { playClick } = useSound();
+  const { playClick, playTransition } = useSound();
 
   // Audit: Identify 3D-Heavy Routes
-  const isHighComputePath = ['/studio', '/studio-pro', '/live-arena', '/karaoke-arena', '/arenas', '/global-map'].includes(location.pathname);
+  const isHighComputePath = ['/studio', '/live-arena', '/karaoke-arena', '/arenas', '/global-map'].includes(location.pathname);
   
   useEffect(() => {
     // Automatically throttle backgrounds on high-compute paths
@@ -105,17 +99,30 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
   const x = useMotionValue(0);
   const opacity = useTransform(x, [-200, 0, 200], [0, 1, 0]);
 
+  // Autonomous Narration Logic
+  useEffect(() => {
+    playTransition();
+    
+    // Audit: Autonomous "God-tier" narration of page context
+    const pageTitle = document.title || 'SingReality';
+    const currentPath = location.pathname === '/' ? 'Nexus' : location.pathname.slice(1).replace(/-/g, ' ');
+    
+    const narrationText = `Entering ${currentPath}. SingReality is converging your reality with the quantum singularity of music. Explore our ${currentPath} and transcend the ordinary.`;
+    
+    // Kernel Nuance: Automatic delivery without user interference
+    narrationEngine.narrate(narrationText, true);
+
+    return () => narrationEngine.stop();
+  }, [location.pathname]);
+
   const links = [
-    { name: 'Gallery', path: '/showcase', icon: Award },
+    { name: 'Showcase', path: '/showcase', icon: Award },
     { name: 'Studio', path: '/studio', icon: LayersIcon },
-    { name: 'Studio Pro', path: '/studio-pro', icon: Maximize2 },
     { name: 'Karaoke', path: '/karaoke-arena', icon: Mic2 },
     { name: 'Quantum Lab', path: '/quantum-lab', icon: Cpu },
     { name: 'SingReality TV', path: '/tv', icon: Tv },
-    { name: 'HPC Cluster', path: '/hpc-cluster', icon: Cpu },
     { name: 'Arenas', path: '/arenas', icon: Radio },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingBag },
-    { name: 'Projects', path: '/projects', icon: Folder },
     { name: 'Nexus', path: '/', icon: Globe },
   ];
 
@@ -157,11 +164,10 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-quantum/10 rounded-full blur-[120px] animate-morph" style={{ animationDelay: '-4s' }} />
       </div>
 
-      {bgEnabled && !isHighComputePath && <HyperMediaBackscreen />}
+      {bgEnabled && !isHighComputePath && <CinematicBackscreen />}
       <LiveCollaboration />
       <CartModal />
       <NexusPlayer />
-      <AdvancedFrontierModal isOpen={isAdvancedModalOpen} onClose={() => setIsAdvancedModalOpen(false)} />
       <EnterpriseNexusPortal />
       <DJVerseOverlay />
       {bgEnabled && !isHighComputePath && <GlobalAvatar />}
@@ -271,13 +277,6 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
             </button>
 
             <div className="hidden md:flex items-center gap-4 px-4 py-2 rounded-full bg-white/5 border border-white/10">
-              <button 
-                onClick={() => { playClick(); setIsAdvancedModalOpen(true); }}
-                className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#00F0FF] hover:text-[#FF0055] transition-colors bg-black/50 px-3 py-1.5 rounded-full border border-[#00F0FF]/30 glow-text"
-              >
-                MEGA SUMF APIS
-              </button>
-              <div className="w-[1px] h-3 bg-white/10" />
               <div className="flex items-center gap-2 text-xs font-mono text-singularity font-bold">
                 ℟ {resonance.toLocaleString()}
               </div>
@@ -286,49 +285,8 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
                 onClick={() => { playClick(); setShowSettings(!showSettings); }}
                 className="flex items-center gap-2 text-xs font-mono text-gray-300 hover:text-white transition-colors"
               >
-                <Globe className="w-3 h-3 text-quantum" /> SETTINGS
+                <Globe className="w-3 h-3 text-quantum" /> {lang.toUpperCase()}
               </button>
-              
-              <AnimatePresence>
-                {showSettings && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    className="absolute top-16 right-20 w-64 p-4 bg-black/90 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl z-50 flex flex-col gap-4"
-                  >
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Narration Voice</label>
-                      <select 
-                        value={store.narrationVoice}
-                        onChange={(e) => store.setNarrationVoice(e.target.value as any)}
-                        className="bg-white/5 border border-white/10 text-white rounded-lg p-2 text-sm focus:outline-none focus:border-singularity"
-                      >
-                        <option value="alloy">Alloy (Neutral)</option>
-                        <option value="nova">Nova (Bright)</option>
-                        <option value="shimmer">Shimmer (Exciting)</option>
-                        <option value="echo">Echo (Calm)</option>
-                        <option value="fable">Fable (Storyteller)</option>
-                        <option value="onyx">Onyx (Deep)</option>
-                        <option value="Puck">Puck (Gemini Default)</option>
-                      </select>
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                      <label className="text-[10px] font-mono text-gray-400 uppercase tracking-widest">Language</label>
-                      <select 
-                        value={lang}
-                        onChange={(e) => setLang(e.target.value)}
-                        className="bg-white/5 border border-white/10 text-white rounded-lg p-2 text-sm focus:outline-none focus:border-singularity"
-                      >
-                        {LANGUAGES.map(l => (
-                          <option key={l.code} value={l.code}>{l.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
 
             {user ? (
@@ -415,7 +373,6 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
         </div>
       </footer>
       <WebAgentInterface />
-      <LiveAgentChat />
     </div>
   );
 }

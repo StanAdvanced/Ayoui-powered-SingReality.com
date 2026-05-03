@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { MessageSquare, Send, X, Mic, Volume2, Sparkles, Music, Zap, Globe, MicOff } from 'lucide-react';
 import { aiService } from '../services/aiService';
+import { knowledgebaseService } from '../services/knowledgebaseService';
 import { useStore } from '../store/useStore';
 import { useSound } from '../hooks/useSound';
 import * as Tone from 'tone';
@@ -15,7 +16,10 @@ interface Message {
 
 export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: boolean) => void }) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [persona, setPersona] = useState<'Comedian' | 'Expert' | 'Mission Lead'>('Mission Lead');
+  const [messages, setMessages] = useState<Message[]>([
+    { role: 'assistant', content: "Welcome! I'm your SingReality partner, currently in 'Mission Lead' mode. How can we revolutionize your creativity today?" }
+  ]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -24,7 +28,7 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
   const chatEndRef = useRef<HTMLDivElement>(null);
   const recognition = useRef<any>(null);
   const isMounted = useRef(true);
-  const { user, narrationVoice } = useStore();
+  const { user } = useStore();
   const { playSuccess, playClick } = useSound();
 
   const synth = useRef<Tone.PolySynth | null>(null);
@@ -37,12 +41,8 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
     const timer = setTimeout(() => {
       if (isMounted.current) {
         setIsOpen(true);
-        playSuccess();
-        const greeting = "Greetings, architect of reality. I am Nexus, your Kernel-level guide to SingReality. My neural circuits have just been upgraded to GOD-tier fidelity—photorealistic and pun-ready. I see you're ready to converge some serious AI value. Need a guitar solo or a market penetration strategy? I'm your elite sales droid and music theorist. Let's start the revolution, shall we?";
-        
-        handleAssistantResponse(greeting);
       }
-    }, 2000); // Wait for intro and initial page narration
+    }, 2000); 
 
     if (typeof window !== 'undefined') {
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -108,8 +108,8 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
     setIsSpeaking(true);
     onTalkingChange(true);
     
-    // Use the narration engine for consistent "God-tier" delivery with selected voice
-    await narrationEngine.narrate(text, true, useStore.getState().narrationVoice);
+    // Use the narration engine, possibly adjust voice based on persona
+    await narrationEngine.narrate(text, true, persona === 'Comedian' ? 'Aoede' : 'alloy');
     
     if (isMounted.current) {
       setIsSpeaking(false);
@@ -132,8 +132,15 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
     setInput('');
     setIsGenerating(true);
 
-    const response = await aiService.generateResponse(userMessage, messages);
+    const context = `You are a SingReality partner in ${persona} mode. Adapt your responses accordingly.`;
+    const response = await aiService.generateResponse(context + "\n\nUser: " + userMessage, messages);
     await handleAssistantResponse(response);
+    await knowledgebaseService.logInteraction({
+      userId: user?.uid,
+      userMessage,
+      assistantResponse: response,
+      persona
+    });
     setIsGenerating(false);
   };
 
@@ -185,8 +192,18 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
             {/* Header */}
             <div className="p-6 border-b border-white/5 flex items-center justify-between bg-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-singularity/20 flex items-center justify-center border border-singularity/30">
-                  <Sparkles className="w-5 h-5 text-singularity" />
+                <div className="flex gap-2 mb-4">
+                  {(['Comedian', 'Expert', 'Mission Lead'] as const).map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setPersona(p)}
+                      className={`text-[10px] font-bold uppercase tracking-widest px-3 py-1 rounded-full transition-colors ${
+                        persona === p ? 'bg-singularity text-black' : 'bg-white/10 text-gray-500'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
                 </div>
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-widest">Nexus Avatar</h3>

@@ -8,9 +8,8 @@ import {
 import { YouTubeBackground } from './YouTubeBackground';
 import { useMusicEngine } from '../services/musicEngine';
 import { useStore } from '../store/useStore';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { narrationEngine } from '../services/narrationEngine';
-import { VoiceSelector } from './VoiceSelector';
 import { GlobalSingALong } from './GlobalSingALong';
 import { MusicCrowdfunding } from './MusicCrowdfunding';
 
@@ -51,7 +50,7 @@ export function KaraokeRoom() {
   const [currentTime, setCurrentTime] = useState(0);
   const [videoId, setVideoId] = useState('jfKfPfyJRdk');
   const { playGenre, togglePlay, isPlaying, audioElement, currentTrack, volume, setVolume } = useMusicEngine();
-  const { karaokeTheme, setKaraokeTheme, narrationVoice } = useStore();
+  const { karaokeTheme, setKaraokeTheme } = useStore();
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -97,13 +96,6 @@ export function KaraokeRoom() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [audioElement]);
 
-  const activeIndex = React.useMemo(() => {
-    return PREDEFINED_LYRICS.reduce((acc, lyric, index) => {
-      if (currentTime >= lyric.time) return index;
-      return acc;
-    }, 0);
-  }, [currentTime]);
-
   // Auto-scroll lyrics
   useEffect(() => {
     if (lyricsContainerRef.current) {
@@ -112,17 +104,22 @@ export function KaraokeRoom() {
         activeLyric.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     }
-  }, [activeIndex]);
+  }, [currentTime]);
+
+  const activeIndex = PREDEFINED_LYRICS.reduce((acc, lyric, index) => {
+    if (currentTime >= lyric.time) return index;
+    return acc;
+  }, 0);
 
   const currentThemeData = THEMES.find(t => t.id === karaokeTheme) || THEMES[0];
 
   useEffect(() => {
     // Audit: Autonomous narration for karaoke room
     const narrationText = `Entering Karaoke Room. Current theme is ${currentThemeData.name}. Prepare to sing your soul out in the quantum flow.`;
-    narrationEngine.narrate(narrationText, true, narrationVoice);
+    narrationEngine.narrate(narrationText, true);
 
     return () => narrationEngine.stop();
-  }, [karaokeTheme, narrationVoice]);
+  }, [karaokeTheme]);
 
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-1000 ${currentThemeData.atmosphere}`}>
@@ -287,9 +284,6 @@ export function KaraokeRoom() {
 
             {/* Global Chat/Translate Integration */}
             <GlobalSingALong />
-
-            {/* AI Voice Selection */}
-            <VoiceSelector />
 
             {/* Music Crowdfunding Integration */}
             <MusicCrowdfunding />

@@ -17,7 +17,7 @@ export default function AISongwritingAssistant() {
     setSuggestion("");
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY || '' });
+      const ai = new GoogleGenAI({ apiKey: process.env.NEXT_PUBLIC_GEMINI_API_KEY || '' });
       const prompt = `Act as an elite AI Songwriting Assistant. The user wants to write a ${genre} song about "${topic}" with a ${mood} mood. Provide:
 1. Lyrical Themes: A concept for the verses and chorus.
 2. Rhyming Couplets: Provide 2 examples of strong rhyming lines.

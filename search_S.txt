@@ -1,3 +1,0 @@
-src/components/AdvancedFrontierModal.tsx:  { name: 'SAP S/4HANA ERP', icon: Database, color: 'text-yellow-500' },
-src/components/SumFormulaVisualizer.tsx:           S.U.M.F. v4.0
-src/services/sumFormulaEngine.ts: * S - Synchronization (WebRTC/Quantum Latency)

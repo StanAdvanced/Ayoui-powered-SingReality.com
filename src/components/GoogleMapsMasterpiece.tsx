@@ -1,18 +1,28 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, MapPin, Navigation, Globe, Box, Zap, Compass, Filter, Layers, Radio } from 'lucide-react';
-import { GoogleMap, useJsApiLoader, Marker, Circle, HeatmapLayer, GroundOverlay } from '@react-google-maps/api';
+import React, { useState, useCallback } from 'react';
+import { GoogleMap, useJsApiLoader, Marker, Circle } from '@react-google-maps/api';
 
-const center = { lat: 34.0522, lng: -118.2437 }; // LA - Media Empire HQ
+const containerStyle = {
+  width: '100%',
+  height: '100%'
+};
 
+const center = {
+  lat: 40.7128,
+  lng: -74.0060
+};
+
+// Advanced Dark Mode Styles for "Quantum Maps"
 const mapStyles = [
-  { "elementType": "geometry", "stylers": [{ "color": "#0a0a0a" }] },
-  { "elementType": "labels.text.fill", "stylers": [{ "color": "#00f0ff" }] },
+  { "elementType": "geometry", "stylers": [{ "color": "#121212" }] },
+  { "elementType": "labels.text.fill", "stylers": [{ "color": "#8e8e8e" }] },
   { "elementType": "labels.text.stroke", "stylers": [{ "color": "#000000" }] },
-  { "featureType": "administrative", "stylers": [{ "visibility": "simplified" }] },
-  { "featureType": "landscape", "stylers": [{ "color": "#050505" }] },
-  { "featureType": "road", "stylers": [{ "color": "#1a1a1a" }] },
-  { "featureType": "water", "stylers": [{ "color": "#000000" }] }
+  { "featureType": "administrative", "elementType": "geometry.stroke", "stylers": [{ "color": "#333333" }] },
+  { "featureType": "landscape", "elementType": "geometry", "stylers": [{ "color": "#1a1a1a" }] },
+  { "featureType": "poi", "elementType": "labels.text.fill", "stylers": [{ "color": "#444444" }] },
+  { "featureType": "road", "elementType": "geometry", "stylers": [{ "color": "#2c2c2c" }] },
+  { "featureType": "road", "elementType": "geometry.stroke", "stylers": [{ "color": "#212121" }] },
+  { "featureType": "water", "elementType": "geometry", "stylers": [{ "color": "#000000" }] },
+  { "featureType": "water", "elementType": "labels.text.fill", "stylers": [{ "color": "#3d3d3d" }] }
 ];
 
 export function GoogleMapsMasterpiece() {
@@ -22,135 +32,64 @@ export function GoogleMapsMasterpiece() {
   });
 
   const [map, setMap] = useState<google.maps.Map | null>(null);
-  const [viewMode, setViewMode] = useState<string>('satellite');
-  const [nodes, setNodes] = useState<{lat: number, lng: number, id: string}[]>([]);
-  const [heading, setHeading] = useState(0);
 
-  useEffect(() => {
-    if (!map) return;
-    
-    // Orbital flyover animation logic
-    const interval = setInterval(() => {
-      setHeading(prev => (prev + 0.1) % 360);
-    }, 50);
-    
-    return () => clearInterval(interval);
-  }, [map]);
+  const onLoad = useCallback(function callback(map: google.maps.Map) {
+    setMap(map);
+  }, []);
 
-  useEffect(() => {
-    if (map) {
-      map.setHeading(heading);
-    }
-  }, [heading, map]);
+  const onUnmount = useCallback(function callback(map: google.maps.Map) {
+    setMap(null);
+  }, []);
 
-  const addNode = (e: google.maps.MapMouseEvent) => {
-    if (e.latLng) {
-      setNodes([...nodes, { lat: e.latLng.lat(), lng: e.latLng.lng(), id: Math.random().toString() }]);
-    }
-  };
-
-  if (!isLoaded) return <div className="w-full h-full bg-black" />;
+  if (!isLoaded) {
+    return (
+      <div className="w-full h-full bg-black flex items-center justify-center font-mono text-[10px] text-gray-500 animate-pulse uppercase tracking-widest">
+        Initializing Geospatial Matrix...
+      </div>
+    );
+  }
 
   return (
-    <div className="w-full h-full rounded-[2.5rem] overflow-hidden border border-white/5 relative group bg-black shadow-2xl">
-      {/* Control Stack */}
-      <div className="absolute top-6 left-6 z-20 flex flex-col gap-3 pointer-events-none">
-         <motion.div 
-           initial={{ x: -20, opacity: 0 }}
-           animate={{ x: 0, opacity: 1 }}
-           className="pointer-events-auto glass p-2 rounded-2xl border border-white/10 flex flex-col gap-1"
-         >
-            {[
-              { id: 'satellite', icon: Globe, label: 'Orbital' },
-              { id: 'roadmap', icon: Filter, label: 'Grid' },
-              { id: 'hybrid', icon: Layers, label: 'Hybrid' },
-            ].map(type => (
-              <button 
-                key={type.id}
-                onClick={() => setViewMode(type.id as any)}
-                className={`p-3 rounded-xl transition-all flex items-center gap-3 ${viewMode === type.id ? 'bg-singularity text-black active-pulse' : 'text-gray-500 hover:text-white hover:bg-white/5'}`}
-              >
-                 <type.icon className="w-4 h-4" />
-                 <span className="text-[10px] font-black uppercase tracking-widest leading-none">{type.label}</span>
-              </button>
-            ))}
-         </motion.div>
-      </div>
-
-      {/* Floating HUD */}
-      <div className="absolute bottom-6 right-6 z-20 flex flex-col items-end gap-3 pointer-events-none">
-         <div className="pointer-events-auto glass px-4 py-2 rounded-full border border-singularity/30 flex items-center gap-3">
-            <Radio className="w-4 h-4 text-singularity animate-pulse" />
-            <span className="text-[10px] font-bold text-white uppercase tracking-widest">Live Node Injection Active</span>
-         </div>
-         <div className="pointer-events-auto glass px-6 py-4 rounded-[2rem] border border-white/10 w-64 space-y-3">
-            <div className="flex justify-between items-center text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-               <span>Orbital Sync</span>
-               <span className="text-singularity">{Math.round(heading)}° Azimuth</span>
-            </div>
-            <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-               <motion.div 
-                 animate={{ width: `${(heading / 360) * 100}%` }}
-                 className="h-full bg-gradient-to-r from-singularity to-quantum"
-               />
-            </div>
-            <p className="text-[9px] text-gray-400 font-mono leading-relaxed italic opacity-60 group-hover:opacity-100 transition-opacity">
-              Singularity Apex Architecture: Integrating Google Space & Earth API nexus. Global delivery nuance synchronized across 12M nodes.
-            </p>
-         </div>
-      </div>
-
+    <div className="w-full h-full rounded-3xl overflow-hidden border border-white/5 shadow-inner">
       <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '100%' }}
+        mapContainerStyle={containerStyle}
         center={center}
         zoom={12}
-        mapTypeId={viewMode === 'custom' ? 'roadmap' : viewMode}
-        onLoad={setMap}
-        onClick={addNode}
+        onLoad={onLoad}
+        onUnmount={onUnmount}
         options={{
           styles: mapStyles,
           disableDefaultUI: true,
-          tilt: 45,
-          heading: 90
+          zoomControl: false,
+          streetViewControl: false,
+          mapTypeControl: false,
+          fullscreenControl: false
         }}
       >
-        {nodes.map(node => (
-          <Marker 
-            key={node.id}
-            position={{ lat: node.lat, lng: node.lng }}
-            icon={{
-              path: 0,
-              scale: 8,
-              fillColor: '#00f0ff',
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 2
-            }}
-          />
-        ))}
-        
+        {/* Dynamic Resonance Pulse circles on the map */}
         <Circle
           center={center}
           radius={5000}
           options={{
-            fillColor: '#7000ff',
-            fillOpacity: 0.05,
-            strokeColor: '#7000ff',
+            fillColor: '#00f0ff',
+            fillOpacity: 0.1,
+            strokeColor: '#00f0ff',
             strokeOpacity: 0.3,
             strokeWeight: 1
           }}
         />
+        <Marker 
+          position={center}
+          icon={{
+            path: 'M 0,0 m -5,-5 a 5,5 0 1,0 10,0 a 5,5 0 1,0 -10,0',
+            fillColor: '#7000ff',
+            fillOpacity: 1,
+            strokeWeight: 2,
+            strokeColor: '#ffffff',
+            scale: 2
+          }}
+        />
       </GoogleMap>
-
-      {/* Media Empire Scanning Overlay */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden">
-         <motion.div 
-            initial={{ y: -100, opacity: 0 }}
-            animate={{ y: [0, 400, 0], opacity: [0, 0.2, 0] }}
-            transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            className="w-full h-1 bg-singularity shadow-[0_0_50px_rgba(0,240,255,1)]"
-         />
-      </div>
     </div>
   );
 }

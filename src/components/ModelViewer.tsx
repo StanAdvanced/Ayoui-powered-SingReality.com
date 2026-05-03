@@ -139,7 +139,7 @@ function Model({ url, layer }: { url: string, layer: any }) {
       clonedObj.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           if (isHologram) {
-            const mat = new HolographicMaterialImpl() as any;
+            const mat = new HolographicMaterialImpl();
             mat.transparent = true;
             mat.side = THREE.DoubleSide;
             mat.depthWrite = false;
@@ -175,7 +175,7 @@ function Model({ url, layer }: { url: string, layer: any }) {
     clonedScene.traverse((child) => {
       if (child instanceof THREE.Mesh) {
         if (isHologram) {
-          const mat = new HolographicMaterialImpl() as any;
+          const mat = new HolographicMaterialImpl();
           mat.transparent = true;
           mat.side = THREE.DoubleSide;
           mat.depthWrite = false;
@@ -210,12 +210,25 @@ function Model({ url, layer }: { url: string, layer: any }) {
 }
 
 function Loader() {
-  const { progress } = useProgress();
+  const { progress, total, loaded } = useProgress();
+  const estimatedTimeSeconds = useMemo(() => {
+    if (total === 0 || loaded === 0) return 0;
+    const remainingBytes = total - loaded;
+    const speedBytesPerSecond = 625000; // Assuming 5 Mbps ~ 625 KB/s
+    return Math.max(0, remainingBytes / speedBytesPerSecond).toFixed(1);
+  }, [total, loaded]);
+
   return (
     <Html center>
-      <div className="flex flex-col items-center gap-2 glass p-4 rounded-2xl">
+      <div className="flex flex-col items-center gap-2 glass p-6 rounded-2xl w-64 border border-white/10 shadow-xl">
         <Loader2 className="w-8 h-8 text-singularity animate-spin" />
-        <span className="text-white font-mono text-xs">{progress.toFixed(0)}%</span>
+        <span className="text-white font-mono text-sm">{progress.toFixed(0)}%</span>
+        <div className="w-full bg-white/10 rounded-full h-1 overflow-hidden">
+            <div className="bg-singularity h-full transition-all duration-300" style={{ width: `${progress}%` }} />
+        </div>
+        <div className="text-[10px] font-mono text-gray-400">
+            {(total / 1024 / 1024).toFixed(2)} MB • {estimatedTimeSeconds}s left
+        </div>
       </div>
     </Html>
   );

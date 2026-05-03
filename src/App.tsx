@@ -1,17 +1,14 @@
-import React, { Suspense, lazy } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { Layout } from './components/Layout';
 import { Loader2 } from 'lucide-react';
-import { AdvancedOnboarding } from './components/AdvancedOnboarding';
+import { OnboardingTour } from './components/OnboardingTour';
 import { AudioPlayer } from './components/AudioPlayer';
-import AdminDashboard from './components/AdminDashboard';
-import { GeoARStage } from './components/GeoARStage';
+import { IntroVideo } from './components/IntroVideo';
 
 // Lazy load pages for performance
 const Home = lazy(() => import('./pages/Home').then(m => ({ default: m.Home })));
-const NvidiaOmniversePortal = lazy(() => import('./pages/NvidiaOmniversePortal').then(m => ({ default: m.NvidiaOmniversePortal })));
-const HPCDashboard = lazy(() => import('./pages/HPCDashboard').then(m => ({ default: m.HPCDashboard })));
 const Studio = lazy(() => import('./pages/Studio').then(m => ({ default: m.Studio })));
 const Portal = lazy(() => import('./pages/Portal').then(m => ({ default: m.Portal })));
 const Arenas = lazy(() => import('./pages/Arenas').then(m => ({ default: m.Arenas })));
@@ -24,14 +21,13 @@ const AISongStudio = lazy(() => import('./components/AISongStudio').then(m => ({
 const Funding = lazy(() => import('./pages/Funding').then(m => ({ default: m.Funding })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
-const Auth = lazy(() => import('./pages/Auth'));
+const Auth = lazy(() => import('./pages/Auth').then(m => ({ default: m.Auth })));
 const LiveArena = lazy(() => import('./pages/LiveArena').then(m => ({ default: m.LiveArena })));
 const GlobalMap = lazy(() => import('./pages/GlobalMap').then(m => ({ default: m.GlobalMap })));
 const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ default: m.NeuralClones })));
 const SingRealityTV = lazy(() => import('./pages/SingRealityTV').then(m => ({ default: m.SingRealityTV })));
 const KaraokeArena = lazy(() => import('./pages/KaraokeArena').then(m => ({ default: m.KaraokeArena })));
 const Showcase = lazy(() => import('./pages/Showcase'));
-const StudioPro = lazy(() => import('./pages/StudioPro').then(m => ({ default: m.StudioPro })));
 
 import { useStore } from './store/useStore';
 
@@ -51,29 +47,28 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  const [showIntro, setShowIntro] = useState(true);
+
   const handleReplayIntro = () => {
-    sessionStorage.removeItem('singreality_boot_complete');
-    window.location.reload();
+    sessionStorage.removeItem('singreality_intro_seen');
+    setShowIntro(true);
   };
 
   return (
     <ErrorBoundary>
-      <AdvancedOnboarding />
+      {showIntro && <IntroVideo onComplete={() => setShowIntro(false)} />}
+      <OnboardingTour />
       <AudioPlayer />
       <Layout onReplayIntro={handleReplayIntro}>
         <Suspense fallback={<LoadingFallback />}>
           <Routes>
-            <Route path="/" element={<GeoARStage />} />
-            <Route path="/home" element={<Home />} />
-            <Route path="/nvidia-omniverse" element={<ProtectedRoute><NvidiaOmniversePortal /></ProtectedRoute>} />
-            <Route path="/hpc-cluster" element={<ProtectedRoute><HPCDashboard /></ProtectedRoute>} />
+            <Route path="/" element={<Home />} />
             <Route path="/studio" element={<ProtectedRoute><Studio /></ProtectedRoute>} />
             <Route path="/clones" element={<ProtectedRoute><NeuralClones /></ProtectedRoute>} />
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/marketplace/:id" element={<MarketplaceItemDetail />} />
             <Route path="/quantum-lab" element={<QuantumLab />} />
             <Route path="/dev-portal" element={<ProtectedRoute><DeveloperPortal /></ProtectedRoute>} />
-            <Route path="/studio-pro" element={<ProtectedRoute><StudioPro /></ProtectedRoute>} />
             <Route path="/karaoke/:sessionId" element={<KaraokeRoom />} />
             <Route path="/ai-studio" element={<ProtectedRoute><AISongStudio /></ProtectedRoute>} />
             <Route path="/funding" element={<ProtectedRoute><Funding /></ProtectedRoute>} />
@@ -87,7 +82,6 @@ export default function App() {
             <Route path="/global-map" element={<GlobalMap />} />
             <Route path="/tv" element={<SingRealityTV />} />
             <Route path="/showcase" element={<Showcase />} />
-            <Route path="/admin" element={<ProtectedRoute><AdminDashboard /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
@@ -95,4 +89,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-

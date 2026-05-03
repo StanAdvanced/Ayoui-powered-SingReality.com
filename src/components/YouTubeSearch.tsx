@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Search, Loader2, Play, ExternalLink, Music } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useSound } from '../hooks/useSound';
 import { useStore } from '../store/useStore';
 

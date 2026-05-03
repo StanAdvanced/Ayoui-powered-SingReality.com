@@ -1,10 +1,8 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Cpu, Zap, Activity, Sliders, Play, Share2, Save, Wand2 } from 'lucide-react';
 import { QuantumMusicEngine } from '../services/quantumMusicEngine';
-import { HyperMediaBackscreen } from '../components/HyperMediaBackscreen';
-import { SpatialCard } from '../components/SpatialCard';
-import { QuantumVisualizer } from '../components/QuantumVisualizer';
+import { CinematicBackscreen } from '../components/CinematicBackscreen';
 
 const algorithms: { id: any; name: string; description: string }[] = [
   { id: 'QUANTUM_SYMPHONY', name: 'Quantum Symphony', description: 'Probability-based superposition of notes across the cosmic frequency.' },
@@ -33,7 +31,7 @@ export function QuantumLab() {
 
   return (
     <div className="min-h-screen relative bg-black">
-      <HyperMediaBackscreen />
+      <CinematicBackscreen />
       
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
         <header className="mb-12">
@@ -72,13 +70,23 @@ export function QuantumLab() {
 
           {/* Main Visualizer & Controls */}
           <div className="lg:col-span-8 space-y-8">
-            <SpatialCard glowColor={isGenerating ? "#ff00ff" : "#00f0ff"} className="rounded-[3rem] border border-white/5 relative h-[450px] flex flex-col justify-end overflow-hidden">
+            <div className="glass rounded-[3rem] p-12 border border-white/5 relative overflow-hidden h-[450px] flex flex-col justify-end">
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent z-10" />
+              
               {/* Particle System Projection */}
               <div className="absolute inset-0 z-0">
-                <QuantumVisualizer isGenerating={isGenerating} />
+                <div className="absolute inset-0 bg-scanlines opacity-10" />
+                <motion.div 
+                  className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-quantum/20 rounded-full blur-[120px]"
+                  animate={isGenerating ? {
+                    scale: [1, 1.5, 1],
+                    opacity: [0.3, 0.6, 0.3]
+                  } : { scale: 1, opacity: 0.3 }}
+                />
               </div>
 
-              <div className="absolute inset-0 flex items-center justify-center gap-[2px] px-12 z-5 pointer-events-none">
+              {/* Advanced Waveform Visualizer */}
+              <div className="absolute inset-0 flex items-center justify-center gap-[2px] px-12 z-5">
                 {[...Array(64)].map((_, i) => (
                   <motion.div
                     key={i}
@@ -102,7 +110,7 @@ export function QuantumLab() {
                 ))}
               </div>
 
-              <div className="relative z-20 p-12 bg-gradient-to-t from-black via-black/50 to-transparent">
+              <div className="relative z-20">
                 <h3 className="text-3xl font-black mb-2">{selectedAlgo.name}</h3>
                 <p className="text-gray-400 max-w-lg mb-8">{selectedAlgo.description}</p>
                 <div className="flex items-center gap-4">
@@ -119,10 +127,10 @@ export function QuantumLab() {
                   </button>
                 </div>
               </div>
-            </SpatialCard>
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <SpatialCard className="p-8 border border-white/5">
+              <div className="glass p-8 rounded-[2rem] border border-white/5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest leading-none">Parameters</div>
                   <Wand2 className="w-4 h-4 text-singularity" />
@@ -147,9 +155,9 @@ export function QuantumLab() {
                     </div>
                   </div>
                 </div>
-              </SpatialCard>
+              </div>
 
-              <SpatialCard className="p-8 border border-white/5 flex flex-col justify-center gap-4">
+              <div className="glass p-8 rounded-[2rem] border border-white/5 flex flex-col justify-center gap-4">
                 <button className="flex items-center justify-between p-4 bg-white/5 rounded-xl hover:bg-white/10 transition-all group">
                    <div className="flex items-center gap-3">
                      <Save className="w-4 h-4 text-gray-400 group-hover:text-white" />
@@ -164,7 +172,7 @@ export function QuantumLab() {
                    </div>
                    <Zap className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </button>
-              </SpatialCard>
+              </div>
             </div>
           </div>
         </div>

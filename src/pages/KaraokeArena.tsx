@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { 
   Mic2, Search, Users, Share2, Calendar, Globe, 
   Music, Zap, Star, Rocket, Sparkles, Heart,
@@ -32,8 +32,6 @@ const THEMES = [
   { id: 'cosmic', name: 'Out of this World', icon: Rocket, color: 'from-purple-900 via-black to-blue-900', atmosphere: 'bg-purple-900/30' },
   { id: 'retro', name: 'Retro Vibes', icon: Music, color: 'from-orange-500 to-red-600', atmosphere: 'bg-orange-500/10' },
 ];
-
-import { GlobalAudioSync } from '../components/GlobalAudioSync';
 
 export function KaraokeArena() {
   const { 
@@ -304,8 +302,6 @@ export function KaraokeArena() {
               </div>
             </div>
           </div>
-
-          <GlobalAudioSync />
 
           {/* The Machine Screen */}
           <div className="relative aspect-video rounded-[3rem] overflow-hidden border border-white/10 shadow-2xl group">

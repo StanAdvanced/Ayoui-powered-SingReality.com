@@ -1,24 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { AISongSincvEngine, BiometricData } from '../services/aisongSincvEngine';
-import { motion } from 'framer-motion';
-import { Brain, Zap, Music, Play, Pause, Sparkles, Volume2, Save, FolderOpen, Loader2, Trash2 } from 'lucide-react';
+import { motion } from 'motion/react';
+import { Brain, Zap, Music, Play, Pause, Sparkles, Volume2 } from 'lucide-react';
 import { generateBgmRecipe, generateSpeech } from '../services/geminiService';
 import { playSpark, SparkRecipe } from '../lib/audioEngine';
 import { YouTubeBackground } from './YouTubeBackground';
-import { db } from '../firebase';
-import { collection, addDoc, query, where, getDocs, orderBy, serverTimestamp, deleteDoc, doc, Timestamp } from 'firebase/firestore';
-import { useStore } from '../store/useStore';
-
-interface SavedSession {
-  id: string;
-  bgmPrompt: string;
-  bgmRecipe: SparkRecipe;
-  biometricData: BiometricData;
-  createdAt: Timestamp;
-}
 
 export function AISongStudio() {
-  const { user } = useStore();
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [biometricData, setBiometricData] = useState<BiometricData>({
     heartRate: 70,
@@ -30,11 +18,6 @@ export function AISongStudio() {
   const [bgmPrompt, setBgmPrompt] = useState('');
   const [isGeneratingBgm, setIsGeneratingBgm] = useState(false);
   const [bgmRecipe, setBgmRecipe] = useState<SparkRecipe | null>(null);
-  
-  const [isSaving, setIsSaving] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [savedSessions, setSavedSessions] = useState<SavedSession[]>([]);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(false);
 
   useEffect(() => {
     if (isSynthesizing) {
@@ -116,66 +99,6 @@ export function AISongStudio() {
     }
   };
 
-  const saveSession = async () => {
-    if (!user || !bgmRecipe) return;
-    setIsSaving(true);
-    try {
-      await addDoc(collection(db, 'aiSongStudioSessions'), {
-        userId: user.uid,
-        bgmPrompt,
-        bgmRecipe,
-        biometricData,
-        createdAt: serverTimestamp(),
-      });
-      alert('Session saved successfully!');
-    } catch (error) {
-      console.error('Error saving session:', error);
-      alert('Failed to save session.');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const loadSessions = async () => {
-    if (!user) return;
-    setIsLoadingSessions(true);
-    try {
-      const q = query(
-        collection(db, 'aiSongStudioSessions'),
-        where('userId', '==', user.uid),
-        orderBy('createdAt', 'desc')
-      );
-      const querySnapshot = await getDocs(q);
-      const sessions = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      })) as SavedSession[];
-      setSavedSessions(sessions);
-    } catch (error) {
-      console.error('Error loading sessions:', error);
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  };
-
-  const deleteSession = async (id: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (!window.confirm('Are you sure you want to delete this session?')) return;
-    try {
-      await deleteDoc(doc(db, 'aiSongStudioSessions', id));
-      setSavedSessions(prev => prev.filter(s => s.id !== id));
-    } catch (error) {
-      console.error('Error deleting session:', error);
-    }
-  };
-
-  const selectSession = (session: SavedSession) => {
-    setBgmPrompt(session.bgmPrompt);
-    setBgmRecipe(session.bgmRecipe);
-    setBiometricData(session.biometricData);
-    setIsMenuOpen(false);
-  };
-
   return (
     <div className="min-h-screen relative">
       <YouTubeBackground videoId="DWcJFNfaw9c" opacity={0.2} />
@@ -199,70 +122,9 @@ export function AISongStudio() {
           </div>
 
           <div className="glass-card p-12 rounded-[3rem] border border-white/5">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-2xl font-bold flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-quantum"/> AI Background Music
-              </h3>
-              <div className="flex gap-2">
-                <button 
-                  onClick={() => {
-                    setIsMenuOpen(!isMenuOpen);
-                    if (!isMenuOpen) loadSessions();
-                  }}
-                  className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors"
-                  title="Load Saved Sessions"
-                >
-                  <FolderOpen className="w-5 h-5" />
-                </button>
-                {bgmRecipe && (
-                  <button 
-                    onClick={saveSession}
-                    disabled={isSaving || !user}
-                    className="p-3 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors disabled:opacity-30"
-                    title="Save Current Session"
-                  >
-                    {isSaving ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {isMenuOpen && (
-              <div className="mb-8 p-6 bg-black/40 rounded-2xl border border-white/10">
-                <h4 className="text-sm font-bold uppercase tracking-widest text-gray-400 mb-4">Saved Neural States</h4>
-                {isLoadingSessions ? (
-                  <div className="flex justify-center py-4">
-                    <Loader2 className="w-6 h-6 animate-spin text-singularity" />
-                  </div>
-                ) : savedSessions.length === 0 ? (
-                  <p className="text-xs text-gray-500 text-center py-4 italic">No saved sessions found.</p>
-                ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto pr-2">
-                    {savedSessions.map((session) => (
-                      <div 
-                        key={session.id}
-                        onClick={() => selectSession(session)}
-                        className="p-4 bg-white/5 border border-white/5 rounded-xl hover:border-singularity/50 transition-all cursor-pointer group flex justify-between items-center"
-                      >
-                        <div>
-                          <p className="text-xs font-bold text-white truncate max-w-[200px] mb-1">{session.bgmPrompt}</p>
-                          <p className="text-[10px] text-gray-500 font-mono">
-                            {session.createdAt?.toDate ? session.createdAt.toDate().toLocaleString() : 'Just now'}
-                          </p>
-                        </div>
-                        <button 
-                          onClick={(e) => deleteSession(session.id, e)}
-                          className="p-2 opacity-0 group-hover:opacity-100 hover:text-red-500 transition-all"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
+            <h3 className="text-2xl font-bold mb-4 flex items-center gap-2">
+              <Sparkles className="w-6 h-6 text-quantum"/> AI Background Music
+            </h3>
             <p className="text-sm text-gray-400 mb-6">
               Generate dynamic background music based on a prompt and your current biometric state.
             </p>

@@ -4,7 +4,6 @@ import { useFrame } from '@react-three/fiber';
 import { OrbitControls, Float, Sparkles, SpotLight } from '@react-three/drei';
 import * as THREE from 'three';
 import { BiometricSphere } from './BiometricSphere';
-import { DynamicLOD } from './DynamicLOD';
 import { useStore } from '../store/useStore';
 import { isWebGLAvailable } from '../lib/webgl';
 
@@ -105,83 +104,30 @@ function Stage() {
       {/* Singer */}
       <Float speed={4} rotationIntensity={0.5} floatIntensity={1}>
         <group ref={singerRef} position={[0, 1, 2]}>
-          <DynamicLOD distances={[0, 15, 30]}>
-            <group>
-              {/* Head */}
-              <mesh position={[0, 1.8, 0]}>
-                <sphereGeometry args={[0.3, 32, 32]} />
-                <meshStandardMaterial color="#ffccaa" roughness={0.4} />
-              </mesh>
-              {/* Body */}
-              <mesh position={[0, 0.8, 0]}>
-                <capsuleGeometry args={[0.4, 1, 16, 16]} />
-                <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
-              </mesh>
-              {/* Arms */}
-              <mesh position={[-0.6, 1.2, 0]} rotation={[0, 0, 0.2]}>
-                <capsuleGeometry args={[0.1, 0.8, 16, 16]} />
-                <meshStandardMaterial color="#222" />
-              </mesh>
-              <mesh position={[0.6, 1.2, 0]} rotation={[0, 0, -0.2]}>
-                <capsuleGeometry args={[0.1, 0.8, 16, 16]} />
-                <meshStandardMaterial color="#222" />
-              </mesh>
-              {/* Microphone */}
-              <mesh position={[0, 1.5, 0.4]} rotation={[0.5, 0, 0]}>
-                <cylinderGeometry args={[0.02, 0.02, 0.4]} />
-                <meshStandardMaterial color="#888" metalness={1} />
-              </mesh>
-            </group>
-            
-            <group>
-              {/* Head */}
-              <mesh position={[0, 1.8, 0]}>
-                <sphereGeometry args={[0.3, 16, 16]} />
-                <meshStandardMaterial color="#ffccaa" roughness={0.4} />
-              </mesh>
-              {/* Body */}
-              <mesh position={[0, 0.8, 0]}>
-                <capsuleGeometry args={[0.4, 1, 8, 8]} />
-                <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
-              </mesh>
-              {/* Arms */}
-              <mesh position={[-0.6, 1.2, 0]} rotation={[0, 0, 0.2]}>
-                <capsuleGeometry args={[0.1, 0.8, 8, 8]} />
-                <meshStandardMaterial color="#222" />
-              </mesh>
-              <mesh position={[0.6, 1.2, 0]} rotation={[0, 0, -0.2]}>
-                <capsuleGeometry args={[0.1, 0.8, 8, 8]} />
-                <meshStandardMaterial color="#222" />
-              </mesh>
-              {/* Microphone */}
-              <mesh position={[0, 1.5, 0.4]} rotation={[0.5, 0, 0]}>
-                <cylinderGeometry args={[0.02, 0.02, 0.4]} />
-                <meshStandardMaterial color="#888" metalness={1} />
-              </mesh>
-            </group>
-
-            <group>
-              {/* Head */}
-              <mesh position={[0, 1.8, 0]}>
-                <sphereGeometry args={[0.3, 8, 8]} />
-                <meshStandardMaterial color="#ffccaa" roughness={0.4} />
-              </mesh>
-              {/* Body */}
-              <mesh position={[0, 0.8, 0]}>
-                <capsuleGeometry args={[0.4, 1, 4, 4]} />
-                <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
-              </mesh>
-              {/* Arms */}
-              <mesh position={[-0.6, 1.2, 0]} rotation={[0, 0, 0.2]}>
-                <capsuleGeometry args={[0.1, 0.8, 4, 4]} />
-                <meshStandardMaterial color="#222" />
-              </mesh>
-              <mesh position={[0.6, 1.2, 0]} rotation={[0, 0, -0.2]}>
-                <capsuleGeometry args={[0.1, 0.8, 4, 4]} />
-                <meshStandardMaterial color="#222" />
-              </mesh>
-            </group>
-          </DynamicLOD>
+          {/* Head */}
+          <mesh position={[0, 1.8, 0]}>
+            <sphereGeometry args={[0.3, 32, 32]} />
+            <meshStandardMaterial color="#ffccaa" roughness={0.4} />
+          </mesh>
+          {/* Body */}
+          <mesh position={[0, 0.8, 0]}>
+            <capsuleGeometry args={[0.4, 1, 16, 16]} />
+            <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
+          </mesh>
+          {/* Arms */}
+          <mesh position={[-0.6, 1.2, 0]} rotation={[0, 0, 0.2]}>
+            <capsuleGeometry args={[0.1, 0.8, 16, 16]} />
+            <meshStandardMaterial color="#222" />
+          </mesh>
+          <mesh position={[0.6, 1.2, 0]} rotation={[0, 0, -0.2]}>
+            <capsuleGeometry args={[0.1, 0.8, 16, 16]} />
+            <meshStandardMaterial color="#222" />
+          </mesh>
+          {/* Microphone */}
+          <mesh position={[0, 1.5, 0.4]} rotation={[0.5, 0, 0]}>
+            <cylinderGeometry args={[0.02, 0.02, 0.4]} />
+            <meshStandardMaterial color="#888" metalness={1} />
+          </mesh>
         </group>
       </Float>
 

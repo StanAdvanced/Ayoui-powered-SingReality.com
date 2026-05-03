@@ -1,5 +1,19 @@
 {
   "entities": {
+    "Project": {
+      "title": "Project",
+      "description": "A user's saved 3D project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "layers": { "type": "array" },
+        "createdAt": { "type": "timestamp" },
+        "updatedAt": { "type": "timestamp" }
+      },
+      "required": ["id", "userId", "name", "layers", "createdAt", "updatedAt"]
+    },
     "User": {
       "title": "User",
       "description": "A user of the SingReality platform.",
@@ -139,18 +153,23 @@
       "properties": {
         "id": { "type": "string" },
         "userId": { "type": "string" },
-        "biometricData": { "type": "object" },
-        "bgmPrompt": { "type": "string" },
-        "bgmRecipe": { "type": "object" },
+        "biometricData": { "type": "array" },
         "generatedAudioUrl": { "type": "string" },
         "sessionDuration": { "type": "number" },
-        "flowStateAchieved": { "type": "boolean" },
-        "createdAt": { "type": "timestamp" }
+        "flowStateAchieved": { "type": "boolean" }
       },
-      "required": ["id", "userId", "createdAt"]
+      "required": ["id", "userId", "sessionDuration"]
     }
   },
   "firestore": {
+    "projects/{projectId}": {
+      "schema": { "$ref": "#/entities/Project" },
+      "description": "User projects."
+    },
+    "chat_interactions/{interactionId}": {
+       "schema": { "type": "object" },
+       "description": "Chat interactions for knowledge base growth."
+    },
     "users/{userId}": {
       "schema": { "$ref": "#/entities/User" },
       "description": "User profiles."

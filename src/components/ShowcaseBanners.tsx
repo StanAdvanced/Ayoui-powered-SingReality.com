@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { Play, ChevronDown, MonitorPlay, Mic2, Tv, Sparkles, Users, Radio, Globe2, Music, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 

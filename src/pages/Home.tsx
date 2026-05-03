@@ -1,12 +1,13 @@
-import React, { useState, Suspense, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, Suspense, useEffect, Component, ReactNode } from 'react';
+import { motion } from 'motion/react';
 import { Play, Globe2, Cpu, Sparkles, ArrowRight, Search, Zap, Users, TrendingUp, ShieldCheck, Loader2, AlertCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import * as THREE from 'three';
+import { Canvas } from '@react-three/fiber';
+import { Environment, ContactShadows, Float } from '@react-three/drei';
 import { useSound } from '../hooks/useSound';
 import { useStore } from '../store/useStore';
 import { AvatarChat } from '../components/AvatarChat';
-import { Avatar } from '../components/Avatar';
 import { isWebGLAvailable } from '../lib/webgl';
 import { CinematicBanner } from '../components/CinematicBanner';
 import { YouTubeBackground } from '../components/YouTubeBackground';
@@ -16,10 +17,22 @@ import { ShowcaseBanners } from '../components/ShowcaseBanners';
 import { ProjectShowcase } from '../components/ProjectShowcase';
 import { PromoBanners } from '../components/PromoBanners';
 import { DJVerseLiveFeed } from '../components/DJVerseLiveFeed';
-import { YouTubeFeatured } from '../components/YouTubeFeatured';
-import { NumtrixianDatabase } from '../components/NumtrixianDatabase';
-import { AvatarBioLink } from '../components/AvatarBioLink';
-import { HeyNumtrixCompanion } from '../components/HeyNumtrixCompanion';
+
+class CanvasErrorBoundary extends Component<{children: ReactNode, fallback: ReactNode}, {hasError: boolean}> {
+  state = { hasError: false };
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+  componentDidCatch(error: Error) {
+    console.error('Canvas Error:', error);
+  }
+  render() {
+    if (this.state.hasError) {
+      return this.props.fallback;
+    }
+    return this.props.children;
+  }
+}
 
 export function Home() {
   const [searchQuery, setSearchQuery] = useState('');
@@ -37,38 +50,16 @@ export function Home() {
       <YouTubeBackground videoId="XpS_6-O9_3s" opacity={0.1} />
       <ConcertEffects />
       <WaitlistModal isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
-      
       <div className="relative z-10">
       
       {/* Avatar Chat Interface */}
       <AvatarChat onTalkingChange={setAvatarTalking} />
-      
-      {/* Numtrixian Integrations */}
-      <AvatarBioLink />
-      <HeyNumtrixCompanion />
 
       {/* Hero Section */}
-      <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-6 pt-24">
+      <section className="relative min-h-[95vh] flex flex-col items-center justify-center overflow-hidden px-6 pt-24">
         
-        {/* Photorealistic 3D Avatar Background/Midground */}
-        <div className="absolute inset-0 z-0 pointer-events-none opacity-80">
-          <Avatar isTalking={isAvatarTalking} />
-        </div>
-
-        <div className="max-w-7xl w-full relative z-10 pointer-events-none">
+        <div className="max-w-7xl w-full relative z-10">
           <CinematicBanner />
-          
-          {/* Hollywood Production Credits */}
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 2 }}
-            className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-4 whitespace-nowrap"
-          >
-            <div className="h-[1px] w-8 bg-white/10" />
-            <span className="text-[9px] font-mono text-white/30 uppercase tracking-[0.5em]">DIRECTED BY STANLEY PHANI • MASTERED AT MEDIA EMPIRE STUDIOS</span>
-            <div className="h-[1px] w-8 bg-white/10" />
-          </motion.div>
         </div>
         
         <div className="relative z-10 max-w-6xl mx-auto text-center mt-12">
@@ -77,19 +68,19 @@ export function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <h1 className="text-6xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] mb-12 drop-shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+            <h1 className="text-6xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] mb-12">
               WHAT A TIME <br />
               <span className="text-gradient">TO BE LIVE!</span>
             </h1>
 
             {/* Global Search Bar */}
-            <div className="max-w-2xl mx-auto mb-16 relative group pointer-events-auto">
+            <div className="max-w-2xl mx-auto mb-16 relative group">
               <div className="absolute inset-0 bg-gradient-to-r from-singularity/20 to-quantum/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
               <div className="relative glass rounded-2xl p-2 flex items-center gap-4 border border-white/10 focus-within:border-singularity/50 transition-all">
                 <Search className="w-6 h-6 text-gray-500 ml-4" />
                 <input 
                   type="text" 
-                  placeholder="Ask the Nexus Avatar anything..." 
+                  placeholder="Search 33M+ Psyche-Resonant Conduits..." 
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="bg-transparent border-none outline-none flex-1 text-lg font-light py-3 placeholder:text-gray-600"
@@ -98,12 +89,12 @@ export function Home() {
                   onClick={playClick}
                   className="px-8 py-3 bg-white text-black rounded-xl font-bold text-sm tracking-widest uppercase hover:scale-105 transition-all"
                 >
-                  Analyze
+                  Search
                 </button>
               </div>
             </div>
             
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pointer-events-auto">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
               <button 
                 onClick={() => { playClick(); setIsWaitlistOpen(true); }}
                 className="group relative px-10 py-5 bg-white text-black rounded-2xl font-bold text-sm tracking-widest uppercase overflow-hidden transition-all hover:scale-105 flex items-center gap-3 shadow-[0_0_40px_rgba(255,255,255,0.3)]"
@@ -136,12 +127,6 @@ export function Home() {
       </section>
 
       <ShowcaseBanners />
-
-      <section className="relative px-6 py-24 max-w-7xl mx-auto">
-        <NumtrixianDatabase />
-      </section>
-
-      <YouTubeFeatured />
 
       <PromoBanners />
 

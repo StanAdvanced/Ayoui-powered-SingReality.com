@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2, Server, Filter, Plus } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
+import { ArrowLeft, Users, Activity, Globe2, Crown, Lock, Zap, Radio, BarChart3, Minimize2, Maximize2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Leaderboard } from '../components/Leaderboard';
 import { QuantumGlobe } from '../components/QuantumGlobe';
@@ -55,7 +55,6 @@ export function GlobalMap() {
   const [showVipOnly, setShowVipOnly] = useState(false);
   const [hasVipAccess, setHasVipAccess] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [viewState, setViewState] = useState<'quantum' | 'orbital'>('quantum');
   
   const [sumData, setSumData] = useState({
     totalResonance: 0,
@@ -109,30 +108,14 @@ export function GlobalMap() {
         
         {/* Navigation & Status Rail */}
         <div className="flex flex-col gap-6 pointer-events-auto">
-          <div className="flex items-center gap-3">
-            <motion.button 
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => navigate(-1)}
-              className="p-5 glass rounded-2xl hover:bg-white/10 transition-all group"
-            >
-              <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
-            </motion.button>
-            <div className="flex glass p-1 rounded-2xl border border-white/10">
-              <button 
-                onClick={() => { playClick(); setViewState('quantum'); }}
-                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewState === 'quantum' ? 'bg-singularity text-black' : 'text-white/40 hover:text-white'}`}
-              >
-                Quantum
-              </button>
-              <button 
-                onClick={() => { playClick(); setViewState('orbital'); }}
-                className={`px-4 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${viewState === 'orbital' ? 'bg-singularity text-black' : 'text-white/40 hover:text-white'}`}
-              >
-                Orbital
-              </button>
-            </div>
-          </div>
+          <motion.button 
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => navigate(-1)}
+            className="p-5 glass rounded-2xl hover:bg-white/10 transition-all group"
+          >
+            <ArrowLeft className="w-6 h-6 group-hover:-translate-x-1 transition-transform" />
+          </motion.button>
 
           <div className="glass-card p-6 rounded-3xl min-w-[300px] border-l-4 border-l-singularity">
              <div className="flex items-center justify-between mb-4">
@@ -148,34 +131,12 @@ export function GlobalMap() {
 
              <h2 className="text-2xl font-display font-black tracking-tight mb-6">SINGULARITY MAP</h2>
              
-             <div className="flex items-center gap-4 mb-8">
-               <button 
-                  onClick={() => {
-                    const newNode = {
-                      lat: (Math.random() - 0.5) * 160,
-                      lng: (Math.random() - 0.5) * 360,
-                      size: 0.8,
-                      color: '#00f0ff',
-                      name: 'User_Node_Uplink',
-                      isVip: true,
-                      frequency: 440
-                    };
-                    setUsers(prev => [...prev, newNode]);
-                    playClick();
-                  }}
-                  className="px-6 py-3 bg-white/5 border border-white/10 hover:border-singularity/50 rounded-xl font-black text-[10px] uppercase tracking-[0.25em] flex items-center justify-center gap-3 transition-all group pointer-events-auto"
-                >
-                  <Plus className="w-3.5 h-3.5 group-hover:rotate-90 transition-transform" /> 
-                  Broadcasting Personal Node
-                </button>
-             </div>
-             
              <div className="space-y-4">
                {[
                  { label: "Active Nodes", value: displayedUsers.length, icon: Users, color: "text-singularity" },
-                 { label: "Node Clusters", value: "1,240 Active", icon: Server, color: "text-quantum" },
-                 { label: "Uplink Speed", value: "Hyper-Sync", icon: Zap, color: "text-reality" },
-                 { label: "Sync Delta", value: "0.001ms", icon: Activity, color: "text-reality" }
+                 { label: "SUM-F Resonance", value: `${(sumData.sumF * 100).toFixed(1)}%`, icon: Zap, color: "text-quantum" },
+                 { label: "Bluetooth Sync", value: "Enabled", icon: Radio, color: "text-reality" },
+                 { label: "Global Sync", value: "0.02ms", icon: Activity, color: "text-reality" }
                ].map((stat) => (
                  <div key={stat.label} className="flex justify-between items-center group cursor-default">
                     <div className="flex items-center gap-3">
@@ -313,35 +274,13 @@ export function GlobalMap() {
 
       {/* Main Quantum Globe Visualization */}
       <div className="absolute inset-0 z-10">
-        <AnimatePresence mode="wait">
-          {viewState === 'quantum' ? (
-            <motion.div
-              key="quantum-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-full h-full"
-            >
-              <QuantumGlobe 
-                width={dimensions.width}
-                height={dimensions.height}
-                resonance={sumData.totalResonance}
-                users={displayedUsers}
-                arcs={arcs}
-              />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="orbital-view"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="w-full h-full"
-            >
-              <GoogleMapsMasterpiece />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <QuantumGlobe 
+          width={dimensions.width}
+          height={dimensions.height}
+          resonance={sumData.totalResonance}
+          users={displayedUsers}
+          arcs={arcs}
+        />
       </div>
 
       {/* VFX Filters */}

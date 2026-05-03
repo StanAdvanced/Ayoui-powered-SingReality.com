@@ -1,10 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useStore } from '../store/useStore';
-import { Loader2, Award, Music, Trophy, Edit2, Save, X, Camera, BarChart2, AlertCircle, Cpu, Zap, Activity, Sparkles } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { db, storage } from '../firebase';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { Loader2, Award, Music, Trophy, Edit2, Save, X, Camera, BarChart2, AlertCircle, Cpu, Zap, Activity } from 'lucide-react';
+import { motion } from 'motion/react';
 import { soundService } from '../services/soundService';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { YouTubeBackground } from '../components/YouTubeBackground';
+import { handleFirestoreError, OperationType } from '../firebase';
 
 interface UserProfile {
   uid: string;
@@ -19,15 +23,12 @@ interface UserProfile {
 
 import { UserAvatar } from '../components/UserAvatar';
 
-import { AvatarStudio } from '../components/AvatarStudio';
-
 export function Profile() {
   const { user, isAuthReady, resonance, biometricSync, setBiometricSync } = useStore();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [isStudioOpen, setIsStudioOpen] = useState(false);
   const [editForm, setEditForm] = useState({
     displayName: '',
     bio: '',
@@ -47,37 +48,24 @@ export function Profile() {
 
     const fetchProfile = async () => {
       setError(null);
+      const path = `users/${user.uid}`;
       try {
-        const token = localStorage.getItem('auth_token');
-        if (!token) throw new Error("No token");
-        
-        const res = await fetch('/api/user/profile', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const data = await res.json();
-        
-        if (data.id) {
-          const profileData = {
-              uid: data.id,
-              displayName: data.name,
-              email: data.email,
-              photoURL: `https://ui-avatars.com/api/?name=${data.name}`,
-              bio: "A SingReality Pioneer.",
-              preferredMusicGenres: ['Electronic', 'Ambient'],
-              singingHistory: [],
-              rewards: []
-          };
-          setProfile(profileData);
+        const userRef = doc(db, 'users', user.uid);
+        const userSnap = await getDoc(userRef);
+        if (userSnap.exists()) {
+          const data = userSnap.data() as UserProfile;
+          setProfile(data);
           setEditForm({
-            displayName: profileData.displayName,
-            bio: profileData.bio,
-            photoURL: profileData.photoURL,
-            preferredMusicGenres: profileData.preferredMusicGenres.join(', ')
+            displayName: data.displayName || '',
+            bio: data.bio || '',
+            photoURL: data.photoURL || '',
+            preferredMusicGenres: data.preferredMusicGenres?.join(', ') || ''
           });
         } else {
           setError("Profile not found in our neural database.");
         }
       } catch (err) {
+        handleFirestoreError(err, OperationType.GET, path);
         setError("Failed to sync with the neural network.");
       } finally {
         setLoading(false);
@@ -88,28 +76,47 @@ export function Profile() {
   }, [user, isAuthReady]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    alert("Image uploads require Cloud Storage. Local previews are not supported for this fallback mode.");
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    setUploadingImage(true);
+    try {
+      const storageRef = ref(storage, `profile_images/${user.uid}_${Date.now()}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      setEditForm(prev => ({ ...prev, photoURL: downloadURL }));
+      soundService.playSuccess();
+    } catch (err) {
+      console.error("Error uploading image:", err);
+      soundService.playError();
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
   const handleSave = async () => {
     if (!user || !profile) return;
     setSaving(true);
     soundService.playClick();
-    
-    // In a real local DB, we would make a PUT request to /api/user/profile
-    // For now, we update local state only
-    setTimeout(() => {
+    const path = `users/${user.uid}`;
+    try {
+      const userRef = doc(db, 'users', user.uid);
       const updatedData = {
         displayName: editForm.displayName,
         bio: editForm.bio,
         photoURL: editForm.photoURL,
         preferredMusicGenres: editForm.preferredMusicGenres.split(',').map(g => g.trim()).filter(g => g !== '')
       };
+      await updateDoc(userRef, updatedData);
       setProfile({ ...profile, ...updatedData });
       setIsEditing(false);
       soundService.playSuccess();
+    } catch (err) {
+      handleFirestoreError(err, OperationType.UPDATE, path);
+      soundService.playError();
+    } finally {
       setSaving(false);
-    }, 500);
+    }
   };
 
   useEffect(() => {
@@ -191,19 +198,9 @@ export function Profile() {
   return (
     <div className="min-h-screen relative">
       <YouTubeBackground videoId="XpS_6-O9_3s" opacity={0.15} />
-      <AvatarStudio isOpen={isStudioOpen} onClose={() => setIsStudioOpen(false)} />
-
       <div className="max-w-4xl mx-auto px-6 py-12 relative z-10">
       <div className="glass-card rounded-[3rem] p-12 mb-12 relative overflow-hidden">
-        <div className="absolute top-6 right-6 flex gap-2">
-          {!isEditing && (
-            <button 
-              onClick={() => { soundService.playSuccess(); setIsStudioOpen(true); }}
-              className="flex items-center gap-2 px-6 py-3 bg-singularity text-black rounded-full font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all shadow-[0_0_20px_#00F0FF]"
-            >
-              <Sparkles className="w-4 h-4" /> Launch 3D Studio
-            </button>
-          )}
+        <div className="absolute top-6 right-6">
           {!isEditing ? (
             <button 
               onClick={() => { soundService.playClick(); setIsEditing(true); }}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Heart, Users, TrendingUp, HandCoins, ArrowRight, Share2, Globe, Zap, ShieldCheck } from 'lucide-react';
 import { useState } from 'react';
 import { CreateCampaignModal } from '../components/CreateCampaignModal';

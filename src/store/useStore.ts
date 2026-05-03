@@ -1,14 +1,9 @@
 import { create } from 'zustand';
-import { monitoringService } from '../services/monitoringService';
-import { VoiceName } from '../lib/tts';
+import { User, signInWithPopup, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
+import { auth, googleProvider, db } from '../firebase';
+import { doc, getDoc, setDoc, serverTimestamp, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';                
 
-export interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  token?: string;
-}
+import { monitoringService } from '../services/monitoringService';
 
 export interface CartItem {
   id: string;
@@ -34,7 +29,6 @@ interface AppState {
   
   // Auth Actions
   login: () => Promise<void>;
-  loginWithFacebook: () => Promise<void>;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   signUpWithEmail: (email: string, pass: string, name: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
@@ -49,10 +43,6 @@ interface AppState {
   // Intelligence at Scale - B2B API Portal
   isEnterprisePortalOpen: boolean;
   setEnterprisePortalOpen: (isOpen: boolean) => void;
-  
-  // Narration Voice
-  narrationVoice: VoiceName;
-  setNarrationVoice: (voice: VoiceName) => void;
   
   // Settings
   theme: 'dark' | 'light';
@@ -91,13 +81,13 @@ interface AppState {
   addToKaraokeQueue: (song: { id: string; title: string; youtubeId: string }) => void;
   removeFromKaraokeQueue: (id: string) => void;
 
-  // Resonance & Currency
+  // SingReality Singularity State
   resonance: number;
   addResonance: (amount: number) => void;
+
+  // Currency State
   currency: string;
   setCurrency: (currency: string) => void;
-  credits: number;
-  setCredits: (credits: number) => void;
 
   // Shopping Cart State
   cartItems: CartItem[];
@@ -125,6 +115,8 @@ interface AppState {
     lastUpdate: number;
   };
   setBiometricSync: (data: Partial<AppState['biometricSync']>) => void;
+  saveProject: (name: string) => Promise<void>;
+  loadProjects: () => Promise<any[]>;
 }
 
 interface Layer {
@@ -138,6 +130,24 @@ interface Layer {
   materialProps?: any;
   isHologram?: boolean;
 }
+
+const createUserDocument = async (user: User) => {
+  const userRef = doc(db, 'users', user.uid);
+  const userSnap = await getDoc(userRef);
+  
+  if (!userSnap.exists()) {
+    await setDoc(userRef, {
+      uid: user.uid,
+      displayName: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.displayName || user.email || 'User')}&background=random`,
+      createdAt: serverTimestamp(),
+      score: 0,
+      singingHistory: [],
+      rewards: []
+    });
+  }
+};
 
 const initialLayers: Layer[] = [
   { id: '1', name: 'Base Layer', visible: true, url: 'https://raw.githubusercontent.com/pmndrs/drei-assets/master/truck.gltf', objects: [], color: '#00f0ff', opacity: 0.6, materialProps: {}, isHologram: true }
@@ -154,7 +164,7 @@ export const useStore = create<AppState>((set, get) => {
 
   return {
     user: null,
-    isAuthReady: true, // we can set to true immediately since no firebase init
+    isAuthReady: false,
     setUser: (user) => set({ user }),
     setAuthReady: (isAuthReady) => set({ isAuthReady }),
 
@@ -166,45 +176,19 @@ export const useStore = create<AppState>((set, get) => {
     isEnterprisePortalOpen: false,
     setEnterprisePortalOpen: (isEnterprisePortalOpen) => set({ isEnterprisePortalOpen }),
     
-    narrationVoice: 'Puck', // Default to Puck mapped or default Gen voice
-    setNarrationVoice: (voice: VoiceName) => {
-      // Also update the narrationEngine dynamically if available
-      import('../services/narrationEngine').then(m => m.narrationEngine.currentVoice = voice);
-      set({ narrationVoice: voice });
-    },
-    
     login: async () => {
-      // Mocked out because oauth requires separate backend handling, falling back to a quick demo user instead
       try {
-        const email = "demo@example.com";
-        const pass = "password";
-        // Attempt login, if not exist, sign up
-        try {
-          await get().loginWithEmail(email, pass);
-        } catch {
-          await get().signUpWithEmail(email, pass, "Demo User");
-        }
+        const result = await signInWithPopup(auth, googleProvider);
+        await createUserDocument(result.user);
       } catch (error) {
         monitoringService.error('Login failed', error as Error);
         throw error;
       }
     },
     
-    loginWithFacebook: async () => {
-      // Not implemented without Firebase
-    },
-    
     loginWithEmail: async (email, pass) => {
       try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: pass })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        localStorage.setItem('auth_token', data.token);
-        set({ user: { uid: data.user.id, email: data.user.email, displayName: data.user.name, photoURL: null, token: data.token } });
+        await signInWithEmailAndPassword(auth, email, pass);
       } catch (error) {
         monitoringService.error('Email login failed', error as Error);
         throw error;
@@ -213,15 +197,9 @@ export const useStore = create<AppState>((set, get) => {
     
     signUpWithEmail: async (email, pass, name) => {
       try {
-        const res = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password: pass, name })
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error);
-        localStorage.setItem('auth_token', data.token);
-        set({ user: { uid: data.user.id, email: data.user.email, displayName: data.user.name, photoURL: null, token: data.token } });
+        const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+        await updateProfile(userCredential.user, { displayName: name });
+        await createUserDocument(userCredential.user);
       } catch (error) {
         monitoringService.error('Sign up failed', error as Error);
         throw error;
@@ -229,13 +207,17 @@ export const useStore = create<AppState>((set, get) => {
     },
     
     resetPassword: async (email) => {
-      throw new Error("Local auth doesn't support password reset yet.");
+      try {
+        await sendPasswordResetEmail(auth, email);
+      } catch (error) {
+        monitoringService.error('Password reset failed', error as Error);
+        throw error;
+      }
     },
     
     logout: async () => {
       try {
-        localStorage.removeItem('auth_token');
-        set({ user: null });
+        await signOut(auth);
       } catch (error) {
         monitoringService.error('Logout failed', error as Error);
         throw error;
@@ -325,10 +307,9 @@ export const useStore = create<AppState>((set, get) => {
 
     resonance: 14729881, // Starting with a high number from the lore
     addResonance: (amount) => set((state) => ({ resonance: state.resonance + amount })),
+
     currency: 'AUD',
     setCurrency: (currency) => set({ currency }),
-    credits: 0,
-    setCredits: (credits) => set({ credits }),
 
     cartItems: [],
     isCartOpen: false,
@@ -367,5 +348,25 @@ export const useStore = create<AppState>((set, get) => {
     setBiometricSync: (data) => set((state) => ({ 
       biometricSync: { ...state.biometricSync, ...data, lastUpdate: Date.now() } 
     })),
+    saveProject: async (name) => {
+      const state = get();
+      if (!state.user) throw new Error("Must be logged in to save project");
+      const docRef = doc(collection(db, 'projects'));
+      await setDoc(docRef, {
+        id: docRef.id,
+        userId: state.user.uid,
+        name: name,
+        layers: state.layers,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    },
+    loadProjects: async () => {
+      const state = get();
+      if (!state.user) throw new Error("Must be logged in to load projects");
+      const q = query(collection(db, 'projects'), where('userId', '==', state.user.uid));
+      const querySnapshot = await getDocs(q);
+      return querySnapshot.docs.map(doc => doc.data());
+    }
   };
 });

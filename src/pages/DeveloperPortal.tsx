@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { 
   Terminal, 
   Code2, 
@@ -17,9 +17,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useStore } from '../store/useStore';
-import { SumFormulaVisualizer } from '../components/SumFormulaVisualizer';
-import { HyperMediaBackscreen } from '../components/HyperMediaBackscreen';
-import { ApiKeysManager } from '../components/ApiKeysManager';
+import { CinematicBackscreen } from '../components/CinematicBackscreen';
 
 export function DeveloperPortal() {
   const { user } = useStore();
@@ -33,7 +31,10 @@ export function DeveloperPortal() {
 
   return (
     <div className="min-h-screen relative bg-black/60">
-      <HyperMediaBackscreen />
+      <CinematicBackscreen 
+        imageUrl="https://images.unsplash.com/photo-1550751827-4bd374c3f58b?q=80&w=2000&auto=format&fit=crop"
+        opacity={0.2}
+      />
       
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
         <header className="mb-16">
@@ -48,11 +49,6 @@ export function DeveloperPortal() {
             real-time collaboration APIs, and ethical revenue sharing models.
           </p>
         </header>
-
-        {/* Algorithm Visualization */}
-        <div className="mb-16 h-[500px]">
-           <SumFormulaVisualizer />
-        </div>
 
         {/* Dash Overview */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
@@ -137,6 +133,10 @@ export function DeveloperPortal() {
 
               <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-4">
                 <button className="p-6 glass rounded-2xl text-center hover:bg-white/5 transition-all">
+                  <Key className="w-5 h-5 mx-auto mb-3 text-quantum" />
+                  <span className="text-[10px] font-bold uppercase tracking-widest block">Manage Keys</span>
+                </button>
+                <button className="p-6 glass rounded-2xl text-center hover:bg-white/5 transition-all">
                   <Box className="w-5 h-5 mx-auto mb-3 text-singularity" />
                   <span className="text-[10px] font-bold uppercase tracking-widest block">SDK Docs</span>
                 </button>
@@ -146,8 +146,6 @@ export function DeveloperPortal() {
                 </button>
               </div>
             </div>
-
-            <ApiKeysManager />
 
             <div className="glass rounded-[3rem] p-10 border border-white/5">
               <h2 className="text-2xl font-bold flex items-center gap-3 mb-8">

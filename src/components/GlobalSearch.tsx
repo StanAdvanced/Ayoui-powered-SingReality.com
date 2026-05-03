@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Command, X, Globe, Mic2, Tv, Map, ShoppingBag, User, Settings, Sparkles, Music } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useSound } from '../hooks/useSound';
 import { useStore } from '../store/useStore';
