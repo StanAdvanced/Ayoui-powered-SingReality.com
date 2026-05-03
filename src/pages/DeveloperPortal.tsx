@@ -178,15 +178,30 @@ export function DeveloperPortal() {
           <div className="space-y-8">
             <div className="glass rounded-[3rem] p-8 border border-white/5">
               <h3 className="text-xl font-bold mb-6 flex items-center gap-2">
-                <Zap className="w-5 h-5 text-reality" /> Quick Deploy
+                <Zap className="w-5 h-5 text-reality" /> Advanced Demos
               </h3>
-              <p className="text-sm text-gray-400 mb-8">Deploy your first music app in minutes using our pre-built templates.</p>
+              <p className="text-sm text-gray-400 mb-8">Access the cutting-edge modules deployed in the last sync phase.</p>
               <div className="space-y-4">
-                <button className="w-full py-4 bg-white text-black rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all">
-                  Create New Project
+                <button onClick={() => window.location.href = '/deepseek-suite'} className="w-full py-4 bg-singularity text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all">
+                  DeepSeek Composer
                 </button>
-                <button className="w-full py-4 glass rounded-xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white/5 transition-all">
-                  Import from GitHub
+                <button onClick={() => window.location.href = '/live-ar-stage'} className="w-full py-4 bg-blue-600 text-white rounded-xl font-bold text-[10px] uppercase tracking-widest hover:scale-105 transition-all">
+                  Geospatial AR Stage
+                </button>
+                <button onClick={() => window.location.href = '/music-graph'} className="w-full py-4 glass rounded-xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white/5 transition-all">
+                  CRDT Music Graph 
+                </button>
+                <button onClick={() => window.location.href = '/wellness'} className="w-full py-4 glass rounded-xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-white/5 transition-all">
+                  DeepSeek Bio Wellness
+                </button>
+                <button onClick={() => window.location.href = '/singularity-settlement'} className="w-full py-4 glass rounded-xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-green-900/50 transition-all">
+                  Singularity Settlement
+                </button>
+                <button onClick={() => window.location.href = '/metamorphosis'} className="w-full py-4 glass rounded-xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-purple-900/50 transition-all">
+                  MetaMorphosis AVATAR
+                </button>
+                <button onClick={() => window.location.href = '/shorts-remix'} className="w-full py-4 glass rounded-xl font-bold text-[10px] uppercase tracking-widest border border-white/10 hover:bg-red-900/50 transition-all">
+                  Shorts AI Auto-Remix
                 </button>
               </div>
             </div>

@@ -28,6 +28,14 @@ const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ defa
 const SingRealityTV = lazy(() => import('./pages/SingRealityTV').then(m => ({ default: m.SingRealityTV })));
 const KaraokeArena = lazy(() => import('./pages/KaraokeArena').then(m => ({ default: m.KaraokeArena })));
 const Showcase = lazy(() => import('./pages/Showcase'));
+const DeepSeekMusicSuite = lazy(() => import('./components/DeepSeekMusicSuite').then(m => ({ default: m.DeepSeekMusicSuite })));
+const LiveARStage = lazy(() => import('./components/LiveARStage').then(m => ({ default: m.LiveARStage })));
+const MusicGraphExplorer = lazy(() => import('./components/MusicGraphExplorer').then(m => ({ default: m.MusicGraphExplorer })));
+const SingularitySettlement = lazy(() => import('./components/SingularitySettlement').then(m => ({ default: m.SingularitySettlement })));
+const MetamorphosisStage = lazy(() => import('./components/MetamorphosisStage').then(m => ({ default: m.MetamorphosisStage })));
+const ShortsRemixFactory = lazy(() => import('./components/ShortsRemixFactory').then(m => ({ default: m.ShortsRemixFactory })));
+
+const Wellness = lazy(() => import('./pages/Wellness').then(m => ({ default: m.Wellness })));
 
 import { useStore } from './store/useStore';
 
@@ -82,6 +90,13 @@ export default function App() {
             <Route path="/global-map" element={<GlobalMap />} />
             <Route path="/tv" element={<SingRealityTV />} />
             <Route path="/showcase" element={<Showcase />} />
+            <Route path="/deepseek-suite" element={<ProtectedRoute><DeepSeekMusicSuite /></ProtectedRoute>} />
+            <Route path="/live-ar-stage" element={<ProtectedRoute><LiveARStage /></ProtectedRoute>} />
+            <Route path="/music-graph" element={<ProtectedRoute><MusicGraphExplorer /></ProtectedRoute>} />
+            <Route path="/wellness" element={<ProtectedRoute><Wellness /></ProtectedRoute>} />
+            <Route path="/singularity-settlement" element={<ProtectedRoute><SingularitySettlement /></ProtectedRoute>} />
+            <Route path="/metamorphosis" element={<ProtectedRoute><MetamorphosisStage /></ProtectedRoute>} />
+            <Route path="/shorts-remix" element={<ProtectedRoute><ShortsRemixFactory /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
