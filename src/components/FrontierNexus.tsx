@@ -8,6 +8,7 @@ import { GeoSpatialHub } from './GeoSpatialHub';
 import { ShortsRemixAgent } from './ShortsRemixAgent';
 import { AvatarCanvas } from './AvatarCanvas';
 import { AIDialogue } from './AIDialogue';
+import { BannerSlide } from './BannerSlide';
 
 type ViewMode = 'LANDING' | 'OVERVIEW' | 'PRODUCTION' | 'MARKETING' | 'GEOSPATIAL' | 'SHORTS_REMIX';
 
@@ -16,6 +17,7 @@ export function FrontierNexus() {
 
   return (
     <div className="min-h-screen bg-[#020205] text-white flex overflow-hidden font-inter selection:bg-singularity/30 selection:text-white relative">
+      <BannerSlide />
       {/* Absolute 3D Agent Swarm Background for OVERVIEW */}
       <div className="absolute inset-0 pointer-events-none z-0">
          <AgentSwarmVisualizer />
@@ -46,7 +48,7 @@ export function FrontierNexus() {
                         transition={{ delay: 0.2 }}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-white/5 rounded-full border border-white/10 text-singularity uppercase tracking-widest text-xs font-bold mb-4"
                     >
-                        <Sparkles className="w-4 h-4" /> Welcome to SingReality
+                        <Sparkles className="w-4 h-4" /> Every Story Needs A Miracle
                     </motion.div>
                     
                     <motion.h1 
@@ -55,8 +57,8 @@ export function FrontierNexus() {
                         transition={{ delay: 0.4 }}
                         className="text-5xl md:text-7xl font-heading font-black tracking-tighter uppercase leading-[0.9]"
                     >
-                        From <span className="text-transparent bg-clip-text bg-gradient-to-r from-gray-500 to-gray-300">Dreams</span><br/>
-                        To The <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D4FF] to-[#6C3CE1] drop-shadow-[0_0_20px_rgba(0,212,255,0.5)]">Red Carpet</span>
+                        Let The World <br/>
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#00D4FF] to-[#6C3CE1] drop-shadow-[0_0_20px_rgba(0,212,255,0.5)]">Sing In Harmony</span>
                     </motion.h1>
                     
                     <motion.p 
@@ -65,7 +67,7 @@ export function FrontierNexus() {
                         transition={{ delay: 0.6 }}
                         className="text-lg md:text-xl text-gray-300 max-w-2xl mx-auto font-light leading-relaxed"
                     >
-                        Your universal access point for music. Whether you want to discover the frequencies of the future or forge your own path to global stardom. AI creates the bridge. You bring the soul.
+                        A human-improving experience designed to make your neurons dance. We are forging a $4M enterprise-grade global product to branch skills across all disciplines and change lives for good.
                     </motion.p>
                     
                     <motion.div 
@@ -78,13 +80,13 @@ export function FrontierNexus() {
                             onClick={() => setActiveView('PRODUCTION')}
                             className="bg-gradient-to-r from-singularity to-blue-600 hover:scale-105 transition-all text-white px-8 py-5 rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 shadow-[0_0_30px_rgba(0,212,255,0.4)] group"
                         >
-                            <Mic2 className="w-5 h-5 group-hover:animate-pulse" /> Create For Free
+                            <Mic2 className="w-5 h-5 group-hover:animate-pulse" /> Architect The Miracle
                         </button>
                         <button 
                             onClick={() => setActiveView('MARKETING')}
                             className="glass border border-white/20 hover:bg-white/10 transition-all text-white px-8 py-5 rounded-2xl font-bold uppercase tracking-widest flex items-center justify-center gap-3 group"
                         >
-                            <Headphones className="w-5 h-5 group-hover:scale-110 transition-transform" /> Listen & Discover
+                            <Headphones className="w-5 h-5 group-hover:scale-110 transition-transform" /> Experience Truth
                         </button>
                     </motion.div>
                 </div>
