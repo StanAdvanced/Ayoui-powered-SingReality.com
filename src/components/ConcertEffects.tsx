@@ -37,19 +37,19 @@ export function ConcertEffects() {
           {/* Giant Cybernetic Entity / Core */}
           <div className="absolute w-1/2 h-1/2 rounded-full border-[3px] border-singularity shadow-[0_0_200px_rgba(0,240,255,1),inset_0_0_50px_rgba(255,140,0,0.5)]" style={{ background: 'radial-gradient(circle, rgba(0,240,255,0.3) 0%, rgba(255,140,0,0.1) 60%)' }} />
           <motion.div 
-            animate={{ rotateZ: 360, scale: [1, 1.1, 1] }} 
+            animate={{ rotateZ: [0, 180, 360], scale: [1, 1.1, 1] }} 
             transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
             className="absolute w-[60%] h-[60%] rounded-full border-t-[6px] border-b-[6px] border-quantum opacity-90 shadow-[0_0_50px_rgba(255,0,255,0.8),0_0_20px_rgba(255,140,0,0.6)]"
           />
           <motion.div 
-            animate={{ rotateZ: -360, scale: [1, 1.2, 1] }} 
+            animate={{ rotateZ: [0, -180, -360], scale: [1, 1.2, 1] }} 
             transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
             className="absolute w-[70%] h-[70%] rounded-full border-l-[4px] border-r-[4px] border-[#ff8c00] opacity-80 shadow-[0_0_50px_rgba(255,140,0,0.7)]"
           />
           {/* Digital Display Glitch Artifacts */}
           <motion.div
-            animate={{ opacity: [0, 1, 0], scale: [0.8, 2, 0.8], skewX: [0, 20, -20, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "circOut" }}
+            animate={{ opacity: [0, 1, 1, 0], scale: [0.8, 1.5, 2, 0.8], skewX: [0, 20, -20, 0] }}
+            transition={{ duration: 3, repeat: Infinity }}
             className="absolute w-full h-[4px] bg-white shadow-[0_0_30px_white,0_0_15px_#ff8c00]"
           />
         </motion.div>

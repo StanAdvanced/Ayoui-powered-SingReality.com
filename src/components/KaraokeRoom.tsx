@@ -3,7 +3,8 @@ import { useParams } from 'react-router-dom';
 import { syncKaraokeSession } from '../services/karaokeService';
 import { 
   Mic2, Users, Zap, Play, Pause, Volume2, VolumeX, SkipForward,
-  Sparkles, Rocket, Music, Star, Share2, ListMusic, Headset
+  Sparkles, Rocket, Music, Star, Share2, ListMusic, Headset,
+  Plus, ChevronUp, ChevronDown, Trash2
 } from 'lucide-react';
 import { YouTubeBackground } from './YouTubeBackground';
 import { useMusicEngine } from '../services/musicEngine';
@@ -64,9 +65,12 @@ export function KaraokeRoom() {
   const [videoId, setVideoId] = useState('jfKfPfyJRdk');
   const [jukeboxOpen, setJukeboxOpen] = useState(false);
   const [beatPulse, setBeatPulse] = useState(1);
-  const { togglePlay, isPlaying, audioElement, currentTrack, volume, setVolume, playGenre } = useMusicEngine();
+  const { togglePlay, isPlaying, audioElement, volume, setVolume } = useMusicEngine();
   const { karaokeTheme, setKaraokeTheme } = useStore();
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
+
+  const [currentKaraokeSong, setCurrentKaraokeSong] = useState<typeof YOUTUBE_TOP_10[0] | null>(null);
+  const [karaokeQueue, setKaraokeQueue] = useState<typeof YOUTUBE_TOP_10>([]);
 
   useEffect(() => {
     if (sessionId) {
@@ -76,25 +80,55 @@ export function KaraokeRoom() {
     }
   }, [sessionId]);
 
+  const addToQueue = (song: typeof YOUTUBE_TOP_10[0]) => {
+    setKaraokeQueue(prev => [...prev, song]);
+  };
+
+  const removeFromQueue = (index: number) => {
+    setKaraokeQueue(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const moveInQueue = (index: number, direction: 'up' | 'down') => {
+    if (direction === 'up' && index > 0) {
+      setKaraokeQueue(prev => {
+        const newQ = [...prev];
+        [newQ[index - 1], newQ[index]] = [newQ[index], newQ[index - 1]];
+        return newQ;
+      });
+    } else if (direction === 'down' && index < karaokeQueue.length - 1) {
+      setKaraokeQueue(prev => {
+        const newQ = [...prev];
+        [newQ[index + 1], newQ[index]] = [newQ[index], newQ[index + 1]];
+        return newQ;
+      });
+    }
+  };
+
+  const playNextInQueue = () => {
+    if (karaokeQueue.length > 0) {
+      const nextSong = karaokeQueue[0];
+      setVideoId(nextSong.id);
+      setCurrentKaraokeSong(nextSong);
+      setKaraokeQueue(prev => prev.slice(1));
+    } else {
+      const randomSong = YOUTUBE_TOP_10[Math.floor(Math.random() * YOUTUBE_TOP_10.length)];
+      setVideoId(randomSong.id);
+      setCurrentKaraokeSong(randomSong);
+    }
+  };
+
   // Autoplay removed for initial landing experience
   useEffect(() => {
     // If we want autonomous start, we can trigger it based on user interaction or specifically selected top 10.
   }, []);
 
-  // Fetch YouTube video dynamically based on the current track
+  // Removed autonomous sync in favor of jukebox/queue
   useEffect(() => {
-    if (currentTrack) {
-      const query = `${currentTrack.title || 'Karaoke'} ${currentTrack.user?.name || ''} official music video`;
-      fetch(`/api/youtube/search?q=${encodeURIComponent(query)}`)
-        .then(res => res.json())
-        .then(data => {
-          if (data.items && data.items.length > 0) {
-            setVideoId(data.items[0].id.videoId);
-          }
-        })
-        .catch(err => console.error("Error fetching YouTube video:", err));
+    if (!currentKaraokeSong && YOUTUBE_TOP_10.length > 0) {
+        setCurrentKaraokeSong(YOUTUBE_TOP_10[0]);
+        setVideoId(YOUTUBE_TOP_10[0].id);
     }
-  }, [currentTrack]);
+  }, []);
 
   // Sync lyrics and beat pulse with audio element
   useEffect(() => {
@@ -117,20 +151,20 @@ export function KaraokeRoom() {
     return () => cancelAnimationFrame(animationFrameId);
   }, [audioElement, isPlaying]);
 
-  // Auto-scroll lyrics
-  useEffect(() => {
-    if (lyricsContainerRef.current) {
-      const activeLyric = lyricsContainerRef.current.querySelector('.active-lyric');
-      if (activeLyric) {
-        activeLyric.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
-    }
-  }, [currentTime]);
-
   const activeIndex = PREDEFINED_LYRICS.reduce((acc, lyric, index) => {
     if (currentTime >= lyric.time) return index;
     return acc;
   }, 0);
+
+  // Auto-scroll lyrics
+  useEffect(() => {
+    if (lyricsContainerRef.current) {
+      const activeLyricNode = lyricsContainerRef.current.querySelector('.active-lyric');
+      if (activeLyricNode) {
+        activeLyricNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+  }, [activeIndex]);
 
   const currentThemeData = THEMES.find(t => t.id === karaokeTheme) || THEMES[0];
 
@@ -226,29 +260,73 @@ export function KaraokeRoom() {
                   <div className="w-24 h-24 rounded-full border-[6px] border-[#555] bg-gradient-to-tr from-gray-900 to-gray-600 shadow-inner" />
                 </div>
                 
-                <div className="flex-1 mt-20 p-8 glass-card border border-white/10 m-8 rounded-3xl overflow-y-auto">
-                  <div className="flex justify-between items-center mb-6">
-                    <h2 className="text-3xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 uppercase tracking-widest drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">Top 10 Global Tracks</h2>
-                    <button onClick={() => setJukeboxOpen(false)} className="px-4 py-2 bg-red-600 hover:bg-red-500 rounded-full font-bold text-white transition-colors uppercase tracking-widest text-sm">Close</button>
-                  </div>
-                  <div className="space-y-4">
-                    {YOUTUBE_TOP_10.map((song, i) => (
-                      <div key={song.id} 
-                           onClick={() => { setVideoId(song.id); setJukeboxOpen(false); }}
-                           className="flex justify-between items-center bg-black/50 p-4 rounded-xl border border-white/5 hover:bg-white/10 hover:border-singularity/50 cursor-pointer transition-colors group">
-                        <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 flex items-center justify-center font-black font-mono text-xl text-singularity opacity-50 group-hover:opacity-100">{i + 1}</div>
-                          <div>
-                            <div className="font-bold text-white text-lg group-hover:text-singularity transition-colors">{song.title}</div>
-                            <div className="text-sm text-gray-400 font-mono">{song.artist}</div>
+                <div className="flex-1 mt-20 p-8 glass-card border border-white/10 m-8 rounded-3xl overflow-hidden flex flex-col md:flex-row gap-8">
+                  <div className="flex-1 overflow-y-auto pr-4">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-3xl font-display font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 uppercase tracking-widest drop-shadow-[0_0_10px_rgba(255,0,0,0.8)]">Hits</h2>
+                      <button onClick={() => setJukeboxOpen(false)} className="md:hidden px-4 py-2 bg-red-600 hover:bg-red-500 rounded-full font-bold text-white transition-colors uppercase tracking-widest text-sm">Close</button>
+                    </div>
+                    <div className="space-y-4">
+                      {YOUTUBE_TOP_10.map((song, i) => (
+                        <div key={song.id} 
+                             className="flex justify-between items-center bg-black/50 p-4 rounded-xl border border-white/5 hover:bg-white/10 hover:border-singularity/50 transition-colors group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 flex items-center justify-center font-black font-mono text-xl text-singularity opacity-50 group-hover:opacity-100">{i + 1}</div>
+                            <div>
+                              <div className="font-bold text-white text-lg group-hover:text-singularity transition-colors">{song.title}</div>
+                              <div className="text-sm text-gray-400 font-mono">{song.artist}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button 
+                              onClick={() => addToQueue(song)}
+                              className="p-2 bg-white/10 hover:bg-singularity text-white hover:text-black rounded-lg transition-colors border border-white/10"
+                              title="Add to Queue"
+                            >
+                              <Plus className="w-5 h-5" />
+                            </button>
+                            <button 
+                              onClick={() => {
+                                setCurrentKaraokeSong(song);
+                                setVideoId(song.id);
+                                setJukeboxOpen(false);
+                              }}
+                              className="px-4 py-2 bg-quantum/20 hover:bg-quantum text-quantum hover:text-white rounded-[2rem] transition-colors font-bold uppercase text-xs border border-quantum/50"
+                            >
+                              Play Now
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full border border-white/10">
-                          <Users className="w-3 h-3 text-quantum" />
-                          <span className="text-xs font-mono text-gray-300">{song.views} views</span>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="w-full md:w-1/3 flex flex-col bg-black/60 rounded-2xl border border-white/10 p-6 overflow-hidden">
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-bold text-white flex items-center gap-2"><ListMusic className="w-6 h-6 text-singularity" /> Queue</h2>
+                      <button onClick={() => setJukeboxOpen(false)} className="hidden md:block px-4 py-2 bg-red-600/50 hover:bg-red-500 rounded-full font-bold text-white transition-colors uppercase tracking-widest text-xs">Close</button>
+                    </div>
+                    <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
+                      {karaokeQueue.length === 0 ? (
+                        <div className="text-center text-gray-400 py-10 font-mono border border-dashed border-white/20 rounded-xl">Queue is empty</div>
+                      ) : (
+                        karaokeQueue.map((song, i) => (
+                          <div key={`${song.id}-${i}`} className="bg-white/5 p-3 rounded-lg border border-white/10 flex items-center justify-between group">
+                            <div className="truncate pr-4 flex-1">
+                              <div className="font-bold text-white text-sm truncate">{song.title}</div>
+                              <div className="text-xs text-gray-400 truncate">{song.artist}</div>
+                            </div>
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <div className="flex flex-col gap-1">
+                                <button onClick={() => moveInQueue(i, 'up')} disabled={i === 0} className="p-1 hover:bg-white/20 rounded disabled:opacity-30"><ChevronUp className="w-3 h-3 text-white" /></button>
+                                <button onClick={() => moveInQueue(i, 'down')} disabled={i === karaokeQueue.length - 1} className="p-1 hover:bg-white/20 rounded disabled:opacity-30"><ChevronDown className="w-3 h-3 text-white" /></button>
+                              </div>
+                              <button onClick={() => removeFromQueue(i)} className="p-2 hover:bg-red-500/20 rounded text-red-400"><Trash2 className="w-4 h-4" /></button>
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -267,7 +345,7 @@ export function KaraokeRoom() {
               className="absolute inset-0 z-0 opacity-10 pointer-events-none flex flex-wrap items-center justify-center gap-12"
               animate={{ 
                 scale: [1, 1.05, 1],
-                opacity: isPlaying ? [0.1, 0.2, 0.1] : 0.05
+                opacity: isPlaying ? [0.1, 0.2, 0.1] : [0.05, 0.05, 0.05]
               }}
               transition={{ duration: 0.5, repeat: Infinity }}
             >
@@ -278,25 +356,37 @@ export function KaraokeRoom() {
             
             <div 
               ref={lyricsContainerRef}
-              className="flex-1 overflow-y-auto hide-scrollbar py-32 px-4 space-y-8 text-center"
+              className="flex-1 overflow-y-auto hide-scrollbar py-[40vh] px-4 space-y-12 text-center scroll-smooth"
             >
               {PREDEFINED_LYRICS.map((lyric, index) => {
                 const isActive = index === activeIndex;
                 const isPast = index < activeIndex;
                 
                 return (
-                  <div 
+                  <motion.div 
                     key={index}
-                    className={`transition-all duration-500 transform ${
+                    className={`transition-all duration-700 transform relative py-4 px-8 rounded-2xl ${
                       isActive 
-                        ? 'active-lyric text-4xl md:text-6xl font-black text-white glow-text scale-110' 
+                        ? 'active-lyric text-4xl md:text-6xl font-black text-white glow-text' 
                         : isPast
-                          ? 'text-2xl md:text-3xl font-bold text-white/30 scale-95'
-                          : 'text-2xl md:text-3xl font-bold text-white/10 scale-90'
+                          ? 'text-2xl md:text-3xl font-bold text-white/30'
+                          : 'text-2xl md:text-3xl font-bold text-white/10'
                     }`}
+                    animate={{
+                      scale: isActive ? 1.1 : isPast ? 0.95 : 0.9,
+                      opacity: isActive ? 1 : isPast ? 0.3 : 0.1,
+                      y: isActive ? 0 : isPast ? -10 : 10
+                    }}
                   >
+                    {isActive && (
+                      <motion.div
+                        className="absolute inset-0 bg-gradient-to-r from-transparent via-singularity/20 to-transparent -z-10 rounded-2xl"
+                        animate={{ opacity: [0.2, 0.6, 0.2], scale: [1, 1.05, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity }}
+                      />
+                    )}
                     {lyric.text}
-                  </div>
+                  </motion.div>
                 );
               })}
             </div>
@@ -330,10 +420,10 @@ export function KaraokeRoom() {
 
               <div className="text-center space-y-2">
                 <h3 className="text-xl font-bold text-white truncate max-w-[200px] mx-auto">
-                  {currentTrack?.title || "Loading Track..."}
+                  {currentKaraokeSong?.title || "Loading Track..."}
                 </h3>
                 <p className="text-gray-400 font-mono text-sm">
-                  {currentTrack?.user?.name || "Audius Network"}
+                  {currentKaraokeSong?.artist || "SingReality"}
                 </p>
               </div>
 
@@ -347,9 +437,9 @@ export function KaraokeRoom() {
                     {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
                   </button>
                   <button 
-                    onClick={() => playGenre('Pop')}
-                    className="w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors"
-                    title="Next Random Track"
+                    onClick={playNextInQueue}
+                    className={`w-10 h-10 rounded-full glass flex items-center justify-center hover:bg-white/10 transition-colors`}
+                    title="Next Track"
                   >
                     <SkipForward className="w-4 h-4 text-white" />
                   </button>
@@ -371,9 +461,20 @@ export function KaraokeRoom() {
                 </div>
               </div>
 
-              <div className="w-full h-[1px] bg-white/10 my-2" />
+              <div className="w-full h-[1px] bg-white/10 my-4" />
 
-              <div className="text-center">
+              {karaokeQueue.length > 0 && (
+                <div className="w-full text-center bg-white/5 p-3 rounded-xl border border-white/10">
+                  <div className="text-[10px] text-singularity flex items-center justify-center gap-1 uppercase tracking-widest mb-1">
+                    <ListMusic className="w-3 h-3" /> Up Next
+                  </div>
+                  <div className="text-sm font-bold text-white truncate px-2">{karaokeQueue[0].title}</div>
+                  <div className="text-xs text-gray-400 truncate px-2">{karaokeQueue[0].artist}</div>
+                  <div className="text-[9px] text-gray-500 uppercase mt-1">+{karaokeQueue.length - 1} more in queue</div>
+                </div>
+              )}
+
+              <div className="text-center mt-4">
                 <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-1">Network Sync</div>
                 <div className="text-lg font-mono font-bold text-quantum glow-text">
                   {new Date(networkTime).toLocaleTimeString()}

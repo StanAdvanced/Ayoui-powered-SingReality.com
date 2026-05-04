@@ -307,7 +307,7 @@ export function CinematicBackscreen({ opacity = 1, pageType = "nexus" }: { opaci
         <QuantumHyperobject isActive={isPlaying} />
         <Particles />
         
-        <EffectComposer disableNormalPass>
+        <EffectComposer enableNormalPass={false}>
           <Bloom
             luminanceThreshold={0.1}
             luminanceSmoothing={0.9}

@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { useFrame, useThree } from '@react-three/fiber';
+import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three-stdlib';
 import { VRMLoaderPlugin, VRM } from '@pixiv/three-vrm';
@@ -18,7 +18,7 @@ function AvatarModel() {
   useEffect(() => {
     let unmounted = false;
     const loader = new GLTFLoader();
-    loader.register((parser) => new VRMLoaderPlugin(parser));
+    loader.register((parser) => new VRMLoaderPlugin(parser as any) as any);
 
     loader.load(
       VRM_URL,

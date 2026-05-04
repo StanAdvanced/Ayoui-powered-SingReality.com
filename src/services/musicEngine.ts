@@ -48,11 +48,12 @@ export const useMusicEngine = create<MusicEngineState>((set, get) => ({
     
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
       
       const res = await fetch('https://api.audius.co', { signal: controller.signal });
       clearTimeout(timeoutId);
       
+      if (!res.ok) throw new Error('Audius API fetch failed');
       const data = await res.json();
       const hosts = data.data;
       if (hosts && hosts.length > 0) {

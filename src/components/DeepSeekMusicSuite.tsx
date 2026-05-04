@@ -152,8 +152,8 @@ export function DeepSeekMusicSuite() {
                     {[...Array(40)].map((_, i) => (
                       <motion.div 
                         key={i}
-                        animate={{ height: isPlaying ? [10, Math.random() * 80 + 20, 10] : 10 }}
-                        transition={{ repeat: Infinity, duration: 0.5 + Math.random() * 0.5 }}
+                        animate={{ height: isPlaying ? [10, 20 + (i % 10) * 8, 10] : [10, 10, 10] }}
+                        transition={{ repeat: Infinity, duration: 0.5 + (i % 5) * 0.1 }}
                         className="w-2 bg-gradient-to-t from-singularity to-blue-400 rounded-full"
                       />
                     ))}

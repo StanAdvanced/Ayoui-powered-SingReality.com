@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'motion/react';
 import { ShoppingCart, Tag, Download, Play, Heart, Share2, Mic2, Layers, Zap, Cpu, TrendingUp, Star, Globe, Database, Network, Search, PenTool } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -292,10 +292,10 @@ const BLUEPRINTS = [
 ];
 
 export function Marketplace() {
-  const [activeCategory, setActiveCategory] = React.useState("All");
-  const [activeType, setActiveType] = React.useState("All");
-  const [activeGenre, setActiveGenre] = React.useState("All");
-  const [searchQuery, setSearchQuery] = React.useState("");
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [activeType, setActiveType] = useState("All");
+  const [activeGenre, setActiveGenre] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
   const { currency } = useStore();
   const navigate = useNavigate();
 
