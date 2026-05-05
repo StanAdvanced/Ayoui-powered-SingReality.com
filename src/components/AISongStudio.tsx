@@ -5,8 +5,10 @@ import { Brain, Zap, Music, Play, Pause, Sparkles, Volume2 } from 'lucide-react'
 import { generateBgmRecipe, generateSpeech } from '../services/geminiService';
 import { playSpark, SparkRecipe } from '../lib/audioEngine';
 import { YouTubeBackground } from './YouTubeBackground';
+import { useSound } from '../hooks/useSound';
 
 export function AISongStudio() {
+  const { playSuccess, playClick } = useSound();
   const [isSynthesizing, setIsSynthesizing] = useState(false);
   const [biometricData, setBiometricData] = useState<BiometricData>({
     heartRate: 70,
@@ -42,6 +44,7 @@ export function AISongStudio() {
       engine.stopSynthesis();
       setIsSynthesizing(false);
     } else {
+      playSuccess();
       setIsSynthesizing(true);
       await engine.startSynthesis();
       await engine.synthesize(biometricData);
@@ -50,6 +53,7 @@ export function AISongStudio() {
 
   const handleGenerateBgm = async () => {
     if (!bgmPrompt) return;
+    playClick();
     setIsGeneratingBgm(true);
     const newRecipe = await generateBgmRecipe(bgmPrompt, biometricData);
     if (newRecipe) {

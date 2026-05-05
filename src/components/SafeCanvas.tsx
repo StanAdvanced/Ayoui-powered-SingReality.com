@@ -44,7 +44,11 @@ class CanvasErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 }
 
-export function SafeCanvas({ children, fallback, ...props }: { children: ReactNode, fallback?: ReactNode } & ComponentProps<typeof Canvas>) {
+import { XR, createXRStore } from '@react-three/xr';
+
+const xrStore = createXRStore();
+
+export function SafeCanvas({ children, fallback, xr = false, ...props }: { children: ReactNode, fallback?: ReactNode, xr?: boolean } & ComponentProps<typeof Canvas>) {
   const supported = isWebGLAvailable();
 
   if (!supported) {
@@ -56,13 +60,37 @@ export function SafeCanvas({ children, fallback, ...props }: { children: ReactNo
     );
   }
 
+  const canvasContent = xr ? (
+    <XR store={xrStore}>
+      {children}
+    </XR>
+  ) : children;
+
   return (
     <CanvasErrorBoundary fallback={fallback}>
-      <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-6 h-6 animate-spin text-singularity opacity-20" /></div>}>
-        <Canvas {...props}>
-          {children}
-        </Canvas>
-      </Suspense>
+      <div className="relative w-full h-full">
+        {xr && (
+          <div className="absolute top-4 left-4 z-50 flex gap-2 pointer-events-auto">
+            <button 
+              onClick={() => xrStore.enterVR()}
+              className="px-3 py-1.5 glass rounded-xl text-[8px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all text-white border border-white/10"
+            >
+              Enter VR
+            </button>
+            <button 
+              onClick={() => xrStore.enterAR()}
+              className="px-3 py-1.5 glass rounded-xl text-[8px] font-bold uppercase tracking-widest hover:bg-white/10 transition-all text-white border border-white/10"
+            >
+              Enter AR
+            </button>
+          </div>
+        )}
+        <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-6 h-6 animate-spin text-singularity opacity-20" /></div>}>
+          <Canvas {...props}>
+            {canvasContent}
+          </Canvas>
+        </Suspense>
+      </div>
     </CanvasErrorBoundary>
   );
 }

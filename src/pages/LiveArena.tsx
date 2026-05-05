@@ -235,7 +235,7 @@ export function LiveArena() {
             {/* 3D Scene */}
             <div className="h-[600px] glass rounded-[3rem] border border-white/10 relative overflow-hidden">
               <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
-                <SafeCanvas camera={{ position: [0, 0, 10], fov: 50 }}>
+                <SafeCanvas xr camera={{ position: [0, 0, 10], fov: 50 }}>
                   <audioListener />
                   <Scene arenaId={arenaId} onCursorMove={handleCursorMove} biometricData={biometricData} />
                 </SafeCanvas>

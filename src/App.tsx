@@ -28,6 +28,7 @@ const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ defa
 const SingRealityTV = lazy(() => import('./pages/SingRealityTV').then(m => ({ default: m.SingRealityTV })));
 const KaraokeArena = lazy(() => import('./pages/KaraokeArena').then(m => ({ default: m.KaraokeArena })));
 const Showcase = lazy(() => import('./pages/Showcase'));
+const ProjectDetailPage = lazy(() => import('./pages/ProjectDetailPage').then(m => ({ default: m.ProjectDetailPage })));
 const DeepSeekMusicSuite = lazy(() => import('./components/DeepSeekMusicSuite').then(m => ({ default: m.DeepSeekMusicSuite })));
 const LiveARStage = lazy(() => import('./components/LiveARStage').then(m => ({ default: m.LiveARStage })));
 const MusicGraphExplorer = lazy(() => import('./components/MusicGraphExplorer').then(m => ({ default: m.MusicGraphExplorer })));
@@ -92,6 +93,7 @@ export default function App() {
             <Route path="/global-map" element={<GlobalMap />} />
             <Route path="/tv" element={<SingRealityTV />} />
             <Route path="/showcase" element={<Showcase />} />
+            <Route path="/showcase/:id" element={<ProjectDetailPage />} />
             <Route path="/deepseek-suite" element={<ProtectedRoute><DeepSeekMusicSuite /></ProtectedRoute>} />
             <Route path="/live-ar-stage" element={<ProtectedRoute><LiveARStage /></ProtectedRoute>} />
             <Route path="/music-graph" element={<ProtectedRoute><MusicGraphExplorer /></ProtectedRoute>} />

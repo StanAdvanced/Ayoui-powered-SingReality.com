@@ -107,7 +107,7 @@ function IntenseHologram({ isPlaying, liquidPulse }: { isPlaying: boolean, liqui
       </Float>
 
       <Points ref={particlesRef} positions={positions}>
-        <PointMaterial transparent color="#ffff00" size={0.05} sizeAttenuation={true} depthWrite={false} emissive="#ffff00" emissiveIntensity={2} />
+        <PointMaterial transparent color="#ffff00" size={0.05} sizeAttenuation={true} depthWrite={false} />
       </Points>
     </group>
   );

@@ -20,7 +20,7 @@ interface ChatMessage {
 }
 
 export function LiveCollaboration({ projectId = 'global' }: { projectId?: string }) {
-  const { user } = useStore();
+  const { user, layers } = useStore();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [cursors, setCursors] = useState<Record<string, Cursor>>({});
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -28,6 +28,16 @@ export function LiveCollaboration({ projectId = 'global' }: { projectId?: string
   const [inputValue, setInputValue] = useState('');
   const containerRef = useRef<HTMLDivElement>(null);
   const myColor = useRef(`hsl(${Math.random() * 360}, 100%, 50%)`);
+
+  // Emit layer changes to other users
+  useEffect(() => {
+    if (socket && layers.length > 0) {
+      socket.emit('project-layer-sync', {
+        projectId,
+        layers
+      });
+    }
+  }, [layers, socket, projectId]);
 
   useEffect(() => {
     const newSocket = io();
@@ -40,6 +50,14 @@ export function LiveCollaboration({ projectId = 'global' }: { projectId?: string
 
     newSocket.on('project-cursor-update', (cursor: Cursor) => {
       setCursors(prev => ({ ...prev, [cursor.id]: cursor }));
+    });
+
+    newSocket.on('project-layer-update', (layers: any[]) => {
+      // Avoid infinite loop by only updating if different
+      const currentLayers = useStore.getState().layers;
+      if (JSON.stringify(currentLayers) !== JSON.stringify(layers)) {
+         useStore.setState({ layers });
+      }
     });
 
     newSocket.on('cursor-remove', (id: string) => {
@@ -124,6 +142,27 @@ export function LiveCollaboration({ projectId = 'global' }: { projectId?: string
 
       {/* Chat Overlay */}
       <div className="absolute bottom-6 right-6 pointer-events-auto flex flex-col items-end">
+        {/* Presence Indicators */}
+        <div className="flex -space-x-2 mb-4">
+          <div 
+            className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-[10px] font-bold text-black"
+            style={{ backgroundColor: myColor.current }}
+            title={`You (${user?.displayName || 'Anonymous'})`}
+          >
+            {user?.displayName?.[0] || 'A'}
+          </div>
+          {Object.values(cursors).map(cursor => (
+            <div 
+              key={cursor.id}
+              className="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center text-[10px] font-bold text-white transition-all hover:scale-110"
+              style={{ backgroundColor: cursor.color }}
+              title={cursor.name}
+            >
+              {cursor.name[0]}
+            </div>
+          ))}
+        </div>
+
         {chatOpen && (
           <div className="w-80 h-96 glass-card rounded-2xl mb-4 flex flex-col overflow-hidden border border-white/10">
             <div className="p-4 border-b border-white/10 flex items-center justify-between bg-white/5">

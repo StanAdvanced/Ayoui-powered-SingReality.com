@@ -14,6 +14,58 @@
       },
       "required": ["id", "userId", "name", "layers", "createdAt", "updatedAt"]
     },
+    "ShowcaseProject": {
+      "title": "ShowcaseProject",
+      "description": "A published 3D project for the public showcase.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string", "description": "Reference to the original editable project" },
+        "userId": { "type": "string", "description": "Current owner of the NFT" },
+        "creatorId": { "type": "string", "description": "Original creator of the project" },
+        "name": { "type": "string" },
+        "description": { "type": "string" },
+        "category": { "type": "string" },
+        "thumbnailUrl": { "type": "string" },
+        "likes": { "type": "number" },
+        "commentCount": { "type": "number" },
+        "price": { "type": "number", "description": "Price in SING tokens" },
+        "isForSale": { "type": "boolean" },
+        "nftTokenId": { "type": "string" },
+        "createdAt": { "type": "timestamp" },
+        "author": { "type": "string" }
+      },
+      "required": ["id", "userId", "name", "description", "category", "thumbnailUrl", "createdAt", "author"]
+    },
+    "NFTTransaction": {
+      "title": "NFTTransaction",
+      "description": "A record of an NFT purchase.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string" },
+        "sellerId": { "type": "string" },
+        "buyerId": { "type": "string" },
+        "price": { "type": "number" },
+        "timestamp": { "type": "timestamp" }
+      },
+      "required": ["id", "projectId", "sellerId", "buyerId", "price", "timestamp"]
+    },
+    "Comment": {
+      "title": "Comment",
+      "description": "A comment on a showcase project.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "projectId": { "type": "string" },
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "userPhoto": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["id", "projectId", "userId", "userName", "text", "createdAt"]
+    },
     "User": {
       "title": "User",
       "description": "A user of the SingReality platform.",
@@ -165,6 +217,18 @@
     "projects/{projectId}": {
       "schema": { "$ref": "#/entities/Project" },
       "description": "User projects."
+    },
+    "showcaseProjects/{projectId}": {
+      "schema": { "$ref": "#/entities/ShowcaseProject" },
+      "description": "Public showcase projects."
+    },
+    "showcaseComments/{commentId}": {
+      "schema": { "$ref": "#/entities/Comment" },
+      "description": "Comments on showcase projects."
+    },
+    "nftTransactions/{txId}": {
+      "schema": { "$ref": "#/entities/NFTTransaction" },
+      "description": "Records of NFT sales."
     },
     "chat_interactions/{interactionId}": {
        "schema": { "type": "object" },

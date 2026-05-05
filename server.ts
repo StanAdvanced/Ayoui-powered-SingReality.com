@@ -136,6 +136,11 @@ async function startServer() {
       io.to(`project-${data.projectId}`).emit("project-chat-message", data.message);
     });
 
+    socket.on("project-layer-sync", (data) => {
+      // data: { projectId: string, layers: array }
+      socket.to(`project-${data.projectId}`).emit("project-layer-update", data.layers);
+    });
+
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
       // We'd need to track rooms per socket to emit specific removes, 

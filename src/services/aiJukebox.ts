@@ -7,15 +7,24 @@ export async function getJukeboxSuggestions(queueTitles: string[]): Promise<Part
     const logs = getStreamingLogs();
     const logSummary = logs.map(l => `Action: ${l.action}`).join(', ');
 
-    const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY });
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
-        contents: `You are an expert DJ for a high-tech Karaoke Room. 
+    const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+    if (!apiKey) throw new Error("GEMINI_API_KEY is missing");
+    
+    const genAI = new GoogleGenAI(apiKey);
+    const model = (genAI as any).getGenerativeModel({ model: 'gemini-1.5-flash' });
+    
+    const response = await model.generateContent({
+        contents: [{
+            role: 'user',
+            parts: [{
+                text: `You are an expert DJ for a high-tech Karaoke Room. 
 Current Queue: ${queueTitles.join(', ') || 'Empty'}.
 Recent Activity Summary: ${logSummary}.
 Based on this vibe, suggest 5 high-energy tracks.
-Return JSON array of {title, artist}.`,
-        config: {
+Return JSON array of {title, artist}.`
+            }]
+        }],
+        generationConfig: {
             responseMimeType: "application/json",
             responseSchema: {
                 type: Type.ARRAY,
@@ -31,8 +40,9 @@ Return JSON array of {title, artist}.`,
         }
     });
 
-    if (response.text) {
-       return JSON.parse(response.text);
+    const text = response.response.text();
+    if (text) {
+       return JSON.parse(text);
     }
     return [];
   } catch (error) {

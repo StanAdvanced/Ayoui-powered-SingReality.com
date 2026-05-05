@@ -17,9 +17,7 @@ interface Message {
 export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: boolean) => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [persona, setPersona] = useState<'Comedian' | 'Expert' | 'Mission Lead'>('Mission Lead');
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: "Welcome! I'm your SingReality partner, currently in 'Mission Lead' mode. How can we revolutionize your creativity today?" }
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -41,6 +39,8 @@ export function AvatarChat({ onTalkingChange }: { onTalkingChange: (isTalking: b
     const timer = setTimeout(() => {
       if (isMounted.current) {
         setIsOpen(true);
+        const greeting = "Nexus Avatar online. Systems synchronized. Ready for the next level of vocal expression. How shall we begin?";
+        handleAssistantResponse(greeting);
       }
     }, 2000); 
 

@@ -70,6 +70,10 @@ class MonitoringService {
     this.log(message, 'info');
   }
 
+  success(message: string) {
+    this.log(message, 'info'); // Using info level for success in this simple logger
+  }
+
   getLogs() {
     return this.logs;
   }

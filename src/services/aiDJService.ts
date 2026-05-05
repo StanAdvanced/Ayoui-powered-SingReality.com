@@ -18,8 +18,11 @@ Rules:
 
 export async function askAIDJ(inputText: string, chatHistory: {role: 'user'|'model', parts: {text: string}[]}[]) {
     try {
-        const genAI = new GoogleGenAI({ apiKey: import.meta.env.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY });
-        const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+        const apiKey = (import.meta as any).env?.VITE_GEMINI_API_KEY || process.env.GEMINI_API_KEY;
+        if (!apiKey) throw new Error("GEMINI_API_KEY is missing");
+        
+        const genAI = new GoogleGenAI(apiKey);
+        const model = (genAI as any).getGenerativeModel({ model: "gemini-1.5-flash" });
         
         const chat = model.startChat({
             history: [

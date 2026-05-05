@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Folder, Layers, History, Share2, Trash2, ExternalLink, Loader2, DollarSign } from 'lucide-react';
+import { Plus, Folder, Layers, History, Share2, Trash2, ExternalLink, Loader2, DollarSign, Coins } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { db } from '../firebase';
 import { collection, query, where, onSnapshot, addDoc, serverTimestamp, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { storage } from '../firebase';
 import { ModelViewer } from '../components/ModelViewer';
 import { GoogleMapBackground } from '../components/GoogleMapBackground';
 import { useNavigate } from 'react-router-dom';
+import { monitoringService } from '../services/monitoringService';
 
 interface Project {
   id: string;
@@ -42,6 +45,35 @@ export function Projects() {
 
     return () => unsubscribe();
   }, [user]);
+
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    if (!file.name.toLowerCase().endsWith('.glb') && !file.name.toLowerCase().endsWith('.gltf')) {
+      setUrlError('Invalid file format. Must be .glb or .gltf');
+      return;
+    }
+    setUrlError(null);
+
+    setUploadingFile(true);
+    try {
+      const storageRef = ref(storage, `models/${user.uid}/${Date.now()}_${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadURL = await getDownloadURL(storageRef);
+      setNewModelUrl(downloadURL);
+      if (!newProjectName) setNewProjectName(file.name.replace(/\.[^/.]+$/, ""));
+      monitoringService.success('3D model uploaded successfully');
+    } catch (error) {
+      console.error('Failed to upload model:', error);
+      setUrlError('Failed to upload model to singularity storage.');
+    } finally {
+      setUploadingFile(false);
+    }
+  };
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -92,6 +124,42 @@ export function Projects() {
   };
 
   const [newVersionName, setNewVersionName] = useState('');
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [publishData, setPublishData] = useState({ 
+    description: '', 
+    category: 'Architecture',
+    isNft: false,
+    price: 100
+  });
+
+  const handlePublish = async () => {
+    if (!selectedProject || !user) return;
+    setIsPublishing(true);
+    try {
+      const showcaseRef = collection(db, 'showcaseProjects');
+      await addDoc(showcaseRef, {
+        projectId: selectedProject.id,
+        userId: user.uid,
+        creatorId: user.uid,
+        name: selectedProject.name,
+        description: publishData.description || selectedProject.name,
+        category: publishData.category,
+        thumbnailUrl: selectedProject.modelUrl.includes('unsplash') ? selectedProject.modelUrl : 'https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=800&auto=format&fit=crop', // Fallback thumbnail
+        author: user.displayName || 'Anonymous',
+        likes: 0,
+        commentCount: 0,
+        isForSale: publishData.isNft,
+        price: publishData.isNft ? publishData.price : 0,
+        nftTokenId: publishData.isNft ? `SNGR-${Math.random().toString(36).substring(2, 9).toUpperCase()}` : null,
+        createdAt: serverTimestamp()
+      });
+      alert(publishData.isNft ? 'Project minted as NFT and published!' : 'Project published to Showcase!');
+    } catch (error) {
+      console.error('Failed to publish project:', error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
 
   const handleSaveVersion = async () => {
     if (!selectedProject || !newVersionName) return;
@@ -165,20 +233,42 @@ export function Projects() {
                 onChange={(e) => setNewProjectName(e.target.value)}
                 className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm"
               />
-              <input 
-                type="text" 
-                placeholder="Model URL (GLB/GLTF)"
-                value={newModelUrl}
-                onChange={(e) => {
-                  setNewModelUrl(e.target.value);
-                  setUrlError(null);
-                }}
-                className={`w-full bg-black/50 border ${urlError ? 'border-red-500' : 'border-white/10'} rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm`}
-              />
+              
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <input 
+                    type="text" 
+                    placeholder="Model URL (GLB/GLTF)"
+                    value={newModelUrl}
+                    onChange={(e) => {
+                      setNewModelUrl(e.target.value);
+                      setUrlError(null);
+                    }}
+                    className={`flex-1 bg-black/50 border ${urlError ? 'border-red-500' : 'border-white/10'} rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-sm`}
+                  />
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleFileUpload}
+                    accept=".glb,.gltf"
+                    className="hidden"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadingFile}
+                    className="px-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-colors flex items-center justify-center min-w-[44px]"
+                  >
+                    {uploadingFile ? <Loader2 className="w-4 h-4 animate-spin text-singularity" /> : <Plus className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[10px] text-gray-500 uppercase tracking-widest text-center italic">Or upload GLB/GLTF directly</p>
+              </div>
+
               {urlError && <p className="text-red-500 text-xs">{urlError}</p>}
               <button 
                 type="submit"
-                disabled={isCreating || !newProjectName || !newModelUrl}
+                disabled={isCreating || uploadingFile || !newProjectName || !newModelUrl}
                 className="w-full py-3 bg-singularity text-black font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
               >
                 {isCreating ? <Loader2 className="w-4 h-4 animate-spin" /> : 'CREATE PROJECT'}
@@ -253,7 +343,7 @@ export function Projects() {
               <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
                 {/* 3D Viewer */}
                 <div className="xl:col-span-2 aspect-square xl:aspect-auto xl:h-[600px]">
-                  <ModelViewer />
+                  <ModelViewer projectId={selectedProject.id} />
                 </div>
 
                 {/* Project Controls */}
@@ -331,6 +421,63 @@ export function Projects() {
                         <DollarSign className="w-5 h-5" /> Listed on Marketplace
                       </div>
                     )}
+
+                    <div className="glass-card rounded-2xl p-6 border border-singularity/20">
+                      <h4 className="text-xs font-bold text-singularity uppercase tracking-widest mb-4">Showcase Publication</h4>
+                      <textarea 
+                        placeholder="Add a description for the showcase..."
+                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-xs mb-3 min-h-[80px]"
+                        value={publishData.description}
+                        onChange={e => setPublishData(prev => ({ ...prev, description: e.target.value }))}
+                      />
+                      <select 
+                        className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-singularity transition-colors text-xs mb-3"
+                        value={publishData.category}
+                        onChange={e => setPublishData(prev => ({ ...prev, category: e.target.value }))}
+                      >
+                        <option>Architecture</option>
+                        <option>Character Art</option>
+                        <option>Environment</option>
+                        <option>Sci-Fi</option>
+                        <option>Abstract</option>
+                      </select>
+
+                      <div className="space-y-3 mb-4">
+                        <div className="flex items-center justify-between p-3 bg-white/5 rounded-xl border border-white/5">
+                          <div className="flex items-center gap-2">
+                             <Coins className="w-4 h-4 text-reality" />
+                             <span className="text-[10px] font-bold uppercase tracking-widest">Mint as NFT</span>
+                          </div>
+                          <input 
+                            type="checkbox" 
+                            checked={publishData.isNft}
+                            onChange={e => setPublishData(prev => ({ ...prev, isNft: e.target.checked }))}
+                            className="w-4 h-4 accent-singularity"
+                          />
+                        </div>
+                        
+                        {publishData.isNft && (
+                          <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">Price ({currency})</span>
+                            <input 
+                               type="number"
+                               value={publishData.price}
+                               onChange={e => setPublishData(prev => ({ ...prev, price: Number(e.target.value) }))}
+                               className="flex-1 bg-transparent text-right outline-none text-xs font-mono font-bold"
+                            />
+                          </div>
+                        )}
+                      </div>
+
+                      <button 
+                        onClick={handlePublish}
+                        disabled={isPublishing}
+                        className="w-full py-3 bg-singularity text-black font-bold rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2 text-xs"
+                      >
+                         {isPublishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Share2 className="w-4 h-4" />}
+                         {publishData.isNft ? 'MINT & PUBLISH' : 'PUBLISH TO SHOWCASE'}
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

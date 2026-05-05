@@ -115,9 +115,18 @@ export function Avatar({ isTalking }: { isTalking: boolean }) {
   const [internalTalking, setInternalTalking] = useState(isTalking);
 
   const handleInteraction = () => {
+    const responses = [
+      "Greetings! SingReality host in the house. Funky vibes enabled. How can I assist?",
+      "System check complete. Creative flow at maximum capacity. What are we creating?",
+      "I feel the rhythm of the arena. Let's sync our neural networks. Ready when you are.",
+      "Neural pathways integrated. The future of music is here, and you are the architect.",
+      "Vibe shift detected. Optimizing acoustic environment for peak performance."
+    ];
+    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+    
     playSuccess();
     setInternalTalking(true);
-    narrationEngine.narrate("Greetings! SingReality host in the house. Funky vibes enabled. How can I assist?", true).finally(() => {
+    narrationEngine.narrate(randomResponse, true).finally(() => {
       setInternalTalking(false);
     });
   };

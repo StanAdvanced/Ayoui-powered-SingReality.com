@@ -82,9 +82,15 @@ export function BiometricPanel({ data, isActive }: BiometricPanelProps) {
           initial={{ opacity: 0, x: 20, scale: 0.95 }}
           animate={{ opacity: 1, x: 0, scale: 1 }}
           exit={{ opacity: 0, x: 20, scale: 0.95 }}
-          className="glass p-6 rounded-[2rem] border border-white/10 w-full md:w-80 backdrop-blur-2xl shadow-2xl"
+          className="glass p-6 rounded-[2rem] border border-white/10 w-full md:w-80 backdrop-blur-2xl shadow-2xl relative overflow-hidden"
         >
-          <div className="flex items-center justify-between mb-6">
+          <motion.div 
+            className="absolute inset-0 bg-gradient-to-br from-quantum/5 to-singularity/5 pointer-events-none"
+            animate={{ opacity: [0.3, 0.6, 0.3] }}
+            transition={{ duration: 3, repeat: Infinity }}
+          />
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-6">
             <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-gray-400 flex items-center gap-2">
               <Zap className="w-4 h-4 text-quantum" /> Bio-Feedback
             </h3>
@@ -130,7 +136,8 @@ export function BiometricPanel({ data, isActive }: BiometricPanelProps) {
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
+      </motion.div>
       )}
     </AnimatePresence>
   );

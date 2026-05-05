@@ -281,7 +281,7 @@ export function Studio() {
                 </span>
               </div>
               
-              <SafeCanvas camera={{ position: [0, 2, 8], fov: 45 }}>
+              <SafeCanvas xr camera={{ position: [0, 2, 8], fov: 45 }}>
                 <color attach="background" args={['#020202']} />
                 <ambientLight intensity={0.2} />
                 <spotLight position={[10, 10, 10]} angle={0.15} penumbra={1} intensity={2} color={activeTab === 'dance' ? '#ff00ff' : '#00f0ff'} />

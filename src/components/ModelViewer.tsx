@@ -270,7 +270,7 @@ const socket = io();
 
 // --- Main Component ---
 
-export function ModelViewer() {
+export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
   const { layers, setLayers, addLayer, removeLayer, toggleLayerVisibility, reorderLayers, user } = useStore();
   const [autoRotate, setAutoRotate] = useState(false);
   const [showLayers, setShowLayers] = useState(false);
@@ -302,7 +302,8 @@ export function ModelViewer() {
 
   // Sync Project State (Layers & Materials)
   useEffect(() => {
-    const unsub = onSnapshot(doc(db, 'projects', 'default'), (docSnap) => {
+    if (!projectId) return;
+    const unsub = onSnapshot(doc(db, 'projects', projectId), (docSnap) => {
       if (docSnap.exists()) {
         const data = docSnap.data();
         if (data.layers) setLayers(data.layers);
@@ -310,35 +311,40 @@ export function ModelViewer() {
         if (data.ambientIntensity !== undefined) setAmbientIntensity(data.ambientIntensity);
       }
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'projects/default');
+      handleFirestoreError(error, OperationType.GET, `projects/${projectId}`);
     });
     return unsub;
-  }, [setLayers]);
+  }, [setLayers, projectId]);
 
   // Socket.io for Real-time Collaboration
   useEffect(() => {
-    socket.emit('join-project', 'default');
+    if (!projectId) return;
+    socket.emit('join-project', projectId);
 
     socket.on('project-cursor-update', (data) => {
-      setRemoteUsers(prev => ({
-        ...prev,
-        [data.uid]: { ...data }
-      }));
+      if (data.projectId === projectId) {
+        setRemoteUsers(prev => ({
+          ...prev,
+          [data.uid]: { ...data }
+        }));
+      }
     });
 
     return () => {
       socket.off('project-cursor-update');
     };
-  }, []);
+  }, [projectId]);
 
   const handlePointerMove = (e: any) => {
-    if (!user) return;
+    if (!user || !projectId) return;
     // Normalize pointer coordinates
-    const x = (e.clientX / window.innerWidth) * 2 - 1;
-    const y = -(e.clientY / window.innerHeight) * 2 + 1;
+    const rect = viewportRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
     
     socket.emit('project-cursor-move', {
-      projectId: 'default',
+      projectId,
       position: { x, y },
       color: '#00F0FF',
       name: user.displayName || 'Anonymous'
@@ -349,9 +355,10 @@ export function ModelViewer() {
   const updateProjectState = useMemo(() => {
     let timeout: NodeJS.Timeout;
     return (newLayers: any, newMaterials: any, newAmbient: number) => {
+      if (!projectId) return;
       clearTimeout(timeout);
       timeout = setTimeout(() => {
-        setDoc(doc(db, 'projects', 'default'), {
+        setDoc(doc(db, 'projects', projectId), {
           layers: newLayers,
           materialProps: newMaterials,
           ambientIntensity: newAmbient,
@@ -359,7 +366,7 @@ export function ModelViewer() {
         }, { merge: true }).catch(err => monitoringService.error('Project sync failed', err));
       }, 500);
     };
-  }, []);
+  }, [projectId]);
 
   const handleMaterialChange = (updates: Partial<typeof materialProps>, isHologramMode?: boolean) => {
     const newProps = { ...materialProps, ...updates };
@@ -414,7 +421,7 @@ export function ModelViewer() {
       const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       
       // Update Firestore with cursor position
-      setDoc(doc(db, 'presence', user.uid), {
+      setDoc(doc(db, 'projects', projectId, 'presence', user.uid), {
         uid: user.uid,
         name: user.displayName || 'Anonymous Node',
         cursor: { x, y, z: 0 },
@@ -425,11 +432,12 @@ export function ModelViewer() {
 
     window.addEventListener('pointermove', handlePointerMove);
     return () => window.removeEventListener('pointermove', handlePointerMove);
-  }, [user]);
+  }, [user, projectId]);
 
   // Listen for Remote Users
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, 'presence'), (snapshot) => {
+    if (!projectId) return;
+    const unsub = onSnapshot(collection(db, 'projects', projectId, 'presence'), (snapshot) => {
       const users: Record<string, any> = {};
       snapshot.forEach(doc => {
         if (user && doc.id !== user.uid) {
@@ -438,31 +446,32 @@ export function ModelViewer() {
       });
       setRemoteUsers(users);
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'presence');
+      handleFirestoreError(error, OperationType.GET, `projects/${projectId}/presence`);
     });
     return unsub;
-  }, [user]);
+  }, [user, projectId]);
 
   // Listen for Chat Messages
   useEffect(() => {
-    const q = query(collection(db, 'nexus_chat'), orderBy('timestamp', 'desc'), limit(50));
+    if (!projectId) return;
+    const q = query(collection(db, 'projects', projectId, 'messages'), orderBy('timestamp', 'desc'), limit(50));
     const unsub = onSnapshot(q, (snapshot) => {
       const msgs: any[] = [];
       snapshot.forEach(doc => msgs.push({ id: doc.id, ...doc.data() }));
       setMessages(msgs.reverse());
     }, (error) => {
-      handleFirestoreError(error, OperationType.GET, 'nexus_chat');
+      handleFirestoreError(error, OperationType.GET, `projects/${projectId}/messages`);
     });
     return unsub;
-  }, []);
+  }, [projectId]);
 
   const sendChat = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!chatMessage.trim() || !user) return;
+    if (!chatMessage.trim() || !user || !projectId) return;
 
     try {
       soundService.playClick();
-      await addDoc(collection(db, 'nexus_chat'), {
+      await addDoc(collection(db, 'projects', projectId, 'messages'), {
         text: chatMessage,
         uid: user.uid,
         name: user.displayName || 'Anonymous',
@@ -485,7 +494,7 @@ export function ModelViewer() {
   };
 
   const handleInvite = () => {
-    const inviteLink = `${window.location.origin}/project/default`;
+    const inviteLink = `${window.location.origin}/studio?projectId=${projectId}`;
     navigator.clipboard.writeText(inviteLink);
     alert('Invite link copied to clipboard!');
   };
@@ -499,7 +508,7 @@ export function ModelViewer() {
 
   return (
     <div ref={viewportRef} onPointerMove={handlePointerMove} className="relative w-full h-full bg-[#050505] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl group">
-      <SafeCanvas shadows dpr={[1, 2]} camera={{ position: [5, 5, 5], fov: 45 }}>
+      <SafeCanvas xr shadows dpr={[1, 2]} camera={{ position: [5, 5, 5], fov: 45 }} gl={{ antialias: true, alpha: true }}>
         <ambientLight intensity={ambientIntensity} />
         <Suspense fallback={<Html center><Loader2 className="w-8 h-8 animate-spin text-singularity" /></Html>}>
           <Stage intensity={0.5} environment="city" shadows="contact" adjustCamera={true}>

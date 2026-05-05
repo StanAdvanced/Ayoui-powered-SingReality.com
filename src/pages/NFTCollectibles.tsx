@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'motion/react';
-import { Layers, Play, Search, ShieldCheck, Zap, Coins, Link2, Share2, ArrowRight, Download, Music, Mic2 } from 'lucide-react';
+import { Layers, Play, Search, ShieldCheck, Zap, Coins, Link2, Share2, ArrowRight, Download, Music, Mic2, Sparkles } from 'lucide-react';
 import { CinematicBackscreen } from '../components/CinematicBackscreen';
 
 const NFTS = [
