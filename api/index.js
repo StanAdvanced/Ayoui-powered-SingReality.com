@@ -12,6 +12,37 @@ const io = new Server(httpServer, {
   }
 });
 
+// WebSocket logic
+io.on("connection", (socket) => {
+  console.log("User connected (Vercel Simulation):", socket.id);
+
+  socket.on("join-room", (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room ${roomId}`);
+  });
+
+  socket.on("send-message", (data) => {
+    io.to(data.roomId).emit("receive-message", {
+      sender: socket.id,
+      content: data.message,
+      timestamp: Date.now()
+    });
+  });
+
+  // WebRTC Signaling
+  socket.on("webrtc-offer", (data) => {
+    socket.to(data.roomId).emit("webrtc-offer", { from: socket.id, offer: data.offer });
+  });
+
+  socket.on("webrtc-answer", (data) => {
+    socket.to(data.roomId).emit("webrtc-answer", { from: socket.id, answer: data.answer });
+  });
+
+  socket.on("webrtc-ice-candidate", (data) => {
+    socket.to(data.roomId).emit("webrtc-ice-candidate", { from: socket.id, candidate: data.candidate });
+  });
+});
+
 // Mock health check for Vercel
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", environment: "vercel" });

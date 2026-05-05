@@ -42,6 +42,46 @@ async function startServer() {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
+    // Generic Room Logic requested by user
+    socket.on("join-room", (roomId) => {
+      socket.join(roomId);
+      console.log(`User ${socket.id} joined room ${roomId}`);
+    });
+
+    socket.on("send-message", (data) => {
+      // data: { roomId: string, message: any }
+      io.to(data.roomId).emit("receive-message", {
+        sender: socket.id,
+        content: data.message,
+        timestamp: Date.now()
+      });
+    });
+
+    // WebRTC Signaling
+    socket.on("webrtc-offer", (data) => {
+      // data: { roomId: string, offer: any }
+      socket.to(data.roomId).emit("webrtc-offer", {
+        from: socket.id,
+        offer: data.offer
+      });
+    });
+
+    socket.on("webrtc-answer", (data) => {
+      // data: { roomId: string, answer: any }
+      socket.to(data.roomId).emit("webrtc-answer", {
+        from: socket.id,
+        answer: data.answer
+      });
+    });
+
+    socket.on("webrtc-ice-candidate", (data) => {
+      // data: { roomId: string, candidate: any }
+      socket.to(data.roomId).emit("webrtc-ice-candidate", {
+        from: socket.id,
+        candidate: data.candidate
+      });
+    });
+
     socket.on("join-arena", (arenaId) => {
       socket.join(arenaId);
       console.log(`User ${socket.id} joined arena ${arenaId}`);

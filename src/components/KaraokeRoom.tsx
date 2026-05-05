@@ -4,7 +4,7 @@ import { syncKaraokeSession, updateKaraokeQueue, updateCurrentSong, Song } from 
 import { 
   Mic2, Users, Zap, Play, Pause, Volume2, VolumeX, SkipForward,
   Sparkles, Rocket, Music, Star, Share2, ListMusic, Headset,
-  Plus, ChevronUp, ChevronDown, Trash2
+  Plus, ChevronUp, ChevronDown, Trash2, Bot
 } from 'lucide-react';
 import { YouTubeBackground } from './YouTubeBackground';
 import { useMusicEngine } from '../services/musicEngine';
@@ -14,6 +14,7 @@ import { narrationEngine } from '../services/narrationEngine';
 import { QuantumJukebox } from './QuantumJukebox';
 import { GlobalSingALong } from './GlobalSingALong';
 import { MusicCrowdfunding } from './MusicCrowdfunding';
+import { RealTimeCommunication } from './RealTimeCommunication';
 
 const PREDEFINED_LYRICS = [
   { time: 0, text: "♪ (Instrumental Intro) ♪" },
@@ -95,6 +96,12 @@ export function KaraokeRoom() {
     else setKaraokeQueue(newQueue);
   };
 
+  const addPriorityToQueue = (song: typeof YOUTUBE_TOP_10[0]) => {
+    const newQueue = [song, ...karaokeQueue];
+    if (sessionId) updateKaraokeQueue(sessionId, newQueue);
+    else setKaraokeQueue(newQueue);
+  };
+
   const removeFromQueue = (index: number) => {
     const newQueue = karaokeQueue.filter((_, i) => i !== index);
     if (sessionId) updateKaraokeQueue(sessionId, newQueue);
@@ -135,18 +142,44 @@ export function KaraokeRoom() {
     }
   };
 
-  // Autoplay removed for initial landing experience
   useEffect(() => {
-    // If we want autonomous start, we can trigger it based on user interaction or specifically selected top 10.
-  }, []);
+    if (!sessionId) {
+       const persists = localStorage.getItem('jukebox_persist_optin') === 'true';
+       if (persists) {
+          const savedStr = localStorage.getItem('jukebox_state_optin_data');
+          if (savedStr) {
+             const saved = JSON.parse(savedStr);
+             if (saved.queue) setKaraokeQueue(saved.queue);
+             if (saved.currentSong) {
+                setCurrentKaraokeSong(saved.currentSong);
+                setVideoId(saved.currentSong.id);
+             }
+             return;
+          }
+       } else {
+          // Clear if opted out
+          localStorage.removeItem('jukebox_state_optin_data');
+       }
 
-  // Removed autonomous sync in favor of jukebox/queue
-  useEffect(() => {
-    if (!currentKaraokeSong && YOUTUBE_TOP_10.length > 0 && !sessionId) {
-        setCurrentKaraokeSong(YOUTUBE_TOP_10[0]);
-        setVideoId(YOUTUBE_TOP_10[0].id);
+       if (!currentKaraokeSong && YOUTUBE_TOP_10.length > 0) {
+          setCurrentKaraokeSong(YOUTUBE_TOP_10[0]);
+          setVideoId(YOUTUBE_TOP_10[0].id);
+       }
     }
-  }, []);
+  }, []); // Run on mount
+
+  // Sync to localstorage if opted in
+  useEffect(() => {
+     if (!sessionId) {
+        const persists = localStorage.getItem('jukebox_persist_optin') === 'true';
+        if (persists && currentKaraokeSong) {
+           localStorage.setItem('jukebox_state_optin_data', JSON.stringify({
+              queue: karaokeQueue,
+              currentSong: currentKaraokeSong
+           }));
+        }
+     }
+  }, [karaokeQueue, currentKaraokeSong, sessionId]);
 
   // Sync lyrics and beat pulse with audio element
   useEffect(() => {
@@ -267,6 +300,7 @@ export function KaraokeRoom() {
                 topTracks={YOUTUBE_TOP_10}
                 queue={karaokeQueue}
                 onAdd={addToQueue}
+                onAddPriority={addPriorityToQueue}
                 onRemove={removeFromQueue}
                 onMove={moveInQueue}
                 onPlayNow={(song) => {
@@ -431,11 +465,43 @@ export function KaraokeRoom() {
             {/* Global Chat/Translate Integration */}
             <GlobalSingALong />
 
+            {/* AI Vibe Status (Simulated Frontier Analysis) */}
+            <div className="glass-card p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-500/10 to-purple-500/10 backdrop-blur-md">
+              <div className="flex items-center gap-2 mb-2 text-xs font-mono uppercase tracking-widest text-cyan-400">
+                <Bot className="w-4 h-4" /> AI Vibe Analysis
+              </div>
+              <div className="flex justify-between items-center bg-black/40 p-3 rounded-xl border border-white/5">
+                <div className="flex flex-col">
+                  <div className="text-[10px] text-gray-500 uppercase">Current Vibe</div>
+                  <div className="text-sm font-bold text-white uppercase tracking-tighter">
+                    {karaokeQueue.length > 5 ? 'High Energy Chaos' : 'Chill Acoustic Flow'}
+                  </div>
+                </div>
+                <div className="flex flex-col items-end">
+                  <div className="text-[10px] text-gray-500 uppercase">Synchronicity</div>
+                  <div className="text-sm font-bold text-quantum">98.4%</div>
+                </div>
+              </div>
+              <div className="mt-3 w-full bg-white/5 h-1 rounded-full overflow-hidden">
+                <motion.div 
+                    className="h-full bg-cyan-500 shadow-[0_0_10px_rgba(0,255,255,1)]" 
+                    animate={{ width: ['20%', '80%', '40%', '98%'] }} 
+                    transition={{ repeat: Infinity, duration: 10 }}
+                />
+              </div>
+            </div>
+
             {/* Music Crowdfunding Integration */}
             <MusicCrowdfunding />
           </div>
         </div>
       </div>
+
+      {/* Real-Time Communication (Text/Voice/Video Chat) */}
+      <RealTimeCommunication 
+        roomId={sessionId || 'local-arena-demo'} 
+        userId={localStorage.getItem('viewer_name') || 'Viewer_' + Math.floor(Math.random()*1000)} 
+      />
     </div>
   );
 }
