@@ -11,6 +11,9 @@ import { useMusicEngine } from '../services/musicEngine';
 import { useStore } from '../store/useStore';
 import { motion, AnimatePresence } from 'motion/react';
 import { narrationEngine } from '../services/narrationEngine';
+import { AIDJAvatar, useAIDJVoice } from './AIDJAvatar';
+import { SafeCanvas } from './SafeCanvas';
+import { Environment, OrbitControls } from '@react-three/drei';
 import { QuantumJukebox } from './QuantumJukebox';
 import { GlobalSingALong } from './GlobalSingALong';
 import { MusicCrowdfunding } from './MusicCrowdfunding';
@@ -71,8 +74,17 @@ export function KaraokeRoom() {
   const { karaokeTheme, setKaraokeTheme } = useStore();
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
+  const [isDJSpeaking, setIsDJSpeaking] = useState(false);
   const [currentKaraokeSong, setCurrentKaraokeSong] = useState<Song | null>(null);
   const [karaokeQueue, setKaraokeQueue] = useState<Song[]>([]);
+
+  // Monitor Speech API for speaking state
+  useEffect(() => {
+    const checkSpeech = setInterval(() => {
+      setIsDJSpeaking(window.speechSynthesis.speaking);
+    }, 100);
+    return () => clearInterval(checkSpeech);
+  }, []);
 
   useEffect(() => {
     if (sessionId) {
@@ -374,36 +386,31 @@ export function KaraokeRoom() {
 
           {/* Right Sidebar - Integrations & Controls */}
           <div className="lg:col-span-4 flex flex-col gap-6">
-            {/* Controls & Track Info with Avatar */}
-            <div className="glass-card p-6 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center gap-6 relative">
-              {/* Avatar Glowing Head Sync */}
-              <div className="absolute top-4 right-4 flex flex-col items-center">
-                <motion.div 
-                  className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 border-2 border-white flex items-center justify-center shadow-[0_0_15px_rgba(255,0,255,0.8)] z-10"
-                  animate={{ 
-                    scale: beatPulse,
-                    boxShadow: isPlaying ? `0 0 ${20 * beatPulse}px rgba(208,255,0,${beatPulse * 0.8})` : '0 0 10px rgba(0,0,0,0.5)',
-                  }}
-                  transition={{ type: "spring", stiffness: 300, damping: 10 }}
-                >
-                  <Headset className="w-8 h-8 text-white" />
-                </motion.div>
-                <div className="text-[10px] uppercase font-bold text-singularity mt-2 bg-black/50 px-2 py-1 rounded">Your Host</div>
+            {/* AI Resident DJ Avatar Section */}
+            <div className="glass-card p-6 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center gap-6 relative min-h-[300px]">
+              <div className="absolute inset-0 z-0">
+                <SafeCanvas camera={{ position: [0, 0, 5], fov: 45 }}>
+                   <ambientLight intensity={0.5} />
+                   <pointLight position={[10, 10, 10]} intensity={2} color="#00ffff" />
+                   <AIDJAvatar isSpeaking={isDJSpeaking} currentVibe={karaokeQueue.length > 5 ? 'High Energy' : 'Chill'} />
+                   <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
+                   <Environment preset="city" />
+                </SafeCanvas>
               </div>
 
-              <div className="relative mt-8">
-                <div className={`absolute inset-0 bg-gradient-to-br ${currentThemeData.color} opacity-20 blur-3xl rounded-full`} />
-                <div className="w-32 h-32 rounded-full border-4 border-white/10 flex items-center justify-center relative overflow-hidden glass">
-                  <Mic2 className={`w-12 h-12 text-singularity ${isPlaying ? 'animate-pulse' : ''}`} />
+              <div className="relative z-10 w-full flex flex-col items-center pointer-events-none mt-[200px]">
+                <div className="text-[10px] uppercase font-black text-cyan-400 bg-black/80 px-3 py-1 rounded-full border border-cyan-500/30 tracking-widest shadow-[0_0_15px_rgba(0,255,255,0.3)] flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${isDJSpeaking ? 'bg-red-500 animate-ping' : 'bg-green-500'}`} />
+                  Luna: Resident Quantum DJ
                 </div>
               </div>
-
-              <div className="text-center space-y-2">
-                <h3 className="text-xl font-bold text-white truncate max-w-[200px] mx-auto">
-                  {currentKaraokeSong?.title || "Loading Track..."}
+              
+              <div className="relative z-10 text-center space-y-1 bg-black/40 backdrop-blur-sm p-4 rounded-2xl border border-white/5 w-full mt-4">
+                <h3 className="text-lg font-bold text-white truncate px-4">
+                  {currentKaraokeSong?.title || "Connecting..."}
                 </h3>
-                <p className="text-gray-400 font-mono text-sm">
-                  {currentKaraokeSong?.artist || "SingReality"}
+                <p className="text-[10px] text-gray-400 font-mono uppercase">
+                   {currentKaraokeSong?.artist || "Quantuam Arena"}
                 </p>
               </div>
 

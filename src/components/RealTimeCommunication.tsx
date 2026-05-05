@@ -1,8 +1,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Video, Mic, MicOff, VideoOff, MessageSquare, Users, X, Bot, ShieldCheck } from 'lucide-react';
+import { Send, Video, Mic, MicOff, VideoOff, MessageSquare, Users, X, Bot, ShieldCheck, Sparkles, Brain } from 'lucide-react';
 import { io, Socket } from 'socket.io-client';
+import { askAIDJ } from '../services/aiDJService';
+import { useAIDJVoice } from './AIDJAvatar';
 
 interface Message {
   sender: string;
@@ -18,8 +20,13 @@ export function RealTimeCommunication({ roomId, userId }: { roomId: string, user
   const [isMediaPanelOpen, setIsMediaPanelOpen] = useState(false);
   const [isVideoOn, setIsVideoOn] = useState(false);
   const [isMicOn, setIsMicOn] = useState(false);
+  const [isAIProcessing, setIsAIProcessing] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { speak } = useAIDJVoice();
+
+  // Chat history for Gemini context
+  const chatHistory = useRef<{role: 'user'|'model', parts: {text: string}[]}[]>([]);
 
   useEffect(() => {
     // Connect to the local server
@@ -28,24 +35,58 @@ export function RealTimeCommunication({ roomId, userId }: { roomId: string, user
 
     socket.emit('join-room', roomId);
 
-    socket.on('receive-message', (msg: Message) => {
+    socket.on('receive-message', (data: any) => {
+      const msg: Message = {
+        sender: data.sender || 'Anonymous',
+        content: data.content,
+        timestamp: data.timestamp
+      };
       setMessages(prev => [...prev, msg]);
+      
+      // If someone mentions "Luna" or "DJ", or if it's the first message, AI might respond
+      if (data.content.toLowerCase().includes('luna') || data.content.toLowerCase().includes('dj')) {
+        handleAIResponse(data.content, data.sender);
+      }
     });
 
-    // Mock AI Moderator Message
+    // Initial Greeting
     setTimeout(() => {
+        const greeting = "Luna here. I've synchronized my neural networks with your arena. Ready for an elite session?";
         setMessages(prev => [...prev, {
-            sender: 'AI Moderator',
-            content: 'Welcome to the room! I am here to ensure a safe and vibey environment. Frontier rules enabled.',
+            sender: 'Luna (Quantum DJ)',
+            content: greeting,
             timestamp: Date.now(),
             isAI: true
         }]);
-    }, 1500);
+        speak(greeting);
+    }, 2000);
 
     return () => {
       socket.disconnect();
     };
   }, [roomId]);
+
+  const handleAIResponse = async (input: string, senderName: string) => {
+    setIsAIProcessing(true);
+    const responseText = await askAIDJ(input, chatHistory.current);
+    
+    const aiMsg: Message = {
+        sender: 'Luna (Quantum DJ)',
+        content: responseText,
+        timestamp: Date.now(),
+        isAI: true
+    };
+
+    setMessages(prev => [...prev, aiMsg]);
+    speak(responseText);
+
+    // Update history
+    chatHistory.current.push({ role: 'user', parts: [{ text: input }] });
+    chatHistory.current.push({ role: 'model', parts: [{ text: responseText }] });
+    if(chatHistory.current.length > 20) chatHistory.current.shift(); // Keep last 10 turns
+
+    setIsAIProcessing(false);
+  };
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -61,11 +102,18 @@ export function RealTimeCommunication({ roomId, userId }: { roomId: string, user
       message: inputText
     });
 
-    setMessages(prev => [...prev, {
+    const myMsg: Message = {
       sender: userId,
       content: inputText,
       timestamp: Date.now()
-    }]);
+    };
+
+    setMessages(prev => [...prev, myMsg]);
+    
+    // Check if user is talking to Luna
+    if (inputText.toLowerCase().includes('luna') || inputText.toLowerCase().includes('dj') || messages.length === 0) {
+        handleAIResponse(inputText, userId);
+    }
 
     setInputText('');
   };
