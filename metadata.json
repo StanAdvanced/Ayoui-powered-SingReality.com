@@ -1,11 +1,5 @@
 {
-  "name": "SingReality | The Quantum Singularity of Music",
-  "description": "The world's first Transcendent-Quantum Global Singularity Harmony Omni-UltraNexus. Immersive 8K real-time holographic karaoke, generative music marketplace, and crowd-funding ecosystem.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone",
-    "geolocation",
-    "bluetooth"
-  ],
-  "majorCapabilities": []
+  "name": "SingReality",
+  "description": "An AI-powered karaoke room and video generation studio that brings your music to life with Veo 3.1.",
+  "requestFramePermissions": ["camera", "microphone"]
 }

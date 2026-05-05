@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Plus, Trash2, ChevronUp, ChevronDown, Flame, Play, X, Zap, DollarSign, Crown, AlertTriangle, Database, Brain, Sparkles } from 'lucide-react';
+import { Plus, Trash2, ChevronUp, ChevronDown, Flame, Play, X, Zap, DollarSign, Crown, AlertTriangle, Database, Brain, Sparkles, History } from 'lucide-react';
 import { SafeCanvas } from './SafeCanvas';
 import { Float, OrbitControls, Environment, PointMaterial, Points, Stars, MeshDistortMaterial } from '@react-three/drei';
 import { EffectComposer, Bloom, Glitch, Vignette, ChromaticAberration } from '@react-three/postprocessing';
@@ -140,12 +140,24 @@ export function QuantumJukebox({
 }: QuantumJukeboxProps) {
   const [inactivityTimer, setInactivityTimer] = useState(15);
   const [mexicanChangeActive, setMexicanChangeActive] = useState<{song: Song, votes: number, required: number} | null>(null);
-  const [activeTab, setActiveTab] = useState<'hits' | 'bidding' | 'ai'>('hits');
+  const [activeTab, setActiveTab] = useState<'hits' | 'history' | 'bidding' | 'ai'>('hits');
   const [isPersistent, setIsPersistent] = useState(localStorage.getItem('jukebox_persist_optin') === 'true');
   const [biddingState, setBiddingState] = useState<{song: Song | null, amount: number, processing: boolean}>({song: null, amount: 50, processing: false});
   const [aiSuggestions, setAiSuggestions] = useState<Song[]>([]);
+  const [searchHistory, setSearchHistory] = useState<Song[]>([]);
   const [isAILoading, setIsAILoading] = useState(false);
   const [liquidPulse, setLiquidPulse] = useState(0);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('singreality_search_history');
+    if (saved) setSearchHistory(JSON.parse(saved));
+  }, []);
+
+  const addToHistory = (song: Song) => {
+    const newHistory = [song, ...searchHistory.filter(s => s.id !== song.id)].slice(0, 10);
+    setSearchHistory(newHistory);
+    localStorage.setItem('singreality_search_history', JSON.stringify(newHistory));
+  };
 
   const triggerLiquid = () => setLiquidPulse(Date.now());
 
@@ -292,6 +304,9 @@ export function QuantumJukebox({
               </h2>
               <div className="flex gap-2 bg-black/50 p-1 rounded-full border border-white/10 flex-wrap">
                  <button onClick={() => setActiveTab('hits')} className={`px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'hits' ? 'bg-white text-black' : 'text-gray-500 hover:text-white'}`}>Top 100</button>
+                 <button onClick={() => setActiveTab('history')} className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'history' ? 'bg-white/20 text-white' : 'text-gray-500 hover:text-white'}`}>
+                   <History className="w-3 h-3" /> History
+                 </button>
                  <button onClick={() => setActiveTab('bidding')} className={`flex items-center gap-1 px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest transition-colors ${activeTab === 'bidding' ? 'bg-yellow-400 text-black' : 'text-gray-500 hover:text-yellow-400'}`}>
                    <Crown className="w-3 h-3" /> Monetised Bids
                  </button>
@@ -329,7 +344,46 @@ export function QuantumJukebox({
                   )}
                 </motion.div>
              </div>
-           ) : activeTab === 'bidding' ? (
+           ) : activeTab === 'history' ? (
+              <div className="flex-1 flex flex-col pt-4 overflow-hidden relative">
+                 <div className="bg-white/5 border border-white/10 p-6 rounded-2xl mb-6 backdrop-blur-md relative overflow-hidden shrink-0">
+                    <h3 className="text-xl font-bold text-white uppercase tracking-widest flex items-center gap-2 mb-2">
+                       <History className="w-6 h-6" /> Search History
+                    </h3>
+                    <p className="text-gray-400 text-sm max-w-lg font-mono">
+                       Your recently searched songs. Fast access to your favorite quantum tracks.
+                    </p>
+                 </div>
+
+                 <div className="flex-1 overflow-y-auto space-y-3 custom-scrollbar pr-4">
+                    {searchHistory.length > 0 ? (
+                       searchHistory.map((song, i) => (
+                        <motion.div 
+                          key={`${song.id}-${i}`}
+                          whileHover={{ scale: 1.02 }}
+                          className="flex justify-between items-center bg-black/40 backdrop-blur-md p-4 rounded-xl border border-white/10 hover:border-cyan-500/50 group transition-all"
+                        >
+                          <div className="flex items-center gap-4 truncate">
+                            <span className="font-mono text-gray-500 group-hover:text-cyan-400 text-md w-6 font-bold">{i + 1}</span>
+                            <div className="truncate">
+                              <h4 className="font-bold text-white group-hover:text-cyan-50 text-md truncate">{song.title}</h4>
+                              <p className="text-xs text-gray-400 font-mono truncate">{song.artist}</p>
+                            </div>
+                          </div>
+                          <button 
+                            onClick={(e) => { e.stopPropagation(); onAdd(song); }}
+                            className="p-2 bg-white/5 hover:bg-white/20 text-white rounded-lg border border-white/10"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </motion.div>
+                       ))
+                    ) : (
+                       <div className="text-center text-gray-500 font-mono py-12 text-sm uppercase tracking-widest border border-dashed border-white/10 rounded-[2rem]">No history transmissions yet.</div>
+                    )}
+                 </div>
+              </div>
+            ) : activeTab === 'bidding' ? (
               <div className="flex-1 flex flex-col pt-4">
                  <div className="bg-gradient-to-r from-yellow-500/20 to-red-500/20 border border-yellow-500/50 p-6 rounded-2xl mb-6 backdrop-blur-md relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-4 opacity-10">

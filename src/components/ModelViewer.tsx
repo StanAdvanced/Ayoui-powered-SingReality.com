@@ -13,6 +13,9 @@ import {
   shaderMaterial
 } from '@react-three/drei';
 import { EffectComposer, Bloom, Scanline, Noise, Vignette, ChromaticAberration } from '@react-three/postprocessing';
+import * as Rapier from '@react-three/rapier';
+const { RigidBody, CuboidCollider } = Rapier;
+const PhysicsDebug = (Rapier as any).Debug;
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { OBJLoader } from 'three-stdlib';
@@ -107,11 +110,25 @@ extend({ HolographicMaterialImpl });
 
 // --- Components ---
 
-function Model({ url, layer }: { url: string, layer: any }) {
+function Model({ url, layer, physicsEnabled = false }: { url: string, layer: any, physicsEnabled?: boolean }) {
   const extension = url.split('.').pop()?.toLowerCase();
   const holoMaterials = useRef<any[]>([]);
   const { materialProps = {}, isHologram = true } = layer;
   const modelRef = useRef<THREE.Object3D | null>(null);
+  const rbRef = useRef<any>(null);
+
+  const handleClick = (e: any) => {
+    if (physicsEnabled && rbRef.current) {
+      e.stopPropagation();
+      // Apply a random upward impulse to make it interactive
+      rbRef.current.applyImpulse({ 
+        x: (Math.random() - 0.5) * 2, 
+        y: 4 + Math.random() * 4, 
+        z: (Math.random() - 0.5) * 2 
+      }, true);
+      soundService.playClick();
+    }
+  };
 
   useFrame((state) => {
     holoMaterials.current.forEach(mat => {
@@ -129,13 +146,13 @@ function Model({ url, layer }: { url: string, layer: any }) {
     }
   });
   
-  if (extension === 'obj') {
-    const obj = useLoader(OBJLoader, url);
-    const clonedObj = useMemo(() => obj.clone(), [obj]);
-    
-    useEffect(() => {
-      modelRef.current = clonedObj;
-      holoMaterials.current = [];
+  const content = useMemo(() => {
+    let mesh: React.ReactNode | null = null;
+
+    if (extension === 'obj') {
+      const obj = useLoader(OBJLoader, url);
+      const clonedObj = obj.clone();
+      
       clonedObj.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           if (isHologram) {
@@ -160,53 +177,76 @@ function Model({ url, layer }: { url: string, layer: any }) {
           }
         }
       });
-    }, [clonedObj, materialProps, isHologram]);
-    
-    return <primitive object={clonedObj} />;
-  }
+      mesh = <primitive object={clonedObj} />;
+    } else {
+      // Default to GLTF
+      const { scene } = useGLTF(url);
+      const clonedScene = scene.clone();
 
-  // Default to GLTF
-  const { scene } = useGLTF(url);
-  const clonedScene = useMemo(() => scene.clone(), [scene]);
-
-  useEffect(() => {
-    modelRef.current = clonedScene;
-    holoMaterials.current = [];
-    clonedScene.traverse((child) => {
-      if (child instanceof THREE.Mesh) {
-        if (isHologram) {
-          const mat = new HolographicMaterialImpl();
-          mat.transparent = true;
-          mat.side = THREE.DoubleSide;
-          mat.depthWrite = false;
-          mat.blending = THREE.AdditiveBlending;
-          mat.uColor = new THREE.Color(layer.color || materialProps.color || '#00f0ff');
-          mat.uOpacity = layer.opacity !== undefined ? layer.opacity : (materialProps.opacity || 0.6);
-          mat.uScanlineIntensity = materialProps.scanlineIntensity || 0.3;
-          mat.uFlickerIntensity = materialProps.flickerIntensity || 0.1;
-          child.material = mat;
-          holoMaterials.current.push(mat);
-        } else {
-          child.material = new THREE.MeshPhysicalMaterial({
-            color: layer.color || materialProps.color || child.material.color,
-            opacity: layer.opacity !== undefined ? layer.opacity : materialProps.opacity,
-            transparent: (layer.opacity !== undefined && layer.opacity < 1) || materialProps.transparent,
-            metalness: materialProps.metalness,
-            roughness: materialProps.roughness,
-            transmission: materialProps.transmission || 0,
-            thickness: materialProps.thickness || 0,
-            ior: materialProps.ior || 1.5,
-            clearcoat: materialProps.clearcoat || 0,
-            emissive: new THREE.Color(materialProps.emissive || '#000000'),
-            emissiveIntensity: materialProps.emissiveIntensity || 0,
-            wireframe: materialProps.wireframe || false
-          });
+      clonedScene.traverse((child) => {
+        if (child instanceof THREE.Mesh) {
+          if (isHologram) {
+            const mat = new HolographicMaterialImpl();
+            mat.transparent = true;
+            mat.side = THREE.DoubleSide;
+            mat.depthWrite = false;
+            mat.blending = THREE.AdditiveBlending;
+            mat.uColor = new THREE.Color(layer.color || materialProps.color || '#00f0ff');
+            mat.uOpacity = layer.opacity !== undefined ? layer.opacity : (materialProps.opacity || 0.6);
+            mat.uScanlineIntensity = materialProps.scanlineIntensity || 0.3;
+            mat.uFlickerIntensity = materialProps.flickerIntensity || 0.1;
+            child.material = mat;
+            holoMaterials.current.push(mat);
+          } else {
+            child.material = new THREE.MeshPhysicalMaterial({
+              color: layer.color || materialProps.color || child.material.color,
+              opacity: layer.opacity !== undefined ? layer.opacity : materialProps.opacity,
+              transparent: (layer.opacity !== undefined && layer.opacity < 1) || materialProps.transparent,
+              metalness: materialProps.metalness,
+              roughness: materialProps.roughness,
+              transmission: materialProps.transmission || 0,
+              thickness: materialProps.thickness || 0,
+              ior: materialProps.ior || 1.5,
+              clearcoat: materialProps.clearcoat || 0,
+              emissive: new THREE.Color(materialProps.emissive || '#000000'),
+              emissiveIntensity: materialProps.emissiveIntensity || 0,
+              wireframe: materialProps.wireframe || false
+            });
+          }
         }
-      }
-    });
-  }, [clonedScene, materialProps, isHologram]);
+      });
+      mesh = <primitive object={clonedScene} />;
+    }
 
-  return <primitive object={clonedScene} />;
+    if (physicsEnabled) {
+      return (
+        <RigidBody 
+          ref={rbRef}
+          colliders="hull" 
+          restitution={0.5} 
+          friction={0.5}
+        >
+          <group onClick={handleClick}>
+            {mesh}
+          </group>
+        </RigidBody>
+      );
+    }
+    return mesh;
+  }, [url, extension, isHologram, layer.color, layer.opacity, materialProps, physicsEnabled]);
+
+  return content;
+}
+
+function Floor() {
+  return (
+    <RigidBody type="fixed" colliders="cuboid">
+      <mesh rotation-x={-Math.PI / 2} position={[0, -0.5, 0]}>
+        <planeGeometry args={[100, 100]} />
+        <meshStandardMaterial color="#050505" transparent opacity={0.1} />
+      </mesh>
+    </RigidBody>
+  );
 }
 
 function Loader() {
@@ -281,6 +321,9 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
   const [messages, setMessages] = useState<any[]>([]);
   const [remoteUsers, setRemoteUsers] = useState<Record<string, any>>({});
   const [isHologram, setIsHologram] = useState(true);
+  const [physicsEnabled, setPhysicsEnabled] = useState(false);
+  const [physicsDebug, setPhysicsDebug] = useState(false);
+  const [spawnedPrims, setSpawnedPrims] = useState<{id: string, type: 'cube' | 'sphere', position: [number, number, number]}[]>([]);
   const [newLayerName, setNewLayerName] = useState('');
   
   // Material & Lighting State
@@ -321,19 +364,46 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
     if (!projectId) return;
     socket.emit('join-project', projectId);
 
-    socket.on('project-cursor-update', (data) => {
-      if (data.projectId === projectId) {
-        setRemoteUsers(prev => ({
-          ...prev,
-          [data.uid]: { ...data }
-        }));
-      }
-    });
+    const handleCursorUpdate = (data: any) => {
+      setRemoteUsers(prev => ({
+        ...prev,
+        [data.id]: { 
+          uid: data.id,
+          name: data.name,
+          color: data.color,
+          cursor: { x: data.x, y: data.y, z: 0 }
+        }
+      }));
+    };
+
+    const handleLayerUpdate = (newLayers: any[]) => {
+      setLayers(newLayers);
+    };
+
+    const handleChatMessage = (message: any) => {
+      setMessages(prev => [...prev, message]);
+    };
+
+    const handleCursorRemove = (userId: string) => {
+      setRemoteUsers(prev => {
+        const next = { ...prev };
+        delete next[userId];
+        return next;
+      });
+    };
+
+    socket.on('project-cursor-update', handleCursorUpdate);
+    socket.on('project-layer-update', handleLayerUpdate);
+    socket.on('project-chat-message', handleChatMessage);
+    socket.on('cursor-remove', handleCursorRemove);
 
     return () => {
-      socket.off('project-cursor-update');
+      socket.off('project-cursor-update', handleCursorUpdate);
+      socket.off('project-layer-update', handleLayerUpdate);
+      socket.off('project-chat-message', handleChatMessage);
+      socket.off('cursor-remove', handleCursorRemove);
     };
-  }, [projectId]);
+  }, [projectId, setLayers]);
 
   const handlePointerMove = (e: any) => {
     if (!user || !projectId) return;
@@ -345,17 +415,25 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
     
     socket.emit('project-cursor-move', {
       projectId,
-      position: { x, y },
+      x,
+      y,
       color: '#00F0FF',
       name: user.displayName || 'Anonymous'
     });
   };
 
-  // Debounced update to Firebase
+  // Debounced update to Firebase and WebSockets
   const updateProjectState = useMemo(() => {
     let timeout: NodeJS.Timeout;
     return (newLayers: any, newMaterials: any, newAmbient: number) => {
       if (!projectId) return;
+      
+      // Instant WebSocket Sync
+      socket.emit('project-layer-sync', {
+        projectId,
+        layers: newLayers
+      });
+
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         setDoc(doc(db, 'projects', projectId), {
@@ -364,7 +442,7 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
           ambientIntensity: newAmbient,
           lastUpdated: serverTimestamp()
         }, { merge: true }).catch(err => monitoringService.error('Project sync failed', err));
-      }, 500);
+      }, 1000); // Debounce to Firestore to save costs
     };
   }, [projectId]);
 
@@ -410,9 +488,9 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
     updateProjectState(result, materialProps, ambientIntensity);
   };
 
-  // Sync Cursor Position
+  // Sync Cursor Position (Firestore fallback removed in favor of Socket.io for performance)
   useEffect(() => {
-    if (!user) return;
+    if (!user || !projectId) return;
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!viewportRef.current) return;
@@ -420,38 +498,20 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
       const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
       const y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
       
-      // Update Firestore with cursor position
-      setDoc(doc(db, 'projects', projectId, 'presence', user.uid), {
-        uid: user.uid,
-        name: user.displayName || 'Anonymous Node',
-        cursor: { x, y, z: 0 },
-        lastSeen: serverTimestamp(),
-        color: '#' + Math.floor(Math.random()*16777215).toString(16)
-      }, { merge: true }).catch(err => monitoringService.error('Presence sync failed', err));
+      socket.emit('project-cursor-move', {
+        projectId,
+        x,
+        y,
+        color: '#00F0FF',
+        name: user.displayName || 'Anonymous'
+      });
     };
 
     window.addEventListener('pointermove', handlePointerMove);
     return () => window.removeEventListener('pointermove', handlePointerMove);
   }, [user, projectId]);
 
-  // Listen for Remote Users
-  useEffect(() => {
-    if (!projectId) return;
-    const unsub = onSnapshot(collection(db, 'projects', projectId, 'presence'), (snapshot) => {
-      const users: Record<string, any> = {};
-      snapshot.forEach(doc => {
-        if (user && doc.id !== user.uid) {
-          users[doc.id] = doc.data();
-        }
-      });
-      setRemoteUsers(users);
-    }, (error) => {
-      handleFirestoreError(error, OperationType.GET, `projects/${projectId}/presence`);
-    });
-    return unsub;
-  }, [user, projectId]);
-
-  // Listen for Chat Messages
+  // Listen for Chat Messages (Firestore hook kept for history, but Socket for instant updates)
   useEffect(() => {
     if (!projectId) return;
     const q = query(collection(db, 'projects', projectId, 'messages'), orderBy('timestamp', 'desc'), limit(50));
@@ -471,12 +531,25 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
 
     try {
       soundService.playClick();
-      await addDoc(collection(db, 'projects', projectId, 'messages'), {
+      const message = {
         text: chatMessage,
         uid: user.uid,
         name: user.displayName || 'Anonymous',
+        timestamp: Date.now()
+      };
+
+      // Instant WebSocket Sync
+      socket.emit('project-chat-message', {
+        projectId,
+        message
+      });
+
+      // Persist to Firestore
+      await addDoc(collection(db, 'projects', projectId, 'messages'), {
+        ...message,
         timestamp: serverTimestamp()
       });
+      
       setChatMessage('');
     } catch (err) {
       monitoringService.error('Chat failed', err as Error);
@@ -499,6 +572,16 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
     alert('Invite link copied to clipboard!');
   };
 
+  const spawnPrimitive = (type: 'cube' | 'sphere') => {
+    soundService.playClick();
+    const id = Math.random().toString(36).substr(2, 9);
+    setSpawnedPrims(prev => [...prev, {
+      id,
+      type,
+      position: [(Math.random() - 0.5) * 4, 10 + Math.random() * 5, (Math.random() - 0.5) * 4]
+    }]);
+  };
+
   const handleAddAsset = (asset: Asset) => {
     // Add asset to the active layer
     const newLayers = layers.map((l, i) => i === 0 ? { ...l, objects: [...l.objects, asset.id] } : l);
@@ -508,7 +591,7 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
 
   return (
     <div ref={viewportRef} onPointerMove={handlePointerMove} className="relative w-full h-full bg-[#050505] rounded-[3rem] overflow-hidden border border-white/5 shadow-2xl group">
-      <SafeCanvas xr shadows dpr={[1, 2]} camera={{ position: [5, 5, 5], fov: 45 }} gl={{ antialias: true, alpha: true }}>
+      <SafeCanvas xr physics={physicsEnabled} shadows dpr={[1, 2]} camera={{ position: [5, 5, 5], fov: 45 }} gl={{ antialias: true, alpha: true }}>
         <ambientLight intensity={ambientIntensity} />
         <Suspense fallback={<Html center><Loader2 className="w-8 h-8 animate-spin text-singularity" /></Html>}>
           <Stage intensity={0.5} environment="city" shadows="contact" adjustCamera={true}>
@@ -518,11 +601,39 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
                   <Model 
                     url={layer.url} 
                     layer={layer}
+                    physicsEnabled={physicsEnabled}
                   />
                 )}
               </group>
             ))}
           </Stage>
+          
+          {physicsEnabled && (
+            <>
+              <Floor />
+              {physicsDebug && PhysicsDebug && <PhysicsDebug />}
+              {spawnedPrims.map(p => (
+                <RigidBody 
+                  key={p.id} 
+                  position={p.position} 
+                  colliders={p.type === 'cube' ? 'cuboid' : 'ball'}
+                  restitution={0.8}
+                  friction={0.2}
+                >
+                  <mesh castShadow receiveShadow>
+                    {p.type === 'cube' ? <boxGeometry args={[1, 1, 1]} /> : <sphereGeometry args={[0.5, 32, 32]} />}
+                    <meshStandardMaterial 
+                      color={p.type === 'cube' ? '#00f0ff' : '#ff00ff'} 
+                      emissive={p.type === 'cube' ? '#00f0ff' : '#ff00ff'} 
+                      emissiveIntensity={0.5}
+                      roughness={0.1}
+                      metalness={0.8}
+                    />
+                  </mesh>
+                </RigidBody>
+              ))}
+            </>
+          )}
           
           {/* Remote Cursors */}
           {Object.values(remoteUsers).map(u => (
@@ -563,6 +674,47 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
         >
           <Send className="w-6 h-6" />
         </button>
+        <button 
+          onClick={() => { soundService.playClick(); setPhysicsEnabled(!physicsEnabled); }}
+          className={`p-4 rounded-2xl backdrop-blur-2xl border border-white/10 transition-all ${physicsEnabled ? 'bg-quantum text-black shadow-[0_0_20px_rgba(120,0,255,0.5)]' : 'bg-white/5 text-white hover:bg-white/10'}`}
+          title="Toggle Physics Engine"
+        >
+          <Activity className={`w-6 h-6 ${physicsEnabled ? 'animate-pulse' : ''}`} />
+        </button>
+        {physicsEnabled && (
+          <button 
+            onClick={() => { soundService.playClick(); setPhysicsDebug(!physicsDebug); }}
+            className={`p-4 rounded-2xl backdrop-blur-2xl border border-white/10 transition-all ${physicsDebug ? 'bg-red-500 text-white' : 'bg-white/5 text-white hover:bg-white/10'}`}
+            title="Toggle Physics Debug"
+          >
+            <Activity className="w-6 h-6" />
+          </button>
+        )}
+        {physicsEnabled && (
+          <>
+            <button 
+              onClick={() => spawnPrimitive('cube')}
+              className="p-4 rounded-2xl backdrop-blur-2xl border border-white/10 transition-all bg-white/5 text-white hover:bg-white/10"
+              title="Spawn Quantum Cube"
+            >
+              <Box className="w-6 h-6 text-cyan-400" />
+            </button>
+            <button 
+              onClick={() => spawnPrimitive('sphere')}
+              className="p-4 rounded-2xl backdrop-blur-2xl border border-white/10 transition-all bg-white/5 text-white hover:bg-white/10"
+              title="Spawn Quantum Sphere"
+            >
+              <Zap className="w-6 h-6 text-pink-400" />
+            </button>
+            <button 
+              onClick={() => { soundService.playClick(); setSpawnedPrims([]); }}
+              className="p-4 rounded-2xl backdrop-blur-2xl border border-white/10 transition-all bg-white/5 text-white hover:bg-white/10"
+              title="Clear Spawned Objects"
+            >
+              <Trash2 className="w-6 h-6 text-red-400" />
+            </button>
+          </>
+        )}
         <button 
           onClick={() => { soundService.playClick(); setIsHologram(!isHologram); }}
           className={`p-4 rounded-2xl backdrop-blur-2xl border border-white/10 transition-all ${isHologram ? 'bg-singularity text-black shadow-[0_0_20px_rgba(0,240,255,0.5)]' : 'bg-white/5 text-white hover:bg-white/10'}`}

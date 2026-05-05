@@ -45,10 +45,11 @@ class CanvasErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySta
 }
 
 import { XR, createXRStore } from '@react-three/xr';
+import { Physics } from '@react-three/rapier';
 
 const xrStore = createXRStore();
 
-export function SafeCanvas({ children, fallback, xr = false, ...props }: { children: ReactNode, fallback?: ReactNode, xr?: boolean } & ComponentProps<typeof Canvas>) {
+export function SafeCanvas({ children, fallback, xr = false, physics = false, ...props }: { children: ReactNode, fallback?: ReactNode, xr?: boolean, physics?: boolean } & ComponentProps<typeof Canvas>) {
   const supported = isWebGLAvailable();
 
   if (!supported) {
@@ -60,11 +61,21 @@ export function SafeCanvas({ children, fallback, xr = false, ...props }: { child
     );
   }
 
+  let content = children;
+
+  if (physics) {
+    content = (
+      <Physics gravity={[0, -9.81, 0]}>
+        {content}
+      </Physics>
+    );
+  }
+
   const canvasContent = xr ? (
     <XR store={xrStore}>
-      {children}
+      {content}
     </XR>
-  ) : children;
+  ) : content;
 
   return (
     <CanvasErrorBoundary fallback={fallback}>

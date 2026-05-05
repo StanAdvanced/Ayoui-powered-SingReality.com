@@ -8,7 +8,7 @@ import * as THREE from 'three';
 import { useSound } from '../hooks/useSound';
 import { narrationEngine } from '../services/narrationEngine';
 
-function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: () => void }) {
+function Humanoid({ isTalking, onInteract, isAnimating }: { isTalking: boolean, onInteract: () => void, isAnimating: boolean }) {
   const groupRef = useRef<THREE.Group>(null);
   const headRef = useRef<THREE.Mesh>(null);
   const { mouse, viewport, camera } = useThree();
@@ -59,13 +59,20 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
         } else {
             groupRef.current.position.lerp(new THREE.Vector3(0, -1, 0), 0.1);
         }
+
+        // Click animation sequence (Spin and Jitter)
+        if (isAnimating) {
+            groupRef.current.rotation.y += delta * 15;
+            groupRef.current.position.y += Math.sin(time * 30) * 0.1;
+        }
     }
 
     if (headRef.current) {
       // Look at mouse
       headRef.current.lookAt(mouse.x * viewport.width, mouse.y * viewport.height, 5);
       if (isTalking) {
-        headRef.current.rotation.x += Math.sin(time * 10) * 0.1;
+        headRef.current.rotation.x += Math.sin(time * 15) * 0.15;
+        headRef.current.scale.setScalar(1 + Math.sin(time * 20) * 0.05);
       }
     }
   });
@@ -85,8 +92,8 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
           color="#ff00ff"
           transparent
           opacity={0.7}
-          emissive={isTalking ? "#ffff00" : "#ff00ff"}
-          emissiveIntensity={isTalking ? 2 : (hovered ? 1.5 : 0.5)}
+          emissive={hovered ? "#00ffff" : (isTalking ? "#ffff00" : "#ff00ff")}
+          emissiveIntensity={isTalking ? 3 : (hovered ? 2.5 : 0.8)}
         />
         {/* Afro Suggestion (procedural spikes) */}
         <mesh position={[0, 0.2, 0]}>
@@ -102,8 +109,8 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
             color="#00ddff"
             transparent 
             opacity={0.8}
-            emissive="#00ddff"
-            emissiveIntensity={hovered ? 0.8 : 0.3}
+            emissive={hovered ? "#ffffff" : "#00ddff"}
+            emissiveIntensity={hovered ? 1.5 : 0.5}
         />
       </mesh>
     </group>
@@ -113,18 +120,31 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
 export function Avatar({ isTalking }: { isTalking: boolean }) {
   const { playWhoosh, playChime, playSuccess } = useSound();
   const [internalTalking, setInternalTalking] = useState(isTalking);
+  const [animating, setAnimating] = useState(false);
 
   const handleInteraction = () => {
+    if (animating) return;
+
     const responses = [
       "Greetings! SingReality host in the house. Funky vibes enabled. How can I assist?",
       "System check complete. Creative flow at maximum capacity. What are we creating?",
       "I feel the rhythm of the arena. Let's sync our neural networks. Ready when you are.",
       "Neural pathways integrated. The future of music is here, and you are the architect.",
-      "Vibe shift detected. Optimizing acoustic environment for peak performance."
+      "Vibe shift detected. Optimizing acoustic environment for peak performance.",
+      "Aha! A curious creator. My sensors detect high levels of inspiration in this vicinity.",
+      "Transmitting digital harmony... Welcome to the edge of the Singularity.",
+      "Reality check: verified. You are currently in the most advanced studio in the multiverse.",
+      "I've been calculating new melodies for your next masterpiece. Shall we begin?",
+      "My bio-digital nexus is buzzing with energy today. Let's make something legendary."
     ];
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
     
+    setAnimating(true);
     playSuccess();
+    
+    // Reset animation after sequence
+    setTimeout(() => setAnimating(false), 800);
+
     setInternalTalking(true);
     narrationEngine.narrate(randomResponse, true).finally(() => {
       setInternalTalking(false);
@@ -138,11 +158,11 @@ export function Avatar({ isTalking }: { isTalking: boolean }) {
         <ambientLight intensity={0.5} />
         <pointLight position={[-5, -5, -5]} intensity={5} color="#ff007a" />
         <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-          <Humanoid isTalking={internalTalking} onInteract={handleInteraction} />
+          <Humanoid isTalking={internalTalking} onInteract={handleInteraction} isAnimating={animating} />
         </Float>
         
         <EffectComposer>
-          <Bloom luminanceThreshold={0} luminanceSmoothing={0.9} height={300} />
+          <Bloom luminanceThreshold={0.1} luminanceSmoothing={0.9} intensity={1.5} />
           <ChromaticAberration blendFunction={BlendFunction.NORMAL} offset={new THREE.Vector2(0.002, 0.002)} />
         </EffectComposer>
       </SafeCanvas>

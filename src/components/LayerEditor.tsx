@@ -17,7 +17,7 @@ import { useStore } from '../store/useStore';
 import { useSound } from '../hooks/useSound';
 
 export function LayerEditor() {
-  const { layers, setLayers, addLayer, removeLayer, toggleLayerVisibility, reorderLayers } = useStore();
+  const { layers, setLayers, addLayer, removeLayer, toggleLayerVisibility, reorderLayers, undoLayerAction, redoLayerAction, layerHistory, layerHistoryIndex } = useStore();
   const { playClick } = useSound();
   const [newLayerName, setNewLayerName] = useState('');
   const [expandedLayer, setExpandedLayer] = useState<string | null>(null);
@@ -38,9 +38,29 @@ export function LayerEditor() {
   return (
     <div className="flex flex-col h-full glass rounded-[2.5rem] border border-white/10 overflow-hidden bg-black/20 backdrop-blur-3xl">
       <div className="p-8 border-b border-white/5">
-        <h3 className="text-sm font-bold uppercase tracking-[0.3em] flex items-center gap-3 mb-6">
-          <LayersIcon className="w-5 h-5 text-singularity" /> Layer Stack Architecture
-        </h3>
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-sm font-bold uppercase tracking-[0.3em] flex items-center gap-3">
+            <LayersIcon className="w-5 h-5 text-singularity" /> Layer Stack Architecture
+          </h3>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => { playClick(); undoLayerAction(); }}
+              disabled={layerHistoryIndex <= 0}
+              className="p-2 glass rounded-lg text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              title="Undo"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5v0a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>
+            </button>
+            <button 
+              onClick={() => { playClick(); redoLayerAction(); }}
+              disabled={layerHistoryIndex >= layerHistory.length - 1}
+              className="p-2 glass rounded-lg text-gray-500 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+              title="Redo"
+            >
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5v0A5.5 5.5 0 0 0 9.5 20H13"/></svg>
+            </button>
+          </div>
+        </div>
         
         <form onSubmit={handleAdd} className="flex gap-2">
           <div className="relative flex-1">

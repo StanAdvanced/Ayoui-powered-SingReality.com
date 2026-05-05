@@ -1,12 +1,17 @@
-import React, { useState } from 'react';
-import { motion } from 'motion/react';
-import { ShoppingCart, Tag, Download, Play, Heart, Share2, Mic2, Layers, Zap, Cpu, TrendingUp, Star, Globe, Database, Network, Search, PenTool } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { 
+  ShoppingCart, Tag, Download, Play, Pause, Volume2, VolumeX, Heart, Share2, 
+  Mic2, Layers, Zap, Cpu, TrendingUp, Star, Globe, Database, Network, Search, 
+  PenTool, Music, ListMusic, ChevronUp, ChevronDown
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useStore } from '../store/useStore';
 import { YouTubeSearch } from '../components/marketplace/YouTubeSearch';
 import { CinematicBackscreen } from '../components/CinematicBackscreen';
 import { UserAvatar } from '../components/UserAvatar';
 import { PromoBanners } from '../components/PromoBanners';
+import { useMusicEngine } from '../services/musicEngine';
 
 const ASSETS = [
   {
@@ -299,6 +304,10 @@ export function Marketplace() {
   const { currency } = useStore();
   const navigate = useNavigate();
 
+  // Background Music Controller
+  const { togglePlay, isPlaying, volume, setVolume } = useMusicEngine();
+  const [showPlayer, setShowPlayer] = useState(true);
+
   const filteredAssets = ASSETS.filter(asset => {
     const matchesCategory = activeCategory === "All" || asset.category === activeCategory;
     const matchesType = activeType === "All" || asset.type === activeType;
@@ -309,8 +318,65 @@ export function Marketplace() {
   });
 
   return (
-    <div className="min-h-screen relative">
+    <div className="min-h-screen relative pb-32">
       <CinematicBackscreen opacity={0.5} pageType="marketplace" />
+      
+      {/* Background Player UI */}
+      <AnimatePresence>
+        {showPlayer && (
+          <motion.div 
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            className="fixed bottom-8 right-8 z-[100] glass px-8 py-6 rounded-[2.5rem] border border-white/20 backdrop-blur-3xl shadow-2xl flex items-center gap-8 group"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-singularity/20 rounded-2xl flex items-center justify-center animate-pulse">
+                <Music className="w-6 h-6 text-singularity" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-mono text-gray-500 uppercase tracking-widest">Now Streaming</span>
+                <span className="text-sm font-bold text-white uppercase tracking-tight">Trending Neural Beats</span>
+              </div>
+            </div>
+
+            <div className="h-10 w-px bg-white/10" />
+
+            <div className="flex items-center gap-6">
+              <button 
+                onClick={togglePlay}
+                className="w-12 h-12 rounded-2xl bg-white text-black flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,255,255,0.3)]"
+              >
+                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
+              </button>
+
+              <div className="flex items-center gap-3">
+                <button onClick={() => setVolume(volume === 0 ? 0.3 : 0)}>
+                  {volume === 0 ? <VolumeX className="w-5 h-5 text-gray-500" /> : <Volume2 className="w-5 h-5 text-gray-300" />}
+                </button>
+                <input 
+                  type="range" 
+                  min="0" 
+                  max="1" 
+                  step="0.01" 
+                  value={volume}
+                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  className="w-24 h-1 bg-white/10 rounded-full appearance-none accent-singularity"
+                />
+              </div>
+
+              <button 
+                onClick={() => setShowPlayer(false)}
+                className="p-2 text-gray-600 hover:text-white transition-colors"
+                title="Collapse Player"
+              >
+                <ChevronDown className="w-5 h-5" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
