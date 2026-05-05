@@ -123,6 +123,7 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
     { name: 'SingReality TV', path: '/tv', icon: Tv },
     { name: 'Arenas', path: '/arenas', icon: Radio },
     { name: 'Marketplace', path: '/marketplace', icon: ShoppingBag },
+    { name: 'Collectibles', path: '/nft-collectibles', icon: HandCoins },
     { name: 'Nexus', path: '/', icon: Globe },
   ];
 

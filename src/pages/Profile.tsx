@@ -452,6 +452,31 @@ export function Profile() {
           )}
         </div>
       </div>
+
+      <div className="glass-card rounded-[2rem] p-8 mb-8">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-bold flex items-center gap-2"><Award className="w-5 h-5 text-singularity" /> My NFT Collectibles</h2>
+          <button onClick={() => window.location.href = '/nft-collectibles'} className="px-4 py-2 border border-white/20 rounded-xl text-[10px] uppercase tracking-widest font-bold hover:bg-white/10 transition-colors">
+            View Marketplace
+          </button>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          {[
+            { id: 1, title: 'VR Festival Ticket 2026', type: 'Ticket', image: 'https://images.unsplash.com/photo-1470229722913-7c090b332da8?auto=format&fit=crop&w=400&q=80' },
+            { id: 2, title: 'Neural Synth Bass', type: 'Stem', image: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=400&q=80' },
+            { id: 3, title: 'Genesis Track #102', type: 'Music', image: 'https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&w=400&q=80' },
+            { id: 4, title: 'Cyberpunk Skin', type: 'Avatar', image: 'https://images.unsplash.com/photo-1516280440502-a2fc994606cf?auto=format&fit=crop&w=400&q=80' },
+          ].map(nft => (
+            <div key={nft.id} className="relative aspect-square rounded-2xl overflow-hidden border border-white/10 group">
+              <img src={nft.image} alt={nft.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
+                <span className="text-[10px] uppercase font-bold text-singularity tracking-widest mb-1">{nft.type}</span>
+                <span className="font-bold text-sm text-white truncate">{nft.title}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
       </div>
     </div>
   );

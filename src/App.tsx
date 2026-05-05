@@ -34,6 +34,7 @@ const MusicGraphExplorer = lazy(() => import('./components/MusicGraphExplorer').
 const SingularitySettlement = lazy(() => import('./components/SingularitySettlement').then(m => ({ default: m.SingularitySettlement })));
 const MetamorphosisStage = lazy(() => import('./components/MetamorphosisStage').then(m => ({ default: m.MetamorphosisStage })));
 const ShortsRemixFactory = lazy(() => import('./components/ShortsRemixFactory').then(m => ({ default: m.ShortsRemixFactory })));
+const NFTCollectibles = lazy(() => import('./pages/NFTCollectibles').then(m => ({ default: m.NFTCollectibles })));
 
 const Wellness = lazy(() => import('./pages/Wellness').then(m => ({ default: m.Wellness })));
 
@@ -98,6 +99,7 @@ export default function App() {
             <Route path="/singularity-settlement" element={<ProtectedRoute><SingularitySettlement /></ProtectedRoute>} />
             <Route path="/metamorphosis" element={<ProtectedRoute><MetamorphosisStage /></ProtectedRoute>} />
             <Route path="/shorts-remix" element={<ProtectedRoute><ShortsRemixFactory /></ProtectedRoute>} />
+            <Route path="/nft-collectibles" element={<ProtectedRoute><NFTCollectibles /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>

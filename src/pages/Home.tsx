@@ -68,10 +68,24 @@ export function Home() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, ease: "easeOut" }}
           >
-            <h1 className="text-6xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] mb-12">
+            <h1 className="text-6xl md:text-9xl font-display font-black tracking-tighter leading-[0.85] mb-6">
               WHAT A TIME <br />
               <span className="text-gradient">TO BE LIVE!</span>
             </h1>
+
+            {/* Live Quantum Sync Counter */}
+            <div className="flex justify-center items-center gap-4 mb-12">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-singularity animate-ping" />
+                <span className="w-2 h-2 rounded-full bg-singularity absolute" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-singularity">Quantum Sync Live</span>
+              </div>
+              <div className="h-4 w-[1px] bg-white/20" />
+              <div className="text-xl font-display font-bold tabular-nums tracking-widest text-white">
+                33,492,104
+              </div>
+              <div className="text-[10px] font-mono text-gray-500 uppercase tracking-widest mt-1">Conduits</div>
+            </div>
 
             {/* Global Search Bar */}
             <div className="max-w-2xl mx-auto mb-16 relative group">

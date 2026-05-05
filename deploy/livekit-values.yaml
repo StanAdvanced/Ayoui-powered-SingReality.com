@@ -1,0 +1,73 @@
+# LiveKit production Helm values for multi-region GKE deployment (SingReality)
+# Optimized for Spatial/Ambisonic Audio and massively scalable VR Festivals.
+
+replicaCount: 3
+
+image:
+  repository: livekit/livekit-server
+  pullPolicy: IfNotPresent
+  tag: "v1.5.0"
+
+livekit:
+  keys:
+    # Replace these in production with Kubernetes Secrets
+    API_KEY: "devkey"
+    API_SECRET: "secret"
+  port: 7880
+  rtc:
+    portRangeStart: 50000
+    portRangeEnd: 60000
+    tcpPort: 7881
+    udpPort: 7882
+    useExternalIP: true
+  redis:
+    # Set to your Redis cluster for global signaling and scaling
+    address: ""
+    password: ""
+  turn:
+    cert: ""
+    key: ""
+    # External TURN for strict corporate/school firewalls
+  # Audio optimizations for Ambisonic / HOA / Spatial HRTF
+  room:
+    emptyTimeout: 300
+    # Enable high-bitrate Opus for spatial audio
+    audioBitrate: 512000 
+    enabledCodecs:
+      - mime: audio/opus
+      - mime: video/VP8
+      - mime: video/H264
+      - mime: video/VP9
+
+resources:
+  requests:
+    cpu: "2"
+    memory: "4Gi"
+  limits:
+    cpu: "8"
+    memory: "16Gi"
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 75
+
+ingress:
+  enabled: true
+  className: nginx
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+  hosts:
+    - host: livekit.singreality.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: livekit-tls
+      hosts:
+        - livekit.singreality.com

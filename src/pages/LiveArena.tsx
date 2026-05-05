@@ -257,6 +257,20 @@ export function LiveArena() {
                   {currentLyrics || 'Waiting for vocals...'}
                 </motion.div>
               </div>
+              
+              {/* LiveKit Spatial Audio Overlay */}
+              <div className="absolute top-6 left-6 z-20 glass p-4 rounded-xl border border-quantum/30 min-w-[200px]">
+                <div className="flex items-center gap-2 mb-2">
+                  <Zap className="w-4 h-4 text-quantum animate-pulse" />
+                  <span className="text-xs font-bold uppercase tracking-widest text-quantum">LiveKit Spatial Audio</span>
+                </div>
+                <div className="space-y-1 font-mono text-[10px] text-gray-400">
+                  <div className="flex justify-between"><span>SFU Node:</span> <span className="text-white">gke-au-east</span></div>
+                  <div className="flex justify-between"><span>Bitrate:</span> <span className="text-white">512 kbps</span></div>
+                  <div className="flex justify-between"><span>Codec:</span> <span className="text-white">Opus HOA</span></div>
+                  <div className="flex justify-between"><span>HRTF:</span> <span className="text-green-400">Active</span></div>
+                </div>
+              </div>
             </div>
 
             {/* Vocal Input */}

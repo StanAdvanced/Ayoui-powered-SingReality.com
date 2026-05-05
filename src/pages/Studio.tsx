@@ -151,8 +151,13 @@ export function Studio() {
                  </p>
                  
                  {choreoStatus === 'ready' && (
-                   <div className="h-[300px] w-full rounded-2xl bg-black/40 border border-[#ff00ff]/30 relative overflow-hidden">
+                   <div className="h-[300px] w-full rounded-2xl bg-black/40 border border-[#ff00ff]/30 relative overflow-hidden group">
                      <Avatar isTalking={choreoStatus === 'ready'} />
+                     <div className="absolute inset-x-0 bottom-0 p-4 bg-gradient-to-t from-black/90 to-transparent flex justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                       <button onClick={() => window.location.href = '/nft-collectibles'} className="px-6 py-2 bg-gradient-to-r from-quantum to-singularity rounded-full text-[10px] font-bold uppercase tracking-widest hover:scale-105 transition-all text-white flex items-center gap-2">
+                         Mint as NFT Collectible
+                       </button>
+                     </div>
                    </div>
                  )}
                  
