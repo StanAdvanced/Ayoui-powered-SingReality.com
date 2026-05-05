@@ -13,6 +13,7 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
   const headRef = useRef<THREE.Mesh>(null);
   const { mouse, viewport, camera } = useThree();
   const [mode, setMode] = useState<'FIXED' | 'CURSOR'>('FIXED');
+  const [hovered, setHovered] = useState(false);
   const lastMoveRef = useRef(Date.now());
   const [targetScale, setTargetScale] = useState(1.0);
 
@@ -41,7 +42,8 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
     }
 
     // Scale logic
-    const scale = mode === 'CURSOR' ? 0.1 : 1.0;
+    const baseScale = mode === 'CURSOR' ? 0.1 : 1.0;
+    const scale = baseScale * (hovered ? 1.05 : 1.0);
     setTargetScale(scale);
     if (groupRef.current) {
         groupRef.current.scale.lerp(new THREE.Vector3(scale, scale, scale), 0.1);
@@ -69,7 +71,13 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
   });
 
   return (
-    <group ref={groupRef} onClick={(e) => { e.stopPropagation(); onInteract(); }} dispose={null}>
+    <group 
+      ref={groupRef} 
+      onClick={(e) => { e.stopPropagation(); onInteract(); }} 
+      onPointerOver={() => setHovered(true)}
+      onPointerOut={() => setHovered(false)}
+      dispose={null}
+    >
       {/* 70s Hologram Look (translucent + emissive) */}
       <mesh ref={headRef} position={[0, 1.8, 0]}>
         <sphereGeometry args={[0.3, 32, 32]} />
@@ -78,7 +86,7 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
           transparent
           opacity={0.7}
           emissive={isTalking ? "#ffff00" : "#ff00ff"}
-          emissiveIntensity={isTalking ? 2 : 0.5}
+          emissiveIntensity={isTalking ? 2 : (hovered ? 1.5 : 0.5)}
         />
         {/* Afro Suggestion (procedural spikes) */}
         <mesh position={[0, 0.2, 0]}>
@@ -95,7 +103,7 @@ function Humanoid({ isTalking, onInteract }: { isTalking: boolean, onInteract: (
             transparent 
             opacity={0.8}
             emissive="#00ddff"
-            emissiveIntensity={0.3}
+            emissiveIntensity={hovered ? 0.8 : 0.3}
         />
       </mesh>
     </group>
@@ -119,6 +127,7 @@ export function Avatar({ isTalking }: { isTalking: boolean }) {
         <div className="pointer-events-auto w-full h-full">
       <SafeCanvas camera={{ position: [0, 0, 5], fov: 50 }}>
         <ambientLight intensity={0.5} />
+        <pointLight position={[-5, -5, -5]} intensity={5} color="#ff007a" />
         <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
           <Humanoid isTalking={internalTalking} onInteract={handleInteraction} />
         </Float>
