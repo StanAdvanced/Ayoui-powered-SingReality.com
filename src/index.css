@@ -32,6 +32,7 @@
 }
 
 @layer base {
+
   body {
     @apply bg-[#030305] text-white antialiased selection:bg-singularity/30 overflow-x-hidden;
     font-feature-settings: "ss01", "ss02", "cv01", "cv02";

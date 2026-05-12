@@ -17,12 +17,14 @@ const MarketplaceItemDetail = lazy(() => import('./pages/MarketplaceItemDetail')
 const DeveloperPortal = lazy(() => import('./pages/DeveloperPortal').then(m => ({ default: m.DeveloperPortal })));
 const QuantumLab = lazy(() => import('./pages/QuantumLab').then(m => ({ default: m.QuantumLab })));
 const KaraokeRoom = lazy(() => import('./components/KaraokeRoom').then(m => ({ default: m.KaraokeRoom })));
-const AISongStudio = lazy(() => import('./components/AISongStudio').then(m => ({ default: m.AISongStudio })));
+const AISongStudio = lazy(() => import('./components/AISongStudio'));
 const Funding = lazy(() => import('./pages/Funding').then(m => ({ default: m.Funding })));
 const Projects = lazy(() => import('./pages/Projects').then(m => ({ default: m.Projects })));
 const Profile = lazy(() => import('./pages/Profile').then(m => ({ default: m.Profile })));
 const Auth = lazy(() => import('./pages/Auth').then(m => ({ default: m.Auth })));
 const LiveArena = lazy(() => import('./pages/LiveArena').then(m => ({ default: m.LiveArena })));
+const LiveBroadcasterStudio = lazy(() => import('./pages/LiveBroadcasterStudio').then(m => ({ default: m.LiveBroadcasterStudio })));
+const GaussianSplatMetaverse = lazy(() => import('./pages/GaussianSplatMetaverse').then(m => ({ default: m.GaussianSplatMetaverse })));
 const GlobalMap = lazy(() => import('./pages/GlobalMap').then(m => ({ default: m.GlobalMap })));
 const NeuralClones = lazy(() => import('./pages/NeuralClones').then(m => ({ default: m.NeuralClones })));
 const SingRealityTV = lazy(() => import('./pages/SingRealityTV').then(m => ({ default: m.SingRealityTV })));
@@ -89,6 +91,8 @@ export default function App() {
             <Route path="/portal" element={<Portal />} />
             <Route path="/arenas" element={<Arenas />} />
             <Route path="/live-arena" element={<LiveArena />} />
+            <Route path="/metaverse" element={<GaussianSplatMetaverse />} />
+            <Route path="/broadcaster" element={<ProtectedRoute><LiveBroadcasterStudio /></ProtectedRoute>} />
             <Route path="/karaoke-arena" element={<KaraokeArena />} />
             <Route path="/global-map" element={<GlobalMap />} />
             <Route path="/tv" element={<SingRealityTV />} />

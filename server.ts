@@ -3,6 +3,15 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import Stripe from "stripe";
+
+// Initialize Stripe gracefully
+let stripe: Stripe | null = null;
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2023-10-16' as any
+  });
+}
 
 async function startServer() {
   const app = express();
@@ -16,9 +25,29 @@ async function startServer() {
 
   const PORT = 3000;
 
+  // Use JSON parsing for normal API requests
+  app.use('/api', express.json());
+
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.post("/api/create-payment-intent", async (req, res) => {
+    if (!stripe) {
+      return res.status(500).json({ error: "Stripe is not configured in environment" });
+    }
+    try {
+      const { amount, currency = "usd" } = req.body;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: Math.round(amount * 100),
+        currency,
+        automatic_payment_methods: { enabled: true },
+      });
+      res.json({ clientSecret: paymentIntent.client_secret });
+    } catch (e: any) {
+      res.status(400).json({ error: e.message });
+    }
   });
 
   app.get("/api/youtube/search", async (req, res) => {
@@ -42,14 +71,39 @@ async function startServer() {
   io.on("connection", (socket) => {
     console.log("User connected:", socket.id);
 
-    // Generic Room Logic requested by user
+    // Advanced WebRTC Live Broadcasting Rooms
+    socket.on("join-broadcast", (roomId) => {
+      socket.join(`broadcast-${roomId}`);
+      console.log(`User ${socket.id} joined broadcast room ${roomId}`);
+    });
+
+    socket.on("broadcaster-webrtc-offer", (data) => {
+      socket.to(`broadcast-${data.roomId}`).emit("broadcaster-webrtc-offer", {
+        from: socket.id,
+        offer: data.offer
+      });
+    });
+
+    socket.on("broadcaster-webrtc-answer", (data) => {
+      socket.to(`broadcast-${data.roomId}`).emit("broadcaster-webrtc-answer", {
+        from: socket.id,
+        answer: data.answer
+      });
+    });
+
+    socket.on("broadcaster-ice-candidate", (data) => {
+      socket.to(`broadcast-${data.roomId}`).emit("broadcaster-ice-candidate", {
+        from: socket.id,
+        candidate: data.candidate
+      });
+    });
+
     socket.on("join-room", (roomId) => {
       socket.join(roomId);
       console.log(`User ${socket.id} joined room ${roomId}`);
     });
 
     socket.on("send-message", (data) => {
-      // data: { roomId: string, message: any }
       io.to(data.roomId).emit("receive-message", {
         sender: socket.id,
         content: data.message,
@@ -57,9 +111,7 @@ async function startServer() {
       });
     });
 
-    // WebRTC Signaling
     socket.on("webrtc-offer", (data) => {
-      // data: { roomId: string, offer: any }
       socket.to(data.roomId).emit("webrtc-offer", {
         from: socket.id,
         offer: data.offer
@@ -67,7 +119,6 @@ async function startServer() {
     });
 
     socket.on("webrtc-answer", (data) => {
-      // data: { roomId: string, answer: any }
       socket.to(data.roomId).emit("webrtc-answer", {
         from: socket.id,
         answer: data.answer
@@ -75,7 +126,6 @@ async function startServer() {
     });
 
     socket.on("webrtc-ice-candidate", (data) => {
-      // data: { roomId: string, candidate: any }
       socket.to(data.roomId).emit("webrtc-ice-candidate", {
         from: socket.id,
         candidate: data.candidate
@@ -114,14 +164,12 @@ async function startServer() {
       });
     });
 
-    // Project Collaboration
     socket.on("join-project", (projectId) => {
       socket.join(`project-${projectId}`);
       console.log(`User ${socket.id} joined project ${projectId}`);
     });
 
     socket.on("project-cursor-move", (data) => {
-      // data: { projectId: string, x: number, y: number, color: string, name: string }
       socket.to(`project-${data.projectId}`).emit("project-cursor-update", {
         id: socket.id,
         x: data.x,
@@ -132,19 +180,15 @@ async function startServer() {
     });
 
     socket.on("project-chat-message", (data) => {
-      // data: { projectId: string, message: object }
       io.to(`project-${data.projectId}`).emit("project-chat-message", data.message);
     });
 
     socket.on("project-layer-sync", (data) => {
-      // data: { projectId: string, layers: array }
       socket.to(`project-${data.projectId}`).emit("project-layer-update", data.layers);
     });
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
-      // We'd need to track rooms per socket to emit specific removes, 
-      // but broadcast remove for now as a fallback.
       socket.broadcast.emit("cursor-remove", socket.id);
     });
   });

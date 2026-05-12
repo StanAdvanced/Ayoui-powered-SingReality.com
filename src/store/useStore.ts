@@ -51,6 +51,8 @@ interface AppState {
   // Project State (for 3D Viewer & Layers)
   layers: Layer[];
   setLayers: (layers: Layer[]) => void;
+  updateLayersWithoutHistory: (layers: Layer[]) => void;
+  commitLayerHistory: () => void;
   addLayer: (name: string, url?: string) => void;
   removeLayer: (id: string) => void;
   toggleLayerVisibility: (id: string) => void;
@@ -233,6 +235,15 @@ export const useStore = create<AppState>((set, get) => {
     
     setLayers: (layers: Layer[]) => {
       pushToHistory(layers);
+    },
+    
+    updateLayersWithoutHistory: (layers: Layer[]) => {
+      set({ layers });
+    },
+
+    commitLayerHistory: () => {
+      const state = get();
+      pushToHistory(state.layers);
     },
     
     addLayer: (name, url) => {
