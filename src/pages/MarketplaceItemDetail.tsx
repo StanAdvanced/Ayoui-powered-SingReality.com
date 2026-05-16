@@ -57,7 +57,7 @@ export function MarketplaceItemDetail() {
     setIsCartOpen(true);
   };
 
-  const onPlayerReady: YouTubeProps['onReady'] = (event) => {
+  const onPlayerReady: YouTubeProps['onReady'] = (event: any) => {
     playerRef.current = event.target;
     setDuration(event.target.getDuration());
     event.target.setVolume(volume);

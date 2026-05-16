@@ -312,7 +312,9 @@ export function Studio() {
                 
                 <EffectComposer>
                   <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} opacity={2} />
-                  {choreoStatus === 'generating' && <Glitch active={true} delay={new THREE.Vector2(1.5, 3.5)} duration={new THREE.Vector2(0.5, 1.0)} strength={new THREE.Vector2(0.2, 0.4)} mode={1} />}
+                  {choreoStatus === 'generating' ? (
+                    <Glitch active={true} delay={new THREE.Vector2(1.5, 3.5)} duration={new THREE.Vector2(0.5, 1.0)} strength={new THREE.Vector2(0.2, 0.4)} mode={1} />
+                  ) : <></>}
                 </EffectComposer>
               </SafeCanvas>
 

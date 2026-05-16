@@ -4,11 +4,17 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import './index.css';
+import { SingReality } from './lib/SingReality';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
 import { useStore } from './store/useStore';
 
 console.log('SingReality: Mounting Quantum Architecture...');
+
+// Initialize the primary SingReality engine architecture
+SingReality.init().catch(err => {
+  console.error('SingReality: Primary boot failure ->', err);
+});
 
 function Root() {
   const setUser = useStore(state => state.setUser);

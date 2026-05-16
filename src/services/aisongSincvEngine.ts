@@ -50,7 +50,7 @@ export class AISongSincvEngine {
       const notes = ["C4", "E4", "G4", "B4", "D5"];
       let index = 0;
 
-      this.loop = new Tone.Loop((time) => {
+      this.loop = new Tone.Loop((time: number) => {
         if (this.synth) {
           this.synth.triggerAttackRelease(notes[index % notes.length], "8n", time);
           index++;

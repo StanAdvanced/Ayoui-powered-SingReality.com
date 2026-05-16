@@ -56,7 +56,7 @@ export function DeepSeekMusicSuite() {
       const reverb = new Tone.Reverb(2).toDestination();
       synth.connect(reverb);
       
-      const part = new Tone.Part((time, value) => {
+      const part = new Tone.Part((time: number, value: any) => {
         synth.triggerAttackRelease(value.note, value.duration, time);
       }, sequenceData).start(0);
 

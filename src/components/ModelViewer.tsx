@@ -156,7 +156,7 @@ function Model({ url, layer, physicsEnabled = false }: { url: string, layer: any
       clonedObj.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           if (isHologram) {
-            const mat = new HolographicMaterialImpl();
+            const mat = new HolographicMaterialImpl() as any;
             mat.transparent = true;
             mat.side = THREE.DoubleSide;
             mat.depthWrite = false;
@@ -186,7 +186,7 @@ function Model({ url, layer, physicsEnabled = false }: { url: string, layer: any
       clonedScene.traverse((child) => {
         if (child instanceof THREE.Mesh) {
           if (isHologram) {
-            const mat = new HolographicMaterialImpl();
+            const mat = new HolographicMaterialImpl() as any;
             mat.transparent = true;
             mat.side = THREE.DoubleSide;
             mat.depthWrite = false;

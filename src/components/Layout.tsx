@@ -33,6 +33,7 @@ import { GlobalAvatar } from './GlobalAvatar';
 
 import { CartModal } from './CartModal';
 import { DJVerseOverlay } from './DJVerseOverlay';
+import { IntelligenceModal } from './IntelligenceModal';
 
 const LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -165,9 +166,10 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-quantum/10 rounded-full blur-[120px] animate-morph" style={{ animationDelay: '-4s' }} />
       </div>
 
-      {bgEnabled && !isHighComputePath && <CinematicBackscreen />}
+      {bgEnabled && !isHighComputePath && <CinematicBackscreen pageType={location.pathname.slice(1) || 'nexus'} />}
       <LiveCollaboration />
       <CartModal />
+      <IntelligenceModal />
       <NexusPlayer />
       <EnterpriseNexusPortal />
       <DJVerseOverlay />
