@@ -33,7 +33,6 @@ import { GlobalAvatar } from './GlobalAvatar';
 
 import { CartModal } from './CartModal';
 import { DJVerseOverlay } from './DJVerseOverlay';
-import { IntelligenceModal } from './IntelligenceModal';
 
 const LANGUAGES = [
   { code: 'en', name: 'English' },
@@ -169,7 +168,6 @@ export function Layout({ children, onReplayIntro }: { children: React.ReactNode,
       {bgEnabled && !isHighComputePath && <CinematicBackscreen pageType={location.pathname.slice(1) || 'nexus'} />}
       <LiveCollaboration />
       <CartModal />
-      <IntelligenceModal />
       <NexusPlayer />
       <EnterpriseNexusPortal />
       <DJVerseOverlay />

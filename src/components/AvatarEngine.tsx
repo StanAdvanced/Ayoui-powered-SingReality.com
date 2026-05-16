@@ -3,9 +3,8 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { GLTFLoader } from 'three-stdlib';
 import { VRMLoaderPlugin, VRM } from '@pixiv/three-vrm';
-import { MessageSquare, Mic, Volume2, Brain, Cpu } from 'lucide-react';
+import { MessageSquare, Mic, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ThoughtProcessUI, ThoughtStep } from './ThoughtProcessUI';
 
 // You can replace this URL with a high-fidelity fully photorealistic UE5-grade exported GLTF/VRM URL
 // For demo purposes, we will use a fallback open-source VRM format model or basic geometry if it fails.
@@ -126,36 +125,15 @@ export function AvatarEngine() {
   ]);
   const [input, setInput] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [isThinking, setIsThinking] = useState(false);
-  const [thoughtSteps, setThoughtSteps] = useState<ThoughtStep[]>([]);
 
-  // Agentic Orchestration Logic
+  // In a production build, this would hit WebLLM or a highly capable backend LLM (Gemini 3.1)
   const handleSend = async () => {
     if (!input.trim()) return;
     
     setMessages(prev => [...prev, { role: 'user', text: input }]);
     const currentInput = input;
     setInput("");
-    setIsThinking(true);
-    setThoughtSteps([]);
-
-    // Multi-Agent Thinking Process (Simulation of Gemini Interactions API)
-    const thoughts: ThoughtStep[] = [
-      { 
-        signature: "q5_k_m_6782-sh1", 
-        summary: ["Identifying user intent: " + currentInput, "Scanning music theory database v4.2", "Contextualizing in SingReality mission"] 
-      },
-      { 
-        signature: "agent_orchestrator_node_09", 
-        summary: ["Orchestrating response with Comedian-Agent and Sales-Pro-Agent", "Optimizing for multi-modal engagement"] 
-      }
-    ];
-
-    for (const step of thoughts) {
-      await new Promise(r => setTimeout(r, 600));
-      setThoughtSteps(prev => [...prev, step]);
-    }
-
+    
     const responses = [
       `Absurd. You're thinking about '${currentInput}'? That's common-tier. On SingReality, we converge that into a multi-octave visual noise array before breakfast.`,
       `Listen, as a master of both music theory and SEO marketing, I can tell you that '${currentInput}' is the exact frequency we need to scale this platform to the Antarctican frenzy levels.`,
@@ -166,9 +144,8 @@ export function AvatarEngine() {
     setTimeout(() => {
       const aiResponse = responses[Math.floor(Math.random() * responses.length)];
       setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
-      setIsThinking(false);
       speak(aiResponse);
-    }, 400);
+    }, 1000);
   };
 
   const speak = (text: string) => {
@@ -232,8 +209,6 @@ export function AvatarEngine() {
                   </div>
                 </div>
               ))}
-              
-              <ThoughtProcessUI steps={thoughtSteps} isThinking={isThinking} />
             </div>
 
             <div className="p-4 border-t border-white/5 flex gap-2">

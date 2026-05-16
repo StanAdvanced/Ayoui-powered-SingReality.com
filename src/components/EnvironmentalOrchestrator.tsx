@@ -9,8 +9,7 @@ import {
   Instance, 
   Instances,
   Environment,
-  Sparkles,
-  MeshTransmissionMaterial
+  Sparkles
 } from '@react-three/drei';
 import * as THREE from 'three';
 import { useLocation } from 'react-router-dom';
@@ -196,50 +195,6 @@ function BioLuminescentCrowd() {
   );
 }
 
-function GaussianSplatLiquid() {
-  const mesh = useRef<THREE.Mesh>(null);
-  useFrame((state) => {
-    if (mesh.current) {
-      mesh.current.rotation.y = state.clock.elapsedTime * 0.1;
-      mesh.current.position.y = Math.sin(state.clock.elapsedTime) * 0.5;
-    }
-  });
-
-  return (
-    <group>
-      <Float speed={1.5} rotationIntensity={0.5} floatIntensity={0.5}>
-        <mesh ref={mesh}>
-          <torusKnotGeometry args={[2, 0.6, 256, 64]} />
-          <MeshTransmissionMaterial
-            backside
-            samples={16}
-            resolution={256}
-            transmission={1}
-            roughness={0}
-            thickness={2}
-            ior={1.5}
-            chromaticAberration={0.1}
-            anisotropy={0.1}
-            distortion={0.5}
-            distortionScale={0.5}
-            temporalDistortion={0.5}
-            color="#ffffff"
-          />
-        </mesh>
-      </Float>
-      {/* 8K Liquid display Particles */}
-      {Array.from({ length: 40 }).map((_, i) => (
-        <Float key={i} speed={2} rotationIntensity={1} floatIntensity={1}>
-          <mesh position={[(Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10, (Math.random() - 0.5) * 10]}>
-            <sphereGeometry args={[0.05, 16, 16]} />
-            <meshBasicMaterial color="#00f0ff" transparent opacity={0.4} />
-          </mesh>
-        </Float>
-      ))}
-    </group>
-  );
-}
-
 export function EnvironmentalOrchestrator() {
   const location = useLocation();
   const path = location.pathname;
@@ -307,7 +262,6 @@ export function EnvironmentalOrchestrator() {
 
       {stage === 'Nexus' && (
         <group>
-          <GaussianSplatLiquid />
           <DroneSwarm />
           {/* Atmospheric Particle Refraction feel */}
           <Sparkles count={100} scale={15} size={1} speed={0.2} color="#ffffff" />
