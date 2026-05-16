@@ -754,7 +754,7 @@ export function ModelViewer({ projectId = 'default' }: { projectId?: string }) {
         </button>
       </div>
 
-      {showAssets && <AssetLibrary />}
+      {showAssets && <AssetLibrary onSelect={handleAddAsset} />}
 
       {/* Material Controls Panel */}
       {showMaterials && (
