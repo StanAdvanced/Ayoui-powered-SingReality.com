@@ -5,7 +5,7 @@ import * as THREE from 'three';
 
 // Atmospheric / Immersive Media Visualizer
 function HarmonicVibrations() {
-  const mesh = useRef<THREE.Points>(null!);
+  const mesh = useRef<THREE.Mesh>(null!);
   
   // 11-dimensional string vibration simulation (simplified)
   const count = 1000;
@@ -26,7 +26,7 @@ function HarmonicVibrations() {
     mesh.current.rotation.x = t * 0.1;
     mesh.current.rotation.y = t * 0.2;
     // Animate particles based on harmonic vibrations
-    const positions = (mesh.current.geometry.attributes.position.array as any) as Float32Array;
+    const positions = mesh.current.geometry.attributes.position.array as Float32Array;
     for (let i = 0; i < count; i++) {
       positions[i * 3 + 2] = Math.sin(t + i * 0.1) * 0.5;
     }

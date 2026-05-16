@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence, Reorder } from 'motion/react';
 import { 
   Layers as LayersIcon, 
@@ -17,45 +17,10 @@ import { useStore } from '../store/useStore';
 import { useSound } from '../hooks/useSound';
 
 export function LayerEditor() {
-  const { 
-    layers, setLayers, updateLayersWithoutHistory, commitLayerHistory, 
-    addLayer, removeLayer, toggleLayerVisibility, undoLayerAction, redoLayerAction, 
-    layerHistory, layerHistoryIndex 
-  } = useStore();
+  const { layers, setLayers, addLayer, removeLayer, toggleLayerVisibility, reorderLayers, undoLayerAction, redoLayerAction, layerHistory, layerHistoryIndex } = useStore();
   const { playClick } = useSound();
   const [newLayerName, setNewLayerName] = useState('');
   const [expandedLayer, setExpandedLayer] = useState<string | null>(null);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      // Allow default behavior for input/textarea
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-        return;
-      }
-      
-      const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
-      const mdKey = isMac ? e.metaKey : e.ctrlKey;
-      
-      if (mdKey && e.key === 'z') {
-        if (e.shiftKey) {
-          e.preventDefault();
-          playClick();
-          redoLayerAction();
-        } else {
-          e.preventDefault();
-          playClick();
-          undoLayerAction();
-        }
-      } else if (mdKey && e.key === 'y') {
-        e.preventDefault();
-        playClick();
-        redoLayerAction();
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [undoLayerAction, redoLayerAction, playClick]);
 
   const handleAdd = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,14 +32,7 @@ export function LayerEditor() {
 
   const updateLayer = (id: string, updates: any) => {
     const newLayers = layers.map(l => l.id === id ? { ...l, ...updates } : l);
-    // Don't commit history for partial drag/slider updates. We will provide specialized updates.
-    // However, if we preserve this, we must ensure slider uses updateLayerWithoutHistory.
     setLayers(newLayers);
-  };
-
-  const updateLayerWithoutHistoryLocal = (id: string, updates: any) => {
-    const newLayers = layers.map(l => l.id === id ? { ...l, ...updates } : l);
-    updateLayersWithoutHistory(newLayers);
   };
 
   return (
@@ -125,13 +83,12 @@ export function LayerEditor() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
-        <Reorder.Group axis="y" values={layers} onReorder={updateLayersWithoutHistory} className="space-y-4">
+        <Reorder.Group axis="y" values={layers} onReorder={setLayers} className="space-y-4">
           {layers.map((layer) => (
             <Reorder.Item 
               key={layer.id} 
               value={layer}
               className="relative group"
-              onDragEnd={() => commitLayerHistory()}
             >
               <div className={`glass rounded-3xl border transition-all ${expandedLayer === layer.id ? 'border-singularity/40 bg-singularity/5' : 'border-white/5 hover:border-white/20 bg-white/2 hover:bg-white/5'}`}>
                 {/* Layer Header */}

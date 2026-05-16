@@ -15,7 +15,6 @@ import { YouTubeBackground } from '../components/YouTubeBackground';
 import { useActionNarrator } from '../hooks/useActionNarrator';
 import { LiveCollaboration } from '../components/LiveCollaboration';
 import { useSearchParams } from 'react-router-dom';
-import { MusicSearch } from '../components/MusicSearch';
 
 // Remove the local CanvasErrorBoundary as SafeCanvas includes one
 
@@ -131,10 +130,6 @@ export function Studio() {
                   className="flex-1 bg-black/40 border border-white/10 rounded-2xl p-4 text-sm focus:border-singularity outline-none transition-all resize-none font-mono"
                   placeholder="e.g., The feeling of a forgotten lullaby passing through neon rain..."
                 />
-                
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Or search existing tracks</h3>
-                <MusicSearch onSelect={(video) => setIntent(`Remix of: ${video.snippet.title}`)} />
-
                 <button 
                   onClick={handleGenerate}
                   disabled={isGenerating || !intent}
@@ -317,9 +312,7 @@ export function Studio() {
                 
                 <EffectComposer>
                   <Bloom luminanceThreshold={0.2} luminanceSmoothing={0.9} height={300} opacity={2} />
-                  {choreoStatus === 'generating' ? (
-                    <Glitch active={true} delay={new THREE.Vector2(1.5, 3.5)} duration={new THREE.Vector2(0.5, 1.0)} strength={new THREE.Vector2(0.2, 0.4)} mode={1} />
-                  ) : <></>}
+                  {choreoStatus === 'generating' && <Glitch active={true} delay={new THREE.Vector2(1.5, 3.5)} duration={new THREE.Vector2(0.5, 1.0)} strength={new THREE.Vector2(0.2, 0.4)} mode={1} />}
                 </EffectComposer>
               </SafeCanvas>
 

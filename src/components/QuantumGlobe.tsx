@@ -61,9 +61,9 @@ export function QuantumGlobe({ width, height, resonance, users, arcs }: QuantumG
       pointsData={users}
       pointLat="lat"
       pointLng="lng"
-      pointColor={(d: any) => (d as any).isVip ? '#eab308' : (d as any).color}
-      pointAltitude={(d: any) => (d as any).size * (1 + resonance)}
-      pointRadius={(d: any) => (d as any).isVip ? 0.8 : 0.4}
+      pointColor={d => (d as any).isVip ? '#eab308' : (d as any).color}
+      pointAltitude={d => (d as any).size * (1 + resonance)}
+      pointRadius={d => (d as any).isVip ? 0.8 : 0.4}
       pointsMerge={true}
       
       // Arc Visualization (Connections)
@@ -72,7 +72,7 @@ export function QuantumGlobe({ width, height, resonance, users, arcs }: QuantumG
       arcStartLng="startLng"
       arcEndLat="endLat"
       arcEndLng="endLng"
-      arcColor={(d: any) => (d as any).color}
+      arcColor={d => (d as any).color}
       arcDashLength={0.4}
       arcDashGap={0.2}
       arcDashAnimateTime={1000 / (0.5 + resonance)}
@@ -85,7 +85,7 @@ export function QuantumGlobe({ width, height, resonance, users, arcs }: QuantumG
       hexMargin={0.2}
       hexTopColor={() => 'rgba(0, 240, 255, 0.4)'}
       hexSideColor={() => 'rgba(112, 0, 255, 0.2)'}
-      hexLabel={(d: any) => `Region Resonance: ${(d as any).sumWeight.toFixed(2)}`}
+      hexLabel={d => `Region Resonance: ${(d as any).sumWeight.toFixed(2)}`}
     />
   );
 }

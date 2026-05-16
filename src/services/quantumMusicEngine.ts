@@ -104,7 +104,7 @@ export class QuantumMusicEngine {
 
   public async play(notes: Note[]) {
     await Tone.start();
-    const part = new Tone.Part((time: number, noteObj: any) => {
+    const part = new Tone.Part((time, noteObj: Note) => {
       this.synth.triggerAttackRelease(noteObj.note, noteObj.duration, time);
     }, notes.map(n => [n.time, n])).start("+0.1");
     

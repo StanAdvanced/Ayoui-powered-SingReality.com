@@ -13,8 +13,6 @@ import { ConcertEffects } from '../components/ConcertEffects';
 import { BiometricPanel } from '../components/BiometricPanel';
 import { DJVerseOverlay } from '../components/DJVerseOverlay';
 import { djVerseService } from '../services/djVerseService';
-import { AIDJAvatar, useAIDJVoice } from '../components/AIDJAvatar';
-import { askAIDJ } from '../services/aiDJService';
 
 const socket = io();
 
@@ -44,7 +42,7 @@ function RemoteAvatar({ position, rotation, userId }: { position: [number, numbe
   );
 }
 
-function Scene({ arenaId, onCursorMove, biometricData, isSpeaking, djVibe }: { arenaId: string, onCursorMove: (pos: [number, number, number]) => void, biometricData: any, isSpeaking: boolean, djVibe: string }) {
+function Scene({ arenaId, onCursorMove, biometricData }: { arenaId: string, onCursorMove: (pos: [number, number, number]) => void, biometricData: any }) {
   const { viewport, mouse } = useThree();
   const [remoteCursors, setRemoteCursors] = useState<Record<string, [number, number, number]>>({});
   const [remoteAvatars, setRemoteAvatars] = useState<Record<string, { position: [number, number, number], rotation: [number, number, number] }>>({});
@@ -76,8 +74,6 @@ function Scene({ arenaId, onCursorMove, biometricData, isSpeaking, djVibe }: { a
       
       <SuperBrain biometricData={biometricData} onClick={() => console.log('Brain clicked!')} />
 
-      <AIDJAvatar isSpeaking={isSpeaking} currentVibe={djVibe} />
-
       {Object.entries(remoteCursors).map(([id, pos]) => (
         <RemoteCursor key={id} userId={id} position={pos} />
       ))}
@@ -98,12 +94,6 @@ export function LiveArena() {
   const [currentLyrics, setCurrentLyrics] = useState('');
   const [song, setSong] = useState('');
   const [biometricSync, setBiometricSync] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [djVibe, setDjVibe] = useState('chill');
-  const lastSpokenHeartRate = useRef(0);
-  const { speak } = useAIDJVoice();
-  const chatHistory = useRef<{role: 'user'|'model', parts: {text: string}[]}[]>([]);
-
   const [biometricData, setBiometricData] = useState({
     heartRate: 70,
     alphaWave: 0.5,
@@ -141,30 +131,10 @@ export function LiveArena() {
   }, [biometricSync]);
 
   useEffect(() => {
-    if (biometricSync) {
-      if (biometricData.heartRate > 120) {
-        djVerseService.generateActivityCommentary(`Heart rate spike detected at ${Math.round(biometricData.heartRate)} BPM! The crowd is going wild! Current lyrics vibe: ${currentLyrics.slice(0, 50)}`);
-      } else if (biometricData.heartRate < 70) {
-         djVerseService.generateActivityCommentary(`Heart rate at ${Math.round(biometricData.heartRate)} BPM. Time for some melodic transition.`);
-      }
-
-      if (biometricData.heartRate > 120 && lastSpokenHeartRate.current <= 120) {
-        lastSpokenHeartRate.current = biometricData.heartRate;
-        setDjVibe('hype');
-        setIsSpeaking(true);
-        const utterance = speak("Energy is off the charts! Let's take it higher!");
-        if (utterance) utterance.onend = () => setIsSpeaking(false);
-      } else if (biometricData.heartRate < 80 && lastSpokenHeartRate.current >= 80) {
-        lastSpokenHeartRate.current = biometricData.heartRate;
-        setDjVibe('chill');
-        setIsSpeaking(true);
-        const utterance = speak("Looks like things are cooling down. Perfect time for a melodic transition.");
-        if (utterance) utterance.onend = () => setIsSpeaking(false);
-      }
-
-      if (biometricData.heartRate > 85 && biometricData.heartRate < 115) {
-         lastSpokenHeartRate.current = biometricData.heartRate;
-      }
+    if (biometricSync && biometricData.heartRate > 120) {
+      djVerseService.generateActivityCommentary(`Heart rate spike detected at ${Math.round(biometricData.heartRate)} BPM! The crowd is going wild! Current lyrics vibe: ${currentLyrics.slice(0, 50)}`);
+    } else if (biometricSync && biometricData.heartRate < 70) {
+       djVerseService.generateActivityCommentary(`Heart rate at ${Math.round(biometricData.heartRate)} BPM. Time for some melodic transition.`);
     }
   }, [biometricData.heartRate, biometricSync, currentLyrics]);
 
@@ -196,26 +166,10 @@ export function LiveArena() {
     };
   }, []);
 
-  const sendChatMessage = async () => {
+  const sendChatMessage = () => {
     if (chatInput.trim()) {
-      const currentInput = chatInput;
-      socket.emit('send-chat-message', { arenaId, text: currentInput });
+      socket.emit('send-chat-message', { arenaId, text: chatInput });
       setChatInput('');
-
-      if (currentInput.toLowerCase().includes('luna') || currentInput.toLowerCase().includes('dj')) {
-        setIsSpeaking(true);
-        const responseText = await askAIDJ(currentInput, chatHistory.current);
-        const utterance = speak(responseText);
-        if (utterance) {
-          utterance.onend = () => setIsSpeaking(false);
-        } else {
-          setIsSpeaking(false);
-        }
-        
-        chatHistory.current.push({ role: 'user', parts: [{ text: currentInput }] });
-        chatHistory.current.push({ role: 'model', parts: [{ text: responseText }] });
-        if (chatHistory.current.length > 20) chatHistory.current.shift();
-      }
     }
   };
 
@@ -283,7 +237,7 @@ export function LiveArena() {
               <Suspense fallback={<div className="flex items-center justify-center h-full"><Loader2 className="w-8 h-8 animate-spin" /></div>}>
                 <SafeCanvas xr camera={{ position: [0, 0, 10], fov: 50 }}>
                   <audioListener />
-                  <Scene arenaId={arenaId} onCursorMove={handleCursorMove} biometricData={biometricData} isSpeaking={isSpeaking} djVibe={djVibe} />
+                  <Scene arenaId={arenaId} onCursorMove={handleCursorMove} biometricData={biometricData} />
                 </SafeCanvas>
               </Suspense>
               

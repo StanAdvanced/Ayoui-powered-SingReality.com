@@ -62,12 +62,12 @@ export const useMusicEngine = create<MusicEngineState>((set, get) => ({
           host = stableHosts[0];
       }
       set({ host });
-      return host as string;
+      return host;
     } catch (error) {
       console.warn('Failed to fetch Audius host list, falling back to stable host', error);
       host = stableHosts[0];
       set({ host });
-      return host as string;
+      return host;
     }
   },
 
