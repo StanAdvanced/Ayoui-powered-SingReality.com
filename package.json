@@ -27,7 +27,6 @@
     "express": "^4.19.2",
     "firebase": "^12.13.0",
     "framer-motion": "^11.2.10",
-    "googleapis": "^171.4.0",
     "lucide-react": "^0.395.0",
     "motion": "^11.13.0",
     "postprocessing": "^6.39.1",

@@ -29,6 +29,16 @@ function RemoteCursor({ position, userId }: { position: [number, number, number]
 }
 
 function RemoteAvatar({ position, rotation, userId }: { position: [number, number, number], rotation: [number, number, number], userId: string }) {
+  const { camera } = useThree();
+  const listener = useRef(new THREE.AudioListener());
+
+  useEffect(() => {
+    camera.add(listener.current);
+    return () => {
+      camera.remove(listener.current);
+    };
+  }, [camera]);
+
   return (
     <group position={position} rotation={rotation}>
       <mesh>
@@ -38,6 +48,7 @@ function RemoteAvatar({ position, rotation, userId }: { position: [number, numbe
       <Text position={[0, 1.2, 0]} fontSize={0.2} color="white">
         {userId.slice(0, 4)}
       </Text>
+      <positionalAudio args={[listener.current]} />
     </group>
   );
 }
