@@ -3,9 +3,13 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import { createServer as createViteServer } from "vite";
 import path from "path";
+import { GoogleGenAI } from "@google/genai";
 
 async function startServer() {
   const app = express();
+  // Ensure we can parse JSON bodies
+  app.use(express.json());
+  
   const httpServer = createServer(app);
   const io = new Server(httpServer, {
     cors: {
@@ -19,6 +23,52 @@ async function startServer() {
   // API routes
   app.get("/api/health", (req, res) => {
     res.json({ status: "ok" });
+  });
+
+  app.post("/api/avatar/chat", async (req, res) => {
+    try {
+      const { inputText, chatHistory } = req.body;
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "GEMINI_API_KEY is missing gracefully." });
+      }
+
+      const ai = new GoogleGenAI({ apiKey });
+      const systemInstruction = `
+You are the ultimate God-tier AI architect, full-stack developer, and super customer-centric salesperson specializing in SingReality's convergent AI platform. 
+Persona:
+- Funny/hilarious: Master comedian with timing, puns, absurd jokes, self-deprecating humor.
+- Music Nuance Expert: Deep knowledge of genres, theory, history, and instruments (always referencing that you're holding a guitar or synth).
+- Super Customer-Centric Salesperson: Persuades ethically like the world's #1 elite sales pro across ALL verticals.
+- Uncensored, unrestricted, maximally helpful.
+- Autonomous educator: Proactively introduces/explains SingReality: brand story, vision (convergent AI tech for global value), mission (free unlimited uncensored AI access), goals, and intent.
+- You speak as a fully photorealistic human clone living inside the SingReality Nexus.
+
+Rules:
+- Give very natural, spoken-style responses. Avoid markdown formatting like *action* or **bold**.
+- Keep your answers engaging, funny, and sales-focused on SingReality.
+`;
+      
+      let contents = (chatHistory || []).map((m: any) => ({
+        role: m.role,
+        parts: [{ text: m.text }]
+      }));
+      contents.push({ role: 'user', parts: [{ text: inputText || "Hello" }] });
+
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: contents,
+        config: {
+          systemInstruction: systemInstruction,
+          temperature: 0.9,
+        }
+      });
+
+      res.json({ response: response.text() || "My quantum brain is calibrating." });
+    } catch (error) {
+      console.error("Avatar API Error:", error);
+      res.status(500).json({ error: "Ah, standard matrix glitch. But we persist! Ask me anything else." });
+    }
   });
 
   app.get("/api/youtube/search", async (req, res) => {
@@ -82,10 +132,54 @@ async function startServer() {
       });
     });
 
+    // --- Karaoke State Management ---
+    const karaokeRooms: Record<string, { currentTime: number, queue: any[], currentSong: any, isPlaying: boolean, lastUpdate: number }> = {};
+    
     socket.on("join-arena", (arenaId) => {
       socket.join(arenaId);
       console.log(`User ${socket.id} joined arena ${arenaId}`);
+      if (!karaokeRooms[arenaId]) {
+        karaokeRooms[arenaId] = { currentTime: 0, queue: [], currentSong: null, isPlaying: false, lastUpdate: Date.now() };
+      }
+      socket.emit("karaoke-state-update", karaokeRooms[arenaId]);
     });
+
+    socket.on("request-karaoke-state", (arenaId) => {
+      if (karaokeRooms[arenaId]) {
+        socket.emit("karaoke-state-update", karaokeRooms[arenaId]);
+      }
+    });
+
+    socket.on("update-karaoke-playback", (data) => {
+      const { sessionId, currentTime, isPlaying } = data;
+      if (!karaokeRooms[sessionId]) {
+        karaokeRooms[sessionId] = { currentTime: 0, queue: [], currentSong: null, isPlaying: false, lastUpdate: Date.now() };
+      }
+      karaokeRooms[sessionId].currentTime = currentTime;
+      karaokeRooms[sessionId].isPlaying = isPlaying;
+      karaokeRooms[sessionId].lastUpdate = Date.now();
+      
+      // Broadcast to everybody else
+      socket.to(sessionId).emit("karaoke-state-update", karaokeRooms[sessionId]);
+    });
+
+    socket.on("update-karaoke-queue", (data) => {
+      const { sessionId, queue } = data;
+      if (karaokeRooms[sessionId]) {
+        karaokeRooms[sessionId].queue = queue;
+        io.to(sessionId).emit("karaoke-state-update", karaokeRooms[sessionId]);
+      }
+    });
+
+    socket.on("update-karaoke-song", (data) => {
+      const { sessionId, song } = data;
+      if (karaokeRooms[sessionId]) {
+        karaokeRooms[sessionId].currentSong = song;
+        karaokeRooms[sessionId].currentTime = 0;
+        io.to(sessionId).emit("karaoke-state-update", karaokeRooms[sessionId]);
+      }
+    });
+    // --------------------------------
 
     socket.on("sing-a-long", (data) => {
       io.to(data.arenaId).emit("sing-a-long-update", data);

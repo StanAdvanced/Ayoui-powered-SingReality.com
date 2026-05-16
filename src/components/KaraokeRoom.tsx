@@ -71,8 +71,9 @@ export function KaraokeRoom() {
   const [videoId, setVideoId] = useState('jfKfPfyJRdk');
   const [jukeboxOpen, setJukeboxOpen] = useState(false);
   const [beatPulse, setBeatPulse] = useState(1);
-  const { togglePlay, isPlaying, audioElement, volume, setVolume } = useMusicEngine();
+  const [isKaraokePlaying, setIsKaraokePlaying] = useState(true);
   const { karaokeTheme, setKaraokeTheme } = useStore();
+  const [karaokeVolume, setKaraokeVolume] = useState(0.8);
   const lyricsContainerRef = useRef<HTMLDivElement>(null);
 
   const [isDJSpeaking, setIsDJSpeaking] = useState(false);
@@ -132,10 +133,17 @@ export function KaraokeRoom() {
     return () => clearInterval(checkSpeech);
   }, []);
 
+  const [seekTarget, setSeekTarget] = useState<number | undefined>(undefined);
+
   useEffect(() => {
     if (sessionId) {
       const cleanup = syncKaraokeSession(sessionId, (data) => {
         setNetworkTime(data.currentTime);
+        if (data.currentTime !== undefined && Math.abs(data.currentTime - currentTime) > 2.5) {
+          setCurrentTime(data.currentTime);
+          setSeekTarget(data.currentTime);
+        }
+        if (data.isPlaying !== undefined) setIsKaraokePlaying(data.isPlaying);
         if (data.queue) setKaraokeQueue(data.queue);
         if (data.currentSong) {
             if (data.currentSong.id !== currentKaraokeSong?.id) {
@@ -146,7 +154,28 @@ export function KaraokeRoom() {
       });
       return cleanup;
     }
-  }, [sessionId, currentKaraokeSong?.id]);
+  }, [sessionId, currentKaraokeSong?.id, currentTime]);
+
+  const toggleKaraokePlay = () => {
+    const newPlayState = !isKaraokePlaying;
+    setIsKaraokePlaying(newPlayState);
+    if (sessionId) {
+      updateKaraokePlayback(sessionId, { currentTime, isPlaying: newPlayState });
+    }
+  };
+
+  const handleVideoProgress = (state: { playedSeconds: number }) => {
+    setCurrentTime(state.playedSeconds);
+    // Simulate a beat detection algorithm using modulo math and time
+    const beatInterval = 60 / 120; // Assuming 120 BPM
+    const beatPhase = (state.playedSeconds % beatInterval) / beatInterval;
+    setBeatPulse(isKaraokePlaying ? 1 + Math.max(0, 1 - beatPhase * 4) * 0.3 : 1);
+    
+    if (sessionId && Math.floor(state.playedSeconds) % 5 === 0) {
+      // Sync every 5 seconds loosely
+      updateKaraokePlayback(sessionId, { currentTime: state.playedSeconds, isPlaying: isKaraokePlaying });
+    }
+  };
 
   const addToQueue = (song: typeof YOUTUBE_TOP_10[0]) => {
     saveToHistory(song); // Save to history when adding to queue
@@ -241,27 +270,6 @@ export function KaraokeRoom() {
      }
   }, [karaokeQueue, currentKaraokeSong, sessionId]);
 
-  // Sync lyrics and beat pulse with audio element
-  useEffect(() => {
-    let animationFrameId: number;
-    
-    const updateTime = () => {
-      if (audioElement) {
-        setCurrentTime(audioElement.currentTime);
-        // Simulate a beat detection algorithm using modulo math and time
-        const beatInterval = 60 / 120; // Assuming 120 BPM
-        const beatPhase = (audioElement.currentTime % beatInterval) / beatInterval;
-        setBeatPulse(isPlaying ? 1 + Math.max(0, 1 - beatPhase * 4) * 0.3 : 1);
-      } else {
-        setBeatPulse(1);
-      }
-      animationFrameId = requestAnimationFrame(updateTime);
-    };
-    
-    updateTime();
-    return () => cancelAnimationFrame(animationFrameId);
-  }, [audioElement, isPlaying]);
-
   const activeIndex = PREDEFINED_LYRICS.reduce((acc, lyric, index) => {
     if (currentTime >= lyric.time) return index;
     return acc;
@@ -290,7 +298,15 @@ export function KaraokeRoom() {
   return (
     <div className={`min-h-screen relative overflow-hidden transition-colors duration-1000 ${currentThemeData.atmosphere}`}>
       {/* 9D Cinematography & Autonomously Synced YouTube Video */}
-      <YouTubeBackground videoId={videoId} opacity={0.3} />
+      <YouTubeBackground 
+        videoId={videoId} 
+        opacity={0.3} 
+        playing={isKaraokePlaying}
+        volume={karaokeVolume}
+        seekTarget={seekTarget}
+        onProgress={handleVideoProgress}
+        onEnded={playNextInQueue}
+      />
       
       {/* Dynamic Visualizer Particles Based on Intensity */}
       <div className="fixed inset-0 pointer-events-none z-0 mix-blend-screen">
@@ -375,7 +391,7 @@ export function KaraokeRoom() {
           )}
         </AnimatePresence>
 
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 relative z-10">
           {/* Main Stage (Lyrics) */}
           <div className="lg:col-span-8 glass-card p-8 rounded-[3rem] border border-white/10 flex flex-col relative overflow-hidden bg-black/40 backdrop-blur-md">
             <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-black/80 to-transparent z-10 pointer-events-none" />
@@ -435,7 +451,7 @@ export function KaraokeRoom() {
           {/* Right Sidebar */}
           <div className="lg:col-span-4 flex flex-col gap-6">
             <div className="glass-card p-6 rounded-[2rem] border border-white/10 flex flex-col items-center justify-center gap-6 relative min-h-[300px]">
-              <div className="absolute inset-0 z-0">
+              <div className="absolute inset-0 z-0 pointer-events-none">
                 <SafeCanvas camera={{ position: [0, 0, 5], fov: 45 }}>
                    <AIDJAvatar isSpeaking={isDJSpeaking} currentVibe={karaokeQueue.length > 5 ? 'High Energy' : 'Chill'} />
                    <OrbitControls enableZoom={false} enablePan={false} autoRotate autoRotateSpeed={0.5} />
@@ -548,10 +564,10 @@ export function KaraokeRoom() {
             <div className="flex flex-col items-center gap-6 w-full px-4">
               <div className="flex items-center gap-6">
                 <button 
-                  onClick={togglePlay}
+                  onClick={toggleKaraokePlay}
                   className="w-14 h-14 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 transition-transform shadow-[0_0_30px_rgba(255,255,255,0.3)]"
                 >
-                  {isPlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
+                  {isKaraokePlaying ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-1" />}
                 </button>
                 <button 
                   onClick={playNextInQueue}
@@ -563,16 +579,16 @@ export function KaraokeRoom() {
               </div>
 
               <div className="flex items-center gap-4 w-full">
-                <button onClick={() => setVolume(volume === 0 ? 0.5 : 0)}>
-                  {volume === 0 ? <VolumeX className="w-4 h-4 text-gray-400" /> : <Volume2 className="w-4 h-4 text-gray-400" />}
+                <button onClick={() => setKaraokeVolume(karaokeVolume === 0 ? 0.8 : 0)}>
+                  {karaokeVolume === 0 ? <VolumeX className="w-4 h-4 text-gray-400" /> : <Volume2 className="w-4 h-4 text-gray-400" />}
                 </button>
                 <input 
                   type="range" 
                   min="0" 
                   max="1" 
                   step="0.01" 
-                  value={volume}
-                  onChange={(e) => setVolume(parseFloat(e.target.value))}
+                  value={karaokeVolume}
+                  onChange={(e) => setKaraokeVolume(parseFloat(e.target.value))}
                   className="flex-1 h-1 bg-white/20 rounded-full appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full"
                 />
               </div>

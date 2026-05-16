@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from 'react';
+import { StrictMode, useEffect, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { HashRouter } from 'react-router-dom';
 import App from './App';
@@ -51,9 +51,11 @@ function Root() {
   return (
     <StrictMode>
       <ErrorBoundary>
-        <HashRouter>
-          <App />
-        </HashRouter>
+        <Suspense fallback={<div style={{ background: '#000', color: '#00FF9F', height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>Initializing Singularity...</div>}>
+          <HashRouter>
+            <App />
+          </HashRouter>
+        </Suspense>
       </ErrorBoundary>
     </StrictMode>
   );

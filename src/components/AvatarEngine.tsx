@@ -5,15 +5,16 @@ import { GLTFLoader } from 'three-stdlib';
 import { VRMLoaderPlugin, VRM } from '@pixiv/three-vrm';
 import { MessageSquare, Mic, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { askGodTierAvatar } from '../services/godTierAvatarService';
 
-// You can replace this URL with a high-fidelity fully photorealistic UE5-grade exported GLTF/VRM URL
-// For demo purposes, we will use a fallback open-source VRM format model or basic geometry if it fails.
+// Fallback high-quality VRM model
 const VRM_URL = 'https://pixiv.github.io/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm';
 
 function AvatarModel() {
-  const { scene, camera, pointer } = useThree();
+  const { pointer } = useThree();
   const vrmRef = useRef<VRM | null>(null);
   const [modelScene, setModelScene] = useState<THREE.Group | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let unmounted = false;
@@ -31,13 +32,14 @@ function AvatarModel() {
         vrm.scene.traverse((obj: THREE.Object3D) => {
           obj.frustumCulled = false;
           if ((obj as THREE.Mesh).isMesh) {
-            obj.castShadow = true;
+             obj.castShadow = true;
           }
         });
         
         setModelScene(vrm.scene);
+        setLoading(false);
       },
-      (progress) => console.log('Loading Avatar...', 100.0 * (progress.loaded / progress.total), '%'),
+      undefined,
       (error) => console.error('Error loading VRM Avatar:', error)
     );
 
@@ -50,23 +52,27 @@ function AvatarModel() {
     if (vrmRef.current) {
       vrmRef.current.update(delta);
       
-      // Makes the avatar continuously look at the mouse cursor
-      if (vrmRef.current.lookAt) {
-        // Map pointer to 3D world coord roughly
-        const targetX = pointer.x * 2;
-        const targetY = pointer.y * 2 + 1.5; // Offset to head height
+      // Makes the avatar continuously look at the mouse cursor with smooth biomechanics
+      if (vrmRef.current.humanoid) {
+        const targetX = pointer.x * 3;
+        const targetY = pointer.y * 3 + 1.5; 
         
-        // Simple lookAt interpolation
-        if (vrmRef.current.humanoid) {
-          const head = vrmRef.current.humanoid.getNormalizedBoneNode('head');
-          const spine = vrmRef.current.humanoid.getNormalizedBoneNode('spine');
-          if (head && spine) {
-            // Apply slight rotation to follow cursor
-             head.rotation.y = THREE.MathUtils.lerp(head.rotation.y, -targetX * 0.5, 0.1);
-             head.rotation.x = THREE.MathUtils.lerp(head.rotation.x, targetY * 0.5, 0.1);
-             
-             spine.rotation.y = THREE.MathUtils.lerp(spine.rotation.y, -targetX * 0.2, 0.1);
-          }
+        const head = vrmRef.current.humanoid.getNormalizedBoneNode('head');
+        const spine = vrmRef.current.humanoid.getNormalizedBoneNode('spine');
+        const rightArm = vrmRef.current.humanoid.getNormalizedBoneNode('rightUpperArm');
+        const leftArm = vrmRef.current.humanoid.getNormalizedBoneNode('leftUpperArm');
+        
+        if (head && spine) {
+           head.rotation.y = THREE.MathUtils.lerp(head.rotation.y, -targetX * 0.5, 0.05);
+           head.rotation.x = THREE.MathUtils.lerp(head.rotation.x, targetY * 0.5, 0.05);
+           spine.rotation.y = THREE.MathUtils.lerp(spine.rotation.y, -targetX * 0.2, 0.05);
+        }
+        
+        // Simulate holding an instrument (guitar pose)
+        if (rightArm && leftArm && !loading) {
+           rightArm.rotation.z = THREE.MathUtils.lerp(rightArm.rotation.z, -1.2, 0.05);
+           leftArm.rotation.z = THREE.MathUtils.lerp(leftArm.rotation.z, 0.8, 0.05);
+           leftArm.rotation.x = THREE.MathUtils.lerp(leftArm.rotation.x, -0.5, 0.05);
         }
       }
     }
@@ -75,64 +81,75 @@ function AvatarModel() {
   if (!modelScene) return null;
 
   return (
-    <primitive 
-      object={modelScene} 
-      position={[0, -1.5, 0]} 
-      scale={[2.5, 2.5, 2.5]} 
-      rotation={[0, Math.PI, 0]} 
-    />
+    <group>
+      <primitive 
+        object={modelScene} 
+        position={[0, -1.5, 0]} 
+        scale={[2.5, 2.5, 2.5]} 
+        rotation={[0, Math.PI, 0]} 
+      />
+    </group>
   );
 }
 
 export function AvatarEngine() {
   const [chatOpen, setChatOpen] = useState(false);
   const [messages, setMessages] = useState<{role: 'ai'|'user', text: string}[]>([
-    { role: 'ai', text: "Yo! Welcome to SingReality. I'm your God-Tier AI rep. I know every chord progression since Bach, and I'm ready to sell you the future. What's up?" }
+    { role: 'ai', text: "Hey! Welcome to the SingReality Nexus! I'm your God-Tier AI rep, fully equipped with a quantum brain, some sweet guitar riffs, and a mission to show you why this platform is the absolute pinnacle of convergent AI. Ask me anything!" }
   ]);
   const [input, setInput] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isThinking, setIsThinking] = useState(false);
 
-  // In a production build, this would hit WebLLM or a highly capable backend LLM (Gemini 3.1)
   const handleSend = async () => {
-    if (!input.trim()) return;
+    if (!input.trim() || isThinking) return;
     
-    setMessages(prev => [...prev, { role: 'user', text: input }]);
-    const currentInput = input;
+    const userMessage = input.trim();
+    setMessages(prev => [...prev, { role: 'user', text: userMessage }]);
     setInput("");
+    setIsThinking(true);
     
-    // Stub for God-Tier AI Response
-    setTimeout(() => {
-      const aiResponse = `Classic. You think you're ready for '${currentInput}'? Listen, in the 899th dimension, we process audio through quantum splatting. But on SingReality, you get it for free. Let me show you how to dominate the Nexus.`;
-      setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
-      speak(aiResponse);
-    }, 1000);
+    try {
+      const history = messages.map(m => ({
+         role: m.role === 'ai' ? 'model' : 'user',
+         text: m.text
+      }));
+      
+      const response = await askGodTierAvatar(userMessage, history);
+      setMessages(prev => [...prev, { role: 'ai', text: response }]);
+      speak(response);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsThinking(false);
+    }
   };
 
   const speak = (text: string) => {
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel(); // kill active speech
+    window.speechSynthesis.cancel(); 
     
     const utterance = new SpeechSynthesisUtterance(text);
-    // Find a cool voice (e.g., Google UK English Male)
     const voices = window.speechSynthesis.getVoices();
-    const coolVoice = voices.find(v => v.name.includes("UK English Male") || v.name.includes("Google") ) || voices[0];
+    const voice = voices.find(v => v.name.includes("UK English") || v.name.includes("Google") ) || voices[0];
     
-    if (coolVoice) utterance.voice = coolVoice;
-    utterance.pitch = 0.9; // deeper/cooler
-    utterance.rate = 1.1; // fast talker
+    if (voice) utterance.voice = voice;
+    utterance.pitch = 0.95; 
+    utterance.rate = 1.05; 
     
     utterance.onstart = () => setIsSpeaking(true);
     utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
     
     window.speechSynthesis.speak(utterance);
   };
 
-  // Autoplay intro line when everything mounts
   useEffect(() => {
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       setChatOpen(true);
       speak(messages[0].text);
-    }, 2000);
+    }, 2500);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

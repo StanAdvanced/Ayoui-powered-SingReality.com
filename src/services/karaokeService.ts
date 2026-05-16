@@ -1,6 +1,8 @@
 // Karaoke Service
 // Manages real-time karaoke sessions and synchronization
 
+import { socket } from './socket';
+
 export interface Song {
   id: string;
   title: string;
@@ -13,62 +15,40 @@ export interface KaraokeState {
   queue: Song[];
   participants: string[];
   currentSong: Song | null;
+  isPlaying: boolean;
 }
 
 export const joinKaraokeSession = async (sessionId: string, userId: string) => {
-  // Mock logic
-  console.log(`User ${userId} joined session ${sessionId}`);
+  socket.emit('join-arena', sessionId);
 };
 
 export const syncKaraokeSession = (sessionId: string, callback: (data: KaraokeState) => void) => {
-  const storageKey = `karaoke_${sessionId}`;
+  socket.emit('join-arena', sessionId);
   
-  // Initialize if empty
-  if (!localStorage.getItem(storageKey)) {
-    localStorage.setItem(storageKey, JSON.stringify({
-      queue: [],
-      currentSong: null,
-      participants: ['Guest']
-    }));
-  }
-
-  const broadcastChannel = new BroadcastChannel(storageKey);
+  // Listen for state push
+  const handleUpdate = (data: KaraokeState) => {
+    callback(data);
+  };
   
-  const pushState = () => {
-     const data = JSON.parse(localStorage.getItem(storageKey) || '{}');
-     callback({ currentTime: Date.now(), ...data });
-  };
+  socket.on('karaoke-state-update', handleUpdate);
 
-  broadcastChannel.onmessage = (e) => {
-    if (e.data === 'update') {
-       pushState();
-    }
-  };
-
-  pushState();
-
-  const t = setInterval(() => {
-    pushState();
-  }, 1000);
+  // Periodic request to sync in case of missed updates
+  socket.emit('request-karaoke-state', sessionId);
 
   return () => {
-    clearInterval(t);
-    broadcastChannel.close();
+    socket.off('karaoke-state-update', handleUpdate);
   };
+};
+
+export const updateKaraokePlayback = (sessionId: string, data: { currentTime: number, isPlaying: boolean }) => {
+    socket.emit('update-karaoke-playback', { sessionId, ...data });
 };
 
 export const updateKaraokeQueue = (sessionId: string, queue: Song[]) => {
-    const storageKey = `karaoke_${sessionId}`;
-    const data = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    data.queue = queue;
-    localStorage.setItem(storageKey, JSON.stringify(data));
-    new BroadcastChannel(storageKey).postMessage('update');
+    socket.emit('update-karaoke-queue', { sessionId, queue });
 };
 
 export const updateCurrentSong = (sessionId: string, song: Song | null) => {
-    const storageKey = `karaoke_${sessionId}`;
-    const data = JSON.parse(localStorage.getItem(storageKey) || '{}');
-    data.currentSong = song;
-    localStorage.setItem(storageKey, JSON.stringify(data));
-    new BroadcastChannel(storageKey).postMessage('update');
+    socket.emit('update-karaoke-song', { sessionId, song });
 };
+
