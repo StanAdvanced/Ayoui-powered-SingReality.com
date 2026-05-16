@@ -10,37 +10,6 @@ import { motion, AnimatePresence } from 'motion/react';
 // For demo purposes, we will use a fallback open-source VRM format model or basic geometry if it fails.
 const VRM_URL = 'https://pixiv.github.io/three-vrm/packages/three-vrm/examples/models/VRM1_Constraint_Twist_Sample.vrm';
 
-function MusicalInstrument() {
-  const group = useRef<THREE.Group>(null);
-  useFrame((state) => {
-    if (group.current) {
-      group.current.position.y = Math.sin(state.clock.elapsedTime) * 0.05;
-      group.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.5) * 0.1;
-    }
-  });
-
-  return (
-    <group ref={group} position={[-0.4, 0.4, 0.2]} rotation={[0, -Math.PI / 4, 0]}>
-      {/* Abstract Synth/Guitar hybrid */}
-      <mesh>
-        <boxGeometry args={[0.8, 0.3, 0.1]} />
-        <meshStandardMaterial color="#222" metalness={0.8} roughness={0.2} />
-      </mesh>
-      <mesh position={[0, 0, 0.06]}>
-        <boxGeometry args={[0.7, 0.2, 0.02]} />
-        <meshStandardMaterial color="#00f0ff" emissive="#00f0ff" emissiveIntensity={2} />
-      </mesh>
-      {/* Strings/Keys */}
-      {Array.from({ length: 6 }).map((_, i) => (
-        <mesh key={i} position={[0, (i - 2.5) * 0.03, 0.075]}>
-          <boxGeometry args={[0.6, 0.005, 0.005]} />
-          <meshBasicMaterial color="white" />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
 function AvatarModel() {
   const { scene, camera, pointer } = useThree();
   const vrmRef = useRef<VRM | null>(null);
@@ -106,15 +75,12 @@ function AvatarModel() {
   if (!modelScene) return null;
 
   return (
-    <group>
-      <primitive 
-        object={modelScene} 
-        position={[0, -1.5, 0]} 
-        scale={[2.5, 2.5, 2.5]} 
-        rotation={[0, Math.PI, 0]} 
-      />
-      <MusicalInstrument />
-    </group>
+    <primitive 
+      object={modelScene} 
+      position={[0, -1.5, 0]} 
+      scale={[2.5, 2.5, 2.5]} 
+      rotation={[0, Math.PI, 0]} 
+    />
   );
 }
 
@@ -134,15 +100,9 @@ export function AvatarEngine() {
     const currentInput = input;
     setInput("");
     
-    const responses = [
-      `Absurd. You're thinking about '${currentInput}'? That's common-tier. On SingReality, we converge that into a multi-octave visual noise array before breakfast.`,
-      `Listen, as a master of both music theory and SEO marketing, I can tell you that '${currentInput}' is the exact frequency we need to scale this platform to the Antarctican frenzy levels.`,
-      `Hilarious! '${currentInput}' reminds me of a pun I heard in the 4th dimension: Why did the musician cross the quantum event horizon? To get to the other slide... of the frequency band.`,
-      `I've analyzed your intent. You're a high-value stakeholder. '${currentInput}' is our mission in a nutshell: convergent AI tech for global empowerment. Let's build it.`
-    ];
-    
+    // Stub for God-Tier AI Response
     setTimeout(() => {
-      const aiResponse = responses[Math.floor(Math.random() * responses.length)];
+      const aiResponse = `Classic. You think you're ready for '${currentInput}'? Listen, in the 899th dimension, we process audio through quantum splatting. But on SingReality, you get it for free. Let me show you how to dominate the Nexus.`;
       setMessages(prev => [...prev, { role: 'ai', text: aiResponse }]);
       speak(aiResponse);
     }, 1000);

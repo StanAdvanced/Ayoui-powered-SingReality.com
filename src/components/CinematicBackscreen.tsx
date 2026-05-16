@@ -4,8 +4,7 @@ import { EffectComposer, Bloom, Vignette, ChromaticAberration, Noise, DepthOfFie
 import { BlendFunction } from 'postprocessing';
 import * as THREE from 'three';
 import { useMusicEngine } from '../services/musicEngine';
-import { Environment, MeshDistortMaterial, Sphere, Plane, Float, Html, ContactShadows } from '@react-three/drei';
-import { EnvironmentalOrchestrator } from './EnvironmentalOrchestrator';
+import { Environment, MeshDistortMaterial, Sphere, Plane, Float, Html } from '@react-three/drei';
 
 /**
  * GROK API MOOD ANALYSIS STUB
@@ -296,27 +295,17 @@ export function CinematicBackscreen({ opacity = 1, pageType = "nexus" }: { opaci
   
   return (
     <div className="fixed inset-0 pointer-events-none transition-opacity duration-1000" style={{ zIndex: 0, opacity }}>
-      <Canvas camera={{ position: [0, 0, 8], fov: 50 }} dpr={[1, 2]} shadows>
+      <Canvas camera={{ position: [0, 0, 8], fov: 50 }} dpr={[1, 2]}>
         <color attach="background" args={['#020202']} />
         
-        <fog attach="fog" args={['#020202', 5, 25]} />
+        <fog attach="fog" args={['#020202', 5, 20]} />
         
         <ambientLight intensity={0.2} />
-        <directionalLight position={[5, 10, 5]} intensity={2} color="#00e0ff" castShadow />
+        <directionalLight position={[5, 10, 5]} intensity={2} color="#00e0ff" />
         <pointLight position={[-5, -5, -5]} intensity={5} color="#ff007a" />
         
         <QuantumHyperobject isActive={isPlaying} />
-        <EnvironmentalOrchestrator />
         <Particles />
-        
-        <ContactShadows 
-          opacity={0.4} 
-          scale={20} 
-          blur={2.4} 
-          far={10} 
-          resolution={256} 
-          color="#000000" 
-        />
         
         <EffectComposer enableNormalPass={false}>
           <Bloom
